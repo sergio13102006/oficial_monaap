@@ -1,0 +1,80 @@
+{% load sort_tags %}
+<div class="table-card anim-from-bottom personal-table-card" style="animation-delay:.15s">
+    <div class="table-responsive personal-table-scroll" aria-label="Tabla de personal">
+        <table class="table styled-table table-hover align-middle mb-0 w-100 personal-table">
+            <thead>
+                <tr>
+                    <th class="personal-col-id"><a href="{% sort_url 'id' %}">Codigo {% if current_sort == 'id' %}<i class="bi bi-caret-{% if current_dir == 'asc' %}up{% else %}down{% endif %}-fill ms-1" aria-hidden="true"></i>{% endif %}</a></th>
+                    <th class="personal-col-documento"><a href="{% sort_url 'documento' %}">Documento {% if current_sort == 'documento' %}<i class="bi bi-caret-{% if current_dir == 'asc' %}up{% else %}down{% endif %}-fill ms-1" aria-hidden="true"></i>{% endif %}</a></th>
+                    <th class="personal-col-nombres"><a href="{% sort_url 'nombres' %}">Nombres {% if current_sort == 'nombres' %}<i class="bi bi-caret-{% if current_dir == 'asc' %}up{% else %}down{% endif %}-fill ms-1" aria-hidden="true"></i>{% endif %}</a></th>
+                    <th class="personal-col-telefono"><a href="{% sort_url 'telefono' %}">Telefono {% if current_sort == 'telefono' %}<i class="bi bi-caret-{% if current_dir == 'asc' %}up{% else %}down{% endif %}-fill ms-1" aria-hidden="true"></i>{% endif %}</a></th>
+                    <th class="personal-col-correo"><a href="{% sort_url 'correo' %}">Correo {% if current_sort == 'correo' %}<i class="bi bi-caret-{% if current_dir == 'asc' %}up{% else %}down{% endif %}-fill ms-1" aria-hidden="true"></i>{% endif %}</a></th>
+                    <th class="personal-col-rol"><a href="{% sort_url 'rol' %}">Rol {% if current_sort == 'rol' %}<i class="bi bi-caret-{% if current_dir == 'asc' %}up{% else %}down{% endif %}-fill ms-1" aria-hidden="true"></i>{% endif %}</a></th>
+                    <th class="personal-col-estado text-center"><a href="{% sort_url 'estado' %}">Estado {% if current_sort == 'estado' %}<i class="bi bi-caret-{% if current_dir == 'asc' %}up{% else %}down{% endif %}-fill ms-1" aria-hidden="true"></i>{% endif %}</a></th>
+                    <th class="personal-col-fecha"><a href="{% sort_url 'fecha' %}">Fecha de Registro {% if current_sort == 'fecha' %}<i class="bi bi-caret-{% if current_dir == 'asc' %}up{% else %}down{% endif %}-fill ms-1" aria-hidden="true"></i>{% endif %}</a></th>
+                    <th class="personal-col-acciones text-end">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for persona in personal_list %}
+                    <tr>
+                        <td data-label="Codigo" class="fw-semibold personal-cell-id">{{ persona.id }}</td>
+                        <td data-label="Documento" class="personal-cell-documento">{{ persona.numero_documento }}</td>
+                        <td data-label="Nombres" class="personal-cell-nombres">{{ persona.nombres }} {{ persona.apellidos }}</td>
+                        <td data-label="Telefono" class="personal-cell-telefono"><a href="tel:{{ persona.telefono }}" class="personal-link-compact">{{ persona.telefono }}</a></td>
+                        <td data-label="Correo" class="personal-cell-correo"><a href="mailto:{{ persona.correo }}" class="personal-link-compact">{{ persona.correo }}</a></td>
+                        <td data-label="Rol" class="personal-cell-rol">
+                            <span class="personal-badge {% if persona.rol == 'AUX' %}warning{% elif persona.rol == 'ADM' %}info{% else %}success{% endif %}">{{ persona.get_rol_display }}</span>
+                        </td>
+                        <td data-label="Estado" class="text-center personal-cell-estado">
+                            {% if puede_modificar %}
+                                <label class="table-switch-wrapper" title="Cambiar estado" data-bs-placement="bottom">
+                                    <input type="checkbox" class="toggle-activo-checkbox" data-personal-id="{{ persona.id }}" data-personal-nombre="{{ persona.nombres }} {{ persona.apellidos }}" {% if persona.activo %}checked{% endif %}>
+                                    <span class="table-switch-slider"></span>
+                                </label>
+                            {% else %}
+                                {% if persona.activo %}
+                                    <span class="personal-badge success">Activo</span>
+                                {% else %}
+                                    <span class="personal-badge danger">Inactivo</span>
+                                {% endif %}
+                            {% endif %}
+                        </td>
+                        <td data-label="Fecha de Registro" class="personal-cell-fecha">{{ persona.fecha_creacion|date:"d/m/Y H:i" }}</td>
+                        <td data-label="Acciones" class="text-end personal-cell-acciones">
+                            <div class="table-action-group ms-auto">
+                                <button type="button" class="table-action-btn btn-detalle-personal" data-personal-action="open-detail" data-personal-id="{{ persona.id }}" data-nombre="{{ persona.nombres }} {{ persona.apellidos }}" data-documento="{{ persona.numero_documento }}" data-rol="{{ persona.get_rol_display }}" data-telefono="{{ persona.telefono|default:'-' }}" data-correo="{{ persona.correo|default:'-' }}" data-estado="{% if persona.activo %}Activo{% else %}Inactivo{% endif %}" data-fecha-creacion="{{ persona.fecha_creacion|date:'d/m/Y H:i' }}" data-fecha-actualizacion="{{ persona.fecha_actualizacion|date:'d/m/Y H:i' }}" data-usuario="{% if persona.usuario %}{{ persona.usuario.username }}{% if persona.usuario.first_name %} ({{ persona.usuario.first_name }}){% endif %}{% endif %}" title="Ver detalles"><i class="bi bi-eye"></i></button>
+                                {% if puede_modificar %}
+                                <button type="button" class="table-action-btn" data-personal-action="open-edit" data-personal-id="{{ persona.id }}" title="Editar"><i class="bi bi-pencil-square"></i></button>
+                                {% endif %}
+                                {% if es_administrador %}
+                                <button type="button" class="table-action-btn table-action-btn--danger" data-personal-action="open-delete" data-personal-id="{{ persona.id }}" title="Eliminar"><i class="bi bi-trash3"></i></button>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="9" class="text-center personal-empty-cell">
+                            <div class="personal-empty-state">
+                                <div class="personal-empty-state-icon">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                                <div>
+                                    <h4 class="personal-empty-state-title">No hay personal registrado</h4>
+                                    <p class="personal-empty-state-text">Actualmente no tienes auxiliares ni colaboradores en tu equipo. Comienza registrando al primer integrante para facilitar tu gestion.</p>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if personal_list %}
+    <div class="personal-stats">
+        <strong>Total:</strong> <span>{{ personal_list|length }} registros</span>
+    </div>
+    {% endif %}
+</div>

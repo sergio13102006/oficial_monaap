@@ -1,0 +1,124 @@
+  <div class="detalle-compra-content">
+    <div class="detalle-compra-layout">
+      <div class="detalle-compra-aside">
+        {% with primer_detalle=c.detalles.all|first %}
+          <div class="detalle-compra-imagebox">
+            {% if primer_detalle and primer_detalle.producto.imagen %}
+              <img
+                src="{{ primer_detalle.producto.imagen.url }}"
+                alt="{{ primer_detalle.producto.nombre }}"
+                class="detalle-compra-main-img"
+              >
+            {% else %}
+              <div class="detalle-compra-main-placeholder">
+                <i class="bi bi-box-seam"></i>
+              </div>
+            {% endif %}
+          </div>
+        {% endwith %}
+
+        <div class="detalle-compra-aside-caption">Compra</div>
+
+        <div class="detalle-compra-aside-badge">
+          {{ c.id }}
+        </div>
+      </div>
+
+      <div class="detalle-compra-main">
+        <div class="detalle-compra-topline">
+          <div>
+            <h2 class="detalle-compra-title">Compra #{{ c.id }}</h2>
+            <div class="detalle-compra-subtitle">Información general de la compra</div>
+          </div>
+
+          <div class="detalle-compra-status {% if c.anulada %}is-danger{% else %}is-success{% endif %}">
+            {% if c.anulada %}Anulada{% else %}Activa{% endif %}
+          </div>
+        </div>
+
+        <hr class="detalle-compra-sep">
+
+        <div class="detalle-compra-info-grid">
+          <div class="detalle-info-item">
+            <div class="detalle-info-label">Proveedor</div>
+            <div class="detalle-info-value">{{ c.proveedor }}</div>
+          </div>
+
+          <div class="detalle-info-item">
+            <div class="detalle-info-label">Fecha</div>
+            <div class="detalle-info-value">{{ c.fecha }}</div>
+          </div>
+
+          <div class="detalle-info-item">
+            <div class="detalle-info-label">Usuario</div>
+            <div class="detalle-info-value">
+              {% if c.usuario %}{{ c.usuario.username }}{% else %}—{% endif %}
+            </div>
+          </div>
+
+          <div class="detalle-info-item">
+            <div class="detalle-info-label">Total</div>
+            <div class="detalle-info-value">${{ c.precio_total|floatformat:2 }}</div>
+          </div>
+        </div>
+
+        <hr class="detalle-compra-sep">
+
+        <div class="detalle-compra-subsection-title">Productos</div>
+
+        <div class="table-responsive">
+          <table class="table detalle-compra-table align-middle mb-0">
+            <thead>
+              <tr>
+                <th>Producto</th>
+                <th class="text-center">Cantidad</th>
+                <th class="text-end">Precio Unitario</th>
+                <th class="text-end">Subtotal</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for d in c.detalles.all %}
+              <tr>
+                <td>
+                  <div class="detalle-producto-cell">
+                    {% if d.producto.imagen %}
+                      <img
+                        src="{{ d.producto.imagen.url }}"
+                        alt="{{ d.producto.nombre }}"
+                        class="detalle-producto-thumb"
+                      >
+                    {% else %}
+                      <div class="detalle-producto-thumb detalle-producto-thumb--placeholder">
+                        <i class="bi bi-box-seam"></i>
+                      </div>
+                    {% endif %}
+
+                    <span>{{ d.producto.nombre }}</span>
+                  </div>
+                </td>
+                <td class="text-center">{{ d.cantidad }}</td>
+                <td class="text-end">${{ d.precio_unitario|floatformat:2 }}</td>
+                <td class="text-end">${{ d.subtotal|floatformat:2 }}</td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="4" class="text-center text-muted">
+                  No hay productos registrados.
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="detalle-compra-resumen">
+          <div class="detalle-compra-subsection-title mb-2">Resumen</div>
+          <p class="mb-0">
+            Esta compra se encuentra registrada en el sistema MONAAPP con la información
+            comercial del proveedor y el detalle de productos asociado.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

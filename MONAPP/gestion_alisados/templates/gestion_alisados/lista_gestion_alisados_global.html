@@ -1,0 +1,84 @@
+{% load humanize %}
+{% load sort_tags %}
+
+{% if gestiones %}
+<div class="table-responsive">
+    <table class="styled-table">
+        <thead>
+            <tr>
+                <th>
+                    <a href="{% sort_url 'fecha' %}">Fecha y Hora
+                        {% if current_sort == 'fecha' %}<i class="bi bi-caret-{% if current_dir == 'asc' %}up{% else %}down{% endif %}-fill ms-1" aria-hidden="true"></i>{% endif %}
+                    </a>
+                </th>
+                <th>
+                    <a href="{% sort_url 'cliente' %}">Cliente
+                        {% if current_sort == 'cliente' %}<i class="bi bi-caret-{% if current_dir == 'asc' %}up{% else %}down{% endif %}-fill ms-1" aria-hidden="true"></i>{% endif %}
+                    </a>
+                </th>
+                <th>
+                    <a href="{% sort_url 'profesional' %}">Profesional
+                        {% if current_sort == 'profesional' %}<i class="bi bi-caret-{% if current_dir == 'asc' %}up{% else %}down{% endif %}-fill ms-1" aria-hidden="true"></i>{% endif %}
+                    </a>
+                </th>
+                <th>
+                    <a href="{% sort_url 'tipo' %}">Tipo de Alisado
+                        {% if current_sort == 'tipo' %}<i class="bi bi-caret-{% if current_dir == 'asc' %}up{% else %}down{% endif %}-fill ms-1" aria-hidden="true"></i>{% endif %}
+                    </a>
+                </th>
+                <th>
+                    <a href="{% sort_url 'precio' %}">Precio
+                        {% if current_sort == 'precio' %}<i class="bi bi-caret-{% if current_dir == 'asc' %}up{% else %}down{% endif %}-fill ms-1" aria-hidden="true"></i>{% endif %}
+                    </a>
+                </th>
+                <th>
+                    <a href="{% sort_url 'saldo' %}">Saldo Pendiente
+                        {% if current_sort == 'saldo' %}<i class="bi bi-caret-{% if current_dir == 'asc' %}up{% else %}down{% endif %}-fill ms-1" aria-hidden="true"></i>{% endif %}
+                    </a>
+                </th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for gestion in gestiones %}
+            <tr>
+                <td>{{ gestion.fecha_hora|date:"d/m/Y H:i" }}</td>
+                <td>{{ gestion.cliente.nombre }} {{ gestion.cliente.apellido }}</td>
+                <td>{{ gestion.procedimiento_realizado_por }}</td>
+                <td>{{ gestion.tipo_alisado }}</td>
+                <td>${{ gestion.precio_alisado|intcomma }} COP</td>
+                <td>
+                    {% if gestion.saldo_pendiente > 0 %}
+                        <span class="badge bg-warning text-dark">${{ gestion.saldo_pendiente|intcomma }} COP</span>
+                    {% else %}
+                        <span class="badge bg-success">Pagado</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <div class="table-action-group">
+                        <a href="{% url 'gestion_alisados:ver_gestion_alisado_modal_content' gestion.pk %}" class="table-action-btn js-open-gestion-info-modal" data-modal-title="Detalle de gestión de datos" title="Ver detalles" aria-label="Ver detalles de la gestion {{ gestion.pk }}">
+                            <i class="bi bi-eye" aria-hidden="true"></i>
+                        </a>
+                        <a href="{% url 'gestion_alisados:editar_gestion_alisado' gestion.pk %}?modal=1" class="table-action-btn js-open-gestion-form-modal" data-form-title="Editar gestión de datos" data-form-url="{% url 'gestion_alisados:editar_gestion_alisado' gestion.pk %}?modal=1" title="Editar" aria-label="Editar gestion {{ gestion.pk }}">
+                            <i class="bi bi-pencil" aria-hidden="true"></i>
+                        </a>
+                        {% if permisos.roles.es_admin %}
+                        <a href="#" class="table-action-btn table-action-btn--danger js-delete-gestion-swal" data-delete-url="{% url 'gestion_alisados:eliminar_gestion_alisado' gestion.pk %}" data-gestion-label="{{ gestion.cliente.nombre }} {{ gestion.cliente.apellido }} - {{ gestion.fecha_hora|date:'d/m/Y H:i' }}" title="Eliminar" aria-label="Eliminar gestion {{ gestion.pk }}">
+                            <i class="bi bi-trash" aria-hidden="true"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+    {% if request.GET %}
+    <div class="table-empty-state">
+        <i class="bi bi-exclamation-triangle"></i>
+        <p>No se encontraron registros con los filtros aplicados.</p>
+    </div>
+    {% endif %}
+{% endif %}

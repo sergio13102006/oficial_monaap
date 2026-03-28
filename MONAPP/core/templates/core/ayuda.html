@@ -1,0 +1,106 @@
+﻿{% extends 'core/panel_admin_base.html' %}
+{% load static %}
+
+{% block title %}Ayuda{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item active" aria-current="page">Ayuda</li>
+{% endblock %}
+
+{% block page_icon %}<i class="bi bi-journal-richtext page-icon"></i>{% endblock %}
+{% block page_title %}Ayuda y documentación{% endblock %}
+{% block page_subtitle %}Manuales en PDF y guía rápida del sistema{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'core/css/ayuda.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-2">
+  <section class="help-shell">
+    <header class="help-hero">
+      <div>
+        <h4>Manuales y guías</h4>
+        <p>Accede a la documentación del sistema en PDF.</p>
+      </div>
+
+      <div class="help-actions">
+        {% if documento_principal %}
+          <a href="{% static documento_principal.archivo %}" class="help-download" target="_blank" rel="noopener">
+            <i class="bi bi-file-earmark-arrow-down-fill" aria-hidden="true"></i>
+            Descargar manual principal
+          </a>
+        {% endif %}
+        <a href="{% url 'core:ayuda_pdf' %}" class="help-download help-download-secondary">
+          <i class="bi bi-lightning-charge-fill" aria-hidden="true"></i>
+          Descargar guía rápida (PDF)
+        </a>
+      </div>
+    </header>
+
+    {% if documentos %}
+      <div class="help-docs" aria-label="Documentos PDF">
+        {% for doc in documentos %}
+          <a class="help-doc" href="{% static doc.archivo %}" target="_blank" rel="noopener">
+            <div class="help-doc-icon" aria-hidden="true">
+              <i class="bi {{ doc.icono }}"></i>
+            </div>
+            <div class="help-doc-body">
+              <div class="help-doc-title">{{ doc.titulo }}</div>
+              {% if doc.descripcion %}
+                <div class="help-doc-desc">{{ doc.descripcion }}</div>
+              {% endif %}
+            </div>
+            <div class="help-doc-action" aria-hidden="true">
+              <i class="bi bi-box-arrow-up-right"></i>
+            </div>
+          </a>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <h5 class="help-section-title">Guía rápida</h5>
+    <div class="help-grid">
+      <article class="help-card">
+        <div class="help-card-head">
+          <h5>Cómo iniciar sesión</h5>
+        </div>
+        <div class="help-card-body">
+          <ol>
+            <li>En la página principal, haz clic en <strong>Iniciar sesión</strong>.</li>
+            <li>Escribe tu usuario y contraseña.</li>
+            <li>Pulsa <strong>Entrar</strong> para acceder al panel.</li>
+          </ol>
+        </div>
+      </article>
+
+      <article class="help-card">
+        <div class="help-card-head">
+          <h5>Cómo registrar un usuario</h5>
+        </div>
+        <div class="help-card-body">
+          <ol>
+            <li>Ingresa al módulo <strong>Usuarios</strong>.</li>
+            <li>Haz clic en <strong>Nuevo usuario</strong>.</li>
+            <li>Completa los campos obligatorios y guarda.</li>
+            <li>Asigna el rol correspondiente.</li>
+          </ol>
+        </div>
+      </article>
+
+      <article class="help-card">
+        <div class="help-card-head">
+          <h5>Cómo usar productos</h5>
+        </div>
+        <div class="help-card-body">
+          <ol>
+            <li>Abre el módulo <strong>Productos</strong> desde el menú lateral.</li>
+            <li>Usa el buscador para localizar productos existentes.</li>
+            <li>Crea, edita o activa/inactiva productos según necesidad.</li>
+            <li>Verifica el mensaje de confirmación al guardar.</li>
+          </ol>
+        </div>
+      </article>
+    </div>
+  </section>
+</div>
+{% endblock %}

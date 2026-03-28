@@ -1,0 +1,231 @@
+﻿{% extends 'core/panel_admin_base.html' %}
+{% load static %}
+
+{% block title %}Configuración de copias de seguridad{% endblock %}
+{% block page_title %}Configuración de copias de seguridad{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'backup/css/backup.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="bk-wrapper">
+
+    <!-- Header -->
+    <div class="bk-page-header">
+        <h1>
+            <i class="bi bi-gear"></i>
+            Configuración de copias de seguridad
+        </h1>
+        <div class="bk-header-actions">
+            <a href="{% url 'backup:dashboard' %}" class="bk-btn outline">
+                <i class="bi bi-arrow-left"></i> Volver al panel
+            </a>
+        </div>
+    </div>
+
+    <!-- Mensajes -->
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show"
+             role="alert"
+             style="border-radius: 12px; border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+            <div class="d-flex align-items-center gap-2">
+                {% if message.tags == 'success' %}
+                    <i class="bi bi-check-circle-fill text-success"></i>
+                {% elif message.tags == 'error' %}
+                    <i class="bi bi-x-circle-fill text-danger"></i>
+                {% else %}
+                    <i class="bi bi-info-circle-fill text-primary"></i>
+                {% endif %}
+                {{ message }}
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <form method="post" action="{% url 'backup:configuracion' %}">
+                {% csrf_token %}
+
+                <div class="bk-card">
+                    <div class="bk-card-header">
+                        <i class="bi bi-sliders"></i>
+                        Parámetros Generales
+                    </div>
+                    <div class="bk-card-body">
+
+                        <!-- Copia automática -->
+                        <div class="bk-switch-row">
+                            <div class="bk-switch-label">
+                                <strong>
+                                    <i class="bi bi-clock-history me-1"></i>
+                                    Copia automática
+                                </strong>
+                                <small>Ejecuta una copia periódicamente de forma automática</small>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox"
+                                       name="backup_automatico" id="backupAuto"
+                                       {% if config.backup_automatico %}checked{% endif %}
+                                       style="width: 48px; height: 24px;">
+                            </div>
+                        </div>
+
+                        <!-- Frecuencia -->
+                        <div class="bk-switch-row">
+                            <div class="bk-switch-label">
+                                <strong>
+                                    <i class="bi bi-arrow-repeat me-1"></i>
+                                    Frecuencia
+                                </strong>
+                                <small>Cada cuántas horas se realiza una copia automática</small>
+                            </div>
+                            <div style="width: 120px;">
+                                <div class="input-group input-group-sm">
+                                    <input type="number" class="form-control" name="frecuencia_horas"
+                                           value="{{ config.frecuencia_horas }}" min="1" max="720"
+                                           style="border-radius: 10px 0 0 10px; border-color: rgba(141,96,74,0.2);">
+                                    <span class="input-group-text"
+                                          style="border-radius: 0 10px 10px 0; background: #f8f5f3; border-color: rgba(141,96,74,0.2); font-size: .82rem;">
+                                        horas
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Máximo copias -->
+                        <div class="bk-switch-row">
+                            <div class="bk-switch-label">
+                                <strong>
+                                    <i class="bi bi-stack me-1"></i>
+                                    Máximo de copias
+                                </strong>
+                                <small>Las copias más antiguas se eliminan automáticamente</small>
+                            </div>
+                            <div style="width: 100px;">
+                                <input type="number" class="form-control form-control-sm"
+                                       name="max_backups" value="{{ config.max_backups }}"
+                                       min="1" max="100"
+                                       style="border-radius: 10px; border-color: rgba(141,96,74,0.2); text-align: center;">
+                            </div>
+                        </div>
+
+                        <!-- Incluir media -->
+                        <div class="bk-switch-row">
+                            <div class="bk-switch-label">
+                                <strong>
+                                    <i class="bi bi-images me-1"></i>
+                                    Incluir archivos multimedia
+                                </strong>
+                                <small>Incluir fotos, documentos e imágenes subidas en la copia automática</small>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox"
+                                       name="incluir_media" id="inclMedia"
+                                       {% if config.incluir_media %}checked{% endif %}
+                                       style="width: 48px; height: 24px;">
+                            </div>
+                        </div>
+
+                        <!-- Ruta personalizada -->
+                        <div class="bk-switch-row" style="border-bottom: none;">
+                            <div class="bk-switch-label" style="flex: 1;">
+                                <strong>
+                                    <i class="bi bi-folder me-1"></i>
+                                    Ruta de Almacenamiento
+                                </strong>
+                                <small>Dejar vacío para usar la ruta por defecto (backups/)</small>
+                                <div style="margin-top: 10px;">
+                                    <input type="text" class="form-control form-control-sm"
+                                           name="ruta_backups" value="{{ config.ruta_backups }}"
+                                           placeholder="Ej: C:\backups\monapp"
+                                           style="border-radius: 10px; border-color: rgba(141,96,74,0.2);">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-3">
+                    <a href="{% url 'backup:dashboard' %}" class="bk-btn outline">Cancelar</a>
+                    <button type="submit" class="bk-btn primary">
+                        <i class="bi bi-check-lg"></i> Guardar configuración
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Panel lateral de info -->
+        <div class="col-lg-4">
+            <div class="bk-card">
+                <div class="bk-card-header" style="background: linear-gradient(135deg, #2d6a4f, #1b4332);">
+                    <i class="bi bi-lightbulb"></i>
+                    Recomendaciones
+                </div>
+                <div class="bk-card-body">
+                    <div style="display: flex; flex-direction: column; gap: 14px;">
+                        <div style="display: flex; gap: 12px; align-items: flex-start;">
+                            <i class="bi bi-check2-circle" style="color: var(--bk-brown-success); font-size: 1.1rem; flex-shrink: 0; margin-top: 2px;"></i>
+                            <div>
+                                <strong style="font-size: .84rem; color: #3a2a24;">Frecuencia diaria</strong>
+                                <p style="font-size: .78rem; color: #8a7a72; margin: 2px 0 0;">
+                                    Se recomienda hacer una copia al menos cada 24 horas.
+                                </p>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 12px; align-items: flex-start;">
+                            <i class="bi bi-check2-circle" style="color: var(--bk-brown-success); font-size: 1.1rem; flex-shrink: 0; margin-top: 2px;"></i>
+                            <div>
+                                <strong style="font-size: .84rem; color: #3a2a24;">Mínimo 5 copias</strong>
+                                <p style="font-size: .78rem; color: #8a7a72; margin: 2px 0 0;">
+                                    Mantener al menos 5 copias permite restaurar versiones anteriores.
+                                </p>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 12px; align-items: flex-start;">
+                            <i class="bi bi-check2-circle" style="color: var(--bk-brown-success); font-size: 1.1rem; flex-shrink: 0; margin-top: 2px;"></i>
+                            <div>
+                                <strong style="font-size: .84rem; color: #3a2a24;">Incluir archivos multimedia</strong>
+                                <p style="font-size: .78rem; color: #8a7a72; margin: 2px 0 0;">
+                                    Las fotos de perfil y documentos subidos son difíciles de recuperar sin una copia.
+                                </p>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 12px; align-items: flex-start;">
+                            <i class="bi bi-check2-circle" style="color: var(--bk-brown-success); font-size: 1.1rem; flex-shrink: 0; margin-top: 2px;"></i>
+                            <div>
+                                <strong style="font-size: .84rem; color: #3a2a24;">Copia externa</strong>
+                                <p style="font-size: .78rem; color: #8a7a72; margin: 2px 0 0;">
+                                    Descarga las copias periódicamente y guárdalas en otra ubicación.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {% if config.ultimo_backup %}
+            <div class="bk-card">
+                <div class="bk-card-header">
+                    <i class="bi bi-clock"></i>
+                    Última copia
+                </div>
+                <div class="bk-card-body">
+                    <div class="bk-detail-item">
+                        <span class="label">Fecha</span>
+                        <span class="value">{{ config.ultimo_backup|date:"d/m/Y H:i:s" }}</span>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+
+

@@ -1,0 +1,57 @@
+{% extends 'core/panel_admin_base.html' %}
+{% load static %}
+
+{% block title %}Gestion de datos{% endblock %}
+
+{% block page_title %}
+    <i class="bi bi-trash"></i> Gestion de datos
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'servicios/css/estilos.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">Confirmar Eliminación</h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        <strong>¡Atención!</strong> Esta acción no se puede deshacer.
+                    </div>
+                    
+                    <p>¿Está seguro que desea eliminar el siguiente registro?</p>
+                    
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <ul class="list-unstyled mb-0">
+                                <li><strong>Fecha y Hora:</strong> {{ gestion.fecha_hora|date:"d/m/Y H:i" }}</li>
+                                <li><strong>Profesional:</strong> {{ gestion.procedimiento_realizado_por }}</li>
+                                <li><strong>Tipo de Alisado:</strong> {{ gestion.tipo_alisado }}</li>
+                                <li><strong>Precio:</strong> ${{ gestion.precio_alisado }}</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'gestion_alisados:lista_gestion_alisados' %}" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-trash"></i> Sí, Eliminar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends "core/panel_admin_base.html" %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'compras/css/compra.css' %}">
+{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item"><a href="{% url 'compras:lista_compras' %}">Compras</a></li>
+<li class="breadcrumb-item active" aria-current="page">Nueva compra</li>
+{% endblock %}
+
+{% block content %}
+  {% include "compras/formulario_crear_compra.html" %}
+{% endblock %}
+<script src="{% static 'compras/js/devoluciones.js' %}"></script>

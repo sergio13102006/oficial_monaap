@@ -1,0 +1,162 @@
+{% extends 'core/panel_admin_base.html' %}
+{%load sort_tags%}
+{% load static %}
+
+{% block title %}Compras{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item active" aria-current="page">Compras</li>
+{% endblock %}
+
+{% block page_icon %}<i class="bi bi-cart-check page-icon"></i>{% endblock %}
+{% block page_title %}Compras{% endblock %}
+{% block page_subtitle %}Gestion de compras y devoluciones{% endblock %}
+{% block page_actions %}
+<button
+  type="button"
+  class="btn-pill-dark"
+  data-modal-url="{% url 'compras:crear_devolucion_compra' %}"
+  data-modal-title="Registrar devolución de compra">
+  <i class="fas fa-plus"></i> Nueva devolución
+</button>
+
+<a href="#"
+  class="btn-pill-dark"
+  data-modal-url="{% url 'compras:crear_compra' %}"
+  data-modal-title="Nueva compra">
+  <i class="fas fa-plus"></i> Nueva compra
+</a>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'compras/css/compra.css' %}">
+<link rel="stylesheet" href="{% static 'compras/css/comprobante.css' %}">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid compras-container">
+
+  {% for message in messages %}
+    <div class="alert alert-success shadow-sm">{{ message }}</div>
+  {% endfor %}
+
+<div class="compras-topbar mb-4">
+  <div class="compras-topbar-main">
+    <h2 class="titulo-modulo mb-0">
+      <i class="bi bi-cart-check me-2"></i> {{ titulo_modulo }}
+    </h2>
+
+    <div class="total-card total-card-inline">
+      <span>{{ label_total }}</span>
+      <strong>${{ total_general|floatformat:2 }}</strong>
+    </div>
+  </div>
+
+  <div class="compras-topbar-actions">
+
+  </div>
+</div>
+
+<div class="module-filters-card compras-filter-card mb-4">
+<form method="get"
+      class="filtro-compras js-ajax-search-form"
+      data-ajax-url="{% url 'compras:lista_compras' %}"
+      data-ajax-target="#compras-resultados"
+      data-ajax-debounce="250">
+  <div class="filtro-compras-grid">
+
+    <div class="filtro-item filtro-item--tipo">
+      <label class="filtro-label">Tipo</label>
+      <select name="tipo" class="filtro-input">
+        <option value="compras" {% if tipo_actual == "compras" %}selected{% endif %}>Compras</option>
+        <option value="devoluciones" {% if tipo_actual == "devoluciones" %}selected{% endif %}>Devoluciones</option>
+      </select>
+    </div>
+
+    <div class="filtro-item filtro-item--estado">
+      <label class="filtro-label">Estado</label>
+      <select name="estado" class="filtro-input">
+        <option value="activas" {% if estado_actual == "activas" %}selected{% endif %}>Activas</option>
+        <option value="anuladas" {% if estado_actual == "anuladas" %}selected{% endif %}>Anuladas</option>
+        <option value="todas" {% if estado_actual == "todas" %}selected{% endif %}>Todas</option>
+      </select>
+    </div>
+
+    <div class="filtro-item filtro-item--fecha">
+      <label class="filtro-label">Fecha exacta</label>
+      <input type="date" name="fecha" class="filtro-input" value="{{ fecha_actual }}">
+    </div>
+
+    <div class="filtro-item filtro-item--desde">
+      <label class="filtro-label">Desde</label>
+      <input type="date" name="fecha_desde" class="filtro-input" value="{{ fecha_desde_actual }}">
+    </div>
+
+    <div class="filtro-item filtro-item--hasta">
+      <label class="filtro-label">Hasta</label>
+      <input type="date" name="fecha_hasta" class="filtro-input" value="{{ fecha_hasta_actual }}">
+    </div>
+
+    <div class="filtro-item filtro-item-busqueda">
+      <label class="filtro-label filtro-label-hidden">Buscar</label>
+      {% include 'core/componentes/busqueda_global.html' with placeholder=placeholder_busqueda search_value=q_actual name='q' modo='inline' %}
+    </div>
+
+    <div class="filtro-item filtro-botones">
+      <a href="{% url 'compras:lista_compras' %}?tipo={{ tipo_actual }}" class="btn-filtro btn-limpiar">
+        <i class="bi bi-arrow-clockwise me-1"></i> Limpiar
+      </a>
+    </div>
+  </div>
+</form>
+</div>
+
+<div id="compras-resultados" data-estado-actual="{{ estado_actual }}">
+  {% include "compras/lista_resultados_global.html" %}
+</div>
+
+<div class="modal fade" id="ajaxFormModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="ajaxFormModalTitle">Formulario</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+
+      <div class="modal-body" id="ajaxFormModalBody">
+        <div class="text-muted">Cargando...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{# ========================= MODAL DETALLE ========================= #}
+<div class="modal fade" id="modalDetalleCompra" tabindex="-1">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content modal-detalle-compra-shell">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalDetalleCompraTitle">Detalle de Compra</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+
+      <div class="modal-body p-0">
+        <div id="detalleCompraBody"></div>
+      </div>
+    </div>
+  </div>
+</div>
+{% include "compras/comprobante_compra.html" %}
+{% endblock %}
+
+{% block extra_js %}
+  {{ block.super }}
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"
+          integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg=="
+          crossorigin="anonymous"
+          referrerpolicy="no-referrer"></script>
+  <script src="{% static 'compras/js/compra.js' %}"></script>
+  <script src="{% static 'compras/js/comprobante.js' %}"></script>
+  <script src="{% static 'compras/js/devolucion.js' %}"></script>
+{% endblock %}

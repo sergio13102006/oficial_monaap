@@ -1,0 +1,516 @@
+﻿{% extends 'master.html' %}
+{% load static %}
+
+{% block title %}
+Servicios
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'core/css/index.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<div class="sq-page-reveal" data-mask-src="{% static 'core/IMG/silueta-mask.png' %}" aria-hidden="true">
+    <canvas class="sq-page-reveal-canvas"></canvas>
+</div>
+
+<section class="sq-hero-bg">
+
+    <!-- ==================== HERO ==================== -->
+    <section class="sq-hero" id="inicio">
+        <div class="sq-hero-inner">
+            <h1 class="visually-hidden">MONAKERATINA</h1>
+            <div class="sq-hero-brand-wrap" aria-hidden="true">
+                <img class="sq-hero-brand-image" src="{% static 'core/IMG/logo_monakeratina.jpg' %}" alt="Monakeratina">
+            </div>
+            <h2 >
+                Alisados y tratamientos capilares profesionales que cuidan tu cabello desde la raíz.
+            </h2>
+            <a href="#contactenos" class="sq-btn">Contáctenos</a>
+        </div>
+    </section>
+
+    <!-- ==================== INTRO ==================== -->
+    <section id="nosotros" class="sq-intro">
+        <div class="sq-container">
+            <header class="sq-section-head">
+                <span class="sq-section-eyebrow">Mona Keratina</span>
+                <h2 class="sq-section-title">Nosotros</h2>
+                <p class="sq-section-lead">
+                    Tratamientos capilares y alisados profesionales con enfoque en salud, técnica y resultados.
+                </p>
+            </header>
+
+            <div class="sq-intro-layout">
+                <div class="sq-intro-media" aria-hidden="true">
+                    <img class="sq-intro-photo primary" src="{% static 'core/IMG/img-sobrenosotros.jpg' %}" alt="">
+                    <img class="sq-intro-photo secondary" src="{% static 'core/IMG/img-sobrenosotros2.png' %}" alt="">
+                </div>
+
+                <div class="sq-intro-content">
+                    <h3 class="sq-intro-title">Sobre nosotros</h3>
+                    <p>
+                        En Mona Keratina somos un centro especializado en tratamientos capilares y alisados profesionales,
+                        con varios años de experiencia dedicados al cuidado y la salud del cabello. Trabajamos con productos
+                        de alta calidad y técnicas responsables para ofrecer resultados visibles, seguros y adaptados a cada tipo de cabello.
+                        <br><br>
+                        Contamos con sedes en Boyacá Duitama, Tunja y Sogamoso, donde acompañamos a cada persona en el proceso de transformar
+                        su cabello sin comprometer su bienestar.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== PROMOCIONES ==================== -->
+    <section class="sq-promotions" id="promociones">
+        <div class="sq-container">
+            <div class="sq-promotions-head">
+                <div>
+                    <span class="sq-promotions-eyebrow">Ofertas destacadas</span>
+                    <h2 class="sq-promotions-title">Promociones</h2>
+                </div>
+                <p class="sq-promotions-lead">
+                    Rediseñamos esta sección para que se sienta más premium, visual y dinámica, con cada promoción como protagonista.
+                </p>
+            </div>
+
+            {% if promociones %}
+                <div class="sq-promotions-stage" data-promotions-stage>
+                    <div class="sq-promotions-backdrop" aria-hidden="true">
+                        {% for promo in promociones %}
+                            <div class="sq-promotions-bg {% if forloop.first %}is-active{% endif %}" data-promo-bg data-index="{{ forloop.counter0 }}">
+                                {% if promo.imagen %}
+                                    <img src="{{ promo.imagen.url }}" alt="{{ promo.nombre }}">
+                                {% else %}
+                                    <div class="sq-promo-placeholder">
+                                        <i class="bi bi-stars"></i>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <div class="sq-promotions-shade" aria-hidden="true"></div>
+
+                    <div class="sq-promotions-head sq-promotions-head--inside">
+                        <div>
+                            <span class="sq-promotions-eyebrow">Ofertas destacadas</span>
+                            <h2 class="sq-promotions-title">Promociones</h2>
+                        </div>
+                    </div>
+
+                    <div class="sq-promotions-layout">
+                        <div class="sq-promotions-feature">
+                            {% for promo in promociones %}
+                                <article class="sq-promo-feature {% if forloop.first %}is-active{% endif %}" data-promo-panel data-index="{{ forloop.counter0 }}">
+                                    <span class="sq-promo-tag">{{ promo.get_etiqueta_display }}</span>
+                                    <span class="sq-promo-feature-kicker">Oferta activa</span>
+                                    <h3>{{ promo.nombre }}</h3>
+                                    <p>{{ promo.descripcion }}</p>
+                                    <div class="sq-promo-feature-meta">
+                                        <span class="sq-promo-discount">{{ promo.porcentaje_descuento }}% OFF</span>
+                                        <span class="sq-promo-counter">{{ forloop.counter|stringformat:"02d" }} / {{ promociones|length|stringformat:"02d" }}</span>
+                                    </div>
+                                    <a href="#contactenos" class="sq-promo-btn">Reservar ahora</a>
+                                </article>
+                            {% endfor %}
+                        </div>
+
+                        <div class="sq-promotions-rail">
+                            <div class="sq-promotions-rail-nav">
+                                <button class="sq-promotions-nav sq-promotions-nav--prev" type="button" aria-label="Promocion anterior" data-promotions-prev>
+                                    <i class="bi bi-arrow-left"></i>
+                                </button>
+                                <button class="sq-promotions-nav sq-promotions-nav--next" type="button" aria-label="Siguiente promocion" data-promotions-next>
+                                    <i class="bi bi-arrow-right"></i>
+                                </button>
+                            </div>
+
+                            <div class="sq-promotions-viewport" data-promotions-viewport>
+                                <div class="sq-promotions-track">
+                                    {% for promo in promociones %}
+                                        <article class="sq-promo-card-mini {% if forloop.first %}is-active{% endif %}" data-promo-card data-index="{{ forloop.counter0 }}">
+                                            <div class="sq-promo-card-mini-image">
+                                                {% if promo.imagen %}
+                                                    <img src="{{ promo.imagen.url }}" alt="{{ promo.nombre }}">
+                                                {% else %}
+                                                    <div class="sq-promo-placeholder">
+                                                        <i class="bi bi-stars"></i>
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                            <div class="sq-promo-card-mini-body">
+                                                <span class="sq-promo-card-mini-tag">{{ promo.get_etiqueta_display }}</span>
+                                                <h4>{{ promo.nombre }}</h4>
+                                            </div>
+                                        </article>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            
+                <div class="sq-promotions-showcase" data-promotions-carousel>
+                    <button class="sq-promotions-nav sq-promotions-nav--prev" type="button" aria-label="Promoción anterior" data-promotions-prev>
+                        <i class="bi bi-arrow-left"></i>
+                    </button>
+                    <button class="sq-promotions-nav sq-promotions-nav--next" type="button" aria-label="Siguiente promoción" data-promotions-next>
+                        <i class="bi bi-arrow-right"></i>
+                    </button>
+
+                    <div class="sq-promotions-viewport" data-promotions-viewport>
+                        <div class="sq-promotions-track">
+                            {% for promo in promociones %}
+                                <article class="sq-promo-spotlight" data-promo-card data-index="{{ forloop.counter0 }}">
+                                    <div class="sq-promo-image">
+                                        {% if promo.imagen %}
+                                            <img src="{{ promo.imagen.url }}" alt="{{ promo.nombre }}">
+                                        {% else %}
+                                            <div class="sq-promo-placeholder">
+                                                <i class="bi bi-stars"></i>
+                                            </div>
+                                        {% endif %}
+                                        <span class="sq-promo-tag">{{ promo.get_etiqueta_display }}</span>
+                                    </div>
+
+                                    <div class="sq-promo-content">
+                                        <div class="sq-promo-meta">
+                                            <span class="sq-promo-kicker">Experiencia Mona</span>
+                                            <span class="sq-promo-count">{{ forloop.counter|stringformat:"02d" }}</span>
+                                        </div>
+                                        <h3>{{ promo.nombre }}</h3>
+                                        <p>{{ promo.descripcion }}</p>
+                                        <div class="sq-promo-actions">
+                                            <a href="#contactenos" class="sq-promo-btn">Reservar ahora</a>
+                                            <span class="sq-promo-ghost">Agenda tu valoración</span>
+                                        </div>
+                                    </div>
+                                </article>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="sq-promotions-status">
+                        <div class="sq-promotions-progress" aria-hidden="true">
+                            <span class="sq-promotions-progress-bar" data-promotions-progress></span>
+                        </div>
+                        <div class="sq-promotions-counter">
+                            <span data-promotions-current>01</span>
+                            <span>/</span>
+                            <span data-promotions-total>{{ promociones|length|stringformat:"02d" }}</span>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+            <div class="sq-promotions-grid">
+                {% for promo in promociones %}
+                    <div class="sq-promo-card">
+                        {% if promo.imagen %}
+                            <div class="sq-promo-image">
+                                <img src="{{ promo.imagen.url }}" alt="{{ promo.nombre }}">
+                            </div>
+                        {% endif %}
+
+                        <span class="sq-promo-tag">{{ promo.get_etiqueta_display }}</span>
+                        <h3>{{ promo.nombre }}</h3>
+                        <p>{{ promo.descripcion }}</p>
+                        <a href="#contactenos" class="sq-promo-btn">Reservar ahora</a>
+                    </div>
+                {% empty %}
+                    <div class="sq-promo-card">
+                        <span class="sq-promo-tag">Pronto</span>
+                        <h3>Nuevas promociones en camino</h3>
+                        <p>Estamos preparando ofertas especiales para ti. ¡Vuelve pronto!</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+</section>
+
+<!-- ==================== SERVICIOS (TRACKS) ==================== -->
+<section class="sq-services-stage" id="infinite">
+    <div class="sq-tracks-wrapper sq-infinite">
+        <div class="sq-services-heading">
+            <span class="sq-services-eyebrow">Experiencia Mona</span>
+            <h2>Servicios</h2>
+        </div>
+
+        <!-- ===== TRACK 1 ===== -->
+        <div class="sq-track" id="track1">
+            {% for servicio in servicios %}
+                <div class="sq-card {% if not servicio.imagen %}no-image{% endif %} {% if servicio.video %}has-video{% endif %}"
+                     {% if servicio.imagen %}data-bg="{{ servicio.imagen.url }}"{% endif %}>
+
+                    <h3>{{ servicio.nombre }}</h3>
+                    <div class="sq-blur"></div>
+
+                    {% if servicio.video %}
+                        <div class="sw-play-hint">
+                            <i class="bi bi-play-fill"></i>
+                            <span>Click para reproducir</span>
+                        </div>
+                        <video class="sq-video" muted playsinline webkit-playsinline preload="metadata">
+                            <source src="{{ servicio.video.url }}" type="video/mp4">
+                        </video>
+                    {% endif %}
+
+                    {% if servicio.imagen %}
+                        <img src="{{ servicio.imagen.url }}" alt="{{ servicio.nombre }}" class="sq-card-image">
+                    {% endif %}
+
+                    {% if not servicio.imagen and not servicio.video %}
+                        <div class="metaballs-slot" data-metaballs="1" aria-label="Servicio sin multimedia"></div>
+
+                    {% elif not servicio.imagen and servicio.video %}
+                        <div class="media-placeholder">
+                            <div class="icon-row">
+                                <i class="bi bi-image"></i>
+                                <i class="bi bi-camera-video"></i>
+                            </div>
+                            <div class="hint">Sin imagen</div>
+                        </div>
+
+                    {% endif %}
+
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- ===== TRACK 2 (DUPLICADO PARA LOOP INFINITO) ===== -->
+        <div class="sq-track" id="track2">
+            {% for servicio in servicios %}
+                <div class="sq-card {% if not servicio.imagen %}no-image{% endif %} {% if servicio.video %}has-video{% endif %}"
+                     {% if servicio.imagen %}data-bg="{{ servicio.imagen.url }}"{% endif %}>
+
+                    <h3>{{ servicio.nombre }}</h3>
+                    <div class="sq-blur"></div>
+
+                    {% if servicio.video %}
+                        <div class="sw-play-hint">
+                            <i class="bi bi-play-fill"></i>
+                            <span>Click para reproducir</span>
+                        </div>
+                        <video class="sq-video" muted playsinline webkit-playsinline preload="metadata">
+                            <source src="{{ servicio.video.url }}" type="video/mp4">
+                        </video>
+                    {% endif %}
+
+                    {% if servicio.imagen %}
+                        <img src="{{ servicio.imagen.url }}" alt="{{ servicio.nombre }}" class="sq-card-image">
+                    {% endif %}
+
+                    {% if not servicio.imagen and not servicio.video %}
+                        <div class="metaballs-slot" data-metaballs="1" aria-label="Servicio sin multimedia"></div>
+
+                    {% elif not servicio.imagen and servicio.video %}
+                        <div class="media-placeholder">
+                            <div class="icon-row">
+                                <i class="bi bi-image"></i>
+                                <i class="bi bi-camera-video"></i>
+                            </div>
+                            <div class="hint">Sin imagen</div>
+                        </div>
+
+                    {% endif %}
+
+                </div>
+            {% endfor %}
+        </div>
+
+    </div>
+</section>
+
+<!-- ==================== PRODUCTOS ==================== -->
+<section class="sq-products" id="productos">
+    <h2 class="sq-products-title">Nuestros Productos</h2>
+
+    {% if productos_web %}
+        <div class="sq-products-grid">
+            {% for producto in productos_web %}
+                <div class="sq-product-card" data-aos="fade-up" tabindex="0" role="button" aria-label="Ver detalles de {{ producto.nombre }}" aria-pressed="false">
+                    <div class="sq-product-inner">
+                        <div class="sq-product-face sq-product-face--front">
+                            <div class="sq-product-media">
+                                {% if producto.imagen %}
+                                    <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}">
+                                {% else %}
+                                    <div class="sq-product-placeholder">
+                                        <i class="bi bi-box-seam"></i>
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="sq-product-info">
+                                <h3>{{ producto.nombre }}</h3>
+
+                                {% if producto.descripcion %}
+                                    <p class="sq-product-desc">{{ producto.descripcion|truncatewords:12 }}</p>
+                                {% endif %}
+
+                                <span class="sq-product-price">${{ producto.precio|floatformat:0 }}</span>
+                            </div>
+                        </div>
+
+                        <div class="sq-product-face sq-product-face--back" aria-hidden="true" {% if producto.imagen %}style="--product-bg: url('{{ producto.imagen.url }}')" {% endif %}>
+                            <div class="sq-product-back-head">
+                                <h3 class="sq-product-back-title">{{ producto.nombre }}</h3>
+                                <span class="sq-product-price">${{ producto.precio|floatformat:0 }}</span>
+                            </div>
+
+                            {% if producto.descripcion %}
+                                <p class="sq-product-back-desc">{{ producto.descripcion|linebreaksbr }}</p>
+                            {% else %}
+                                <p class="sq-product-back-desc sq-product-back-desc--muted">Sin descripción.</p>
+                            {% endif %}
+
+                            <div class="sq-product-back-hint">Click para volver</div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="sq-products-empty">
+            <p>Próximamente nuevos productos. ¡Mantente atento!</p>
+        </div>
+    {% endif %}
+</section>
+
+<!-- ==================== FINAL CTA ==================== -->
+<section class="sq-cta sq-contact sq-contact--video" id="contactenos">
+    <video class="sq-contact-video" autoplay muted loop playsinline aria-hidden="true">
+        <source src="{% static 'core/mp4/fondo_contactenos.mp4' %}" type="video/mp4">
+    </video>
+    <div class="sq-contact-wrapper">
+
+        <header class="sq-contact-header">
+            <span class="sq-contact-eyebrow">MONA KERATINA</span>
+            <h2>Agenda, visítanos o escríbenos</h2>
+            <p>
+                Somos un centro especializado en tratamientos capilares profesionales.
+                Nuestro equipo te asesora según tu tipo de cabello y tus objetivos.
+            </p>
+        </header>
+
+        <div class="sq-contact-layout">
+
+            <div class="sq-contact-info">
+                <div class="sq-contact-item">
+                    <h3>Sede principal</h3>
+                    <p>Duitama, Boyacá – Colombia</p>
+                </div>
+
+                <div class="sq-contact-item">
+                    <h3>Atención</h3>
+                    <p>
+                        Lunes a Sábado · 8:00 a.m. – 7:00 p.m.<br>
+                        Domingos y festivos · Con cita previa
+                    </p>
+                </div>
+
+                <div class="sq-contact-item">
+                    <h3>Contacto directo</h3>
+                    <p>WhatsApp: +57 3223328408</p>
+                </div>
+
+                <div class="sq-contact-item">
+                    <h3>Redes sociales</h3>
+                    <a href="https://www.instagram.com/monakeratinaduitama/" target="_blank" class="sq-contact-link">
+                        Instagram · @monakeratinaduitama
+                    </a>
+                    <a href="https://www.facebook.com/MonaKeratinaDuitama" target="_blank" class="sq-contact-link">
+                        Facebook · Mona Keratina Duitama
+                    </a>
+                </div>
+            </div>
+
+            <div class="sq-contact-cards" aria-label="Contacto rÃ¡pido">
+                <a class="sq-social-card is-whatsapp" href="https://wa.me/573223328408" target="_blank" rel="noopener">
+                    <div class="sq-social-card-icon">
+                        <i class="bi bi-whatsapp"></i>
+                    </div>
+                    <div class="sq-social-card-body">
+                        <h3>WhatsApp</h3>
+                        <p>EscrÃ­benos para agendar tu cita</p>
+                    </div>
+                    <span class="sq-social-card-cta">Chatear</span>
+                </a>
+
+                <a class="sq-social-card is-instagram" href="https://www.instagram.com/monakeratinaduitama/" target="_blank" rel="noopener">
+                    <div class="sq-social-card-icon">
+                        <i class="bi bi-instagram"></i>
+                    </div>
+                    <div class="sq-social-card-body">
+                        <h3>Instagram</h3>
+                        <p>@monakeratinaduitama</p>
+                    </div>
+                    <span class="sq-social-card-cta">Ver perfil</span>
+                </a>
+
+                <a class="sq-social-card is-facebook" href="https://www.facebook.com/MonaKeratinaDuitama" target="_blank" rel="noopener">
+                    <div class="sq-social-card-icon">
+                        <i class="bi bi-facebook"></i>
+                    </div>
+                    <div class="sq-social-card-body">
+                        <h3>Facebook</h3>
+                        <p>Mona Keratina Duitama</p>
+                    </div>
+                    <span class="sq-social-card-cta">Visitar</span>
+                </a>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- ==================== FOOTER ==================== -->
+<footer class="mona-footer">
+    <div class="footer-content">
+        <div class="footer-logo">
+            <span>MONA KERATINA</span>
+        </div>
+
+        <div class="footer-map" aria-label="Mapa de ubicaciÃ³n">
+            <iframe
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d387.6692098579932!2d-73.0329069!3d5.8266966!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8e6a3f55fe1d0cb5%3A0x2b2c27a99cc5efea!2sMona%20Keratina%20Duitama!5e0!3m2!1ses!2sco!4v1708800000000!5m2!1ses!2sco"
+                loading="lazy"
+                referrerpolicy="no-referrer-when-downgrade"
+                allowfullscreen=""
+                style="border:0; width:100%; height:100%;">
+            </iframe>
+        </div>
+
+        <div class="footer-info-grid">
+            <div class="footer-info-block">
+                <h4>Sede principal</h4>
+                <p>Duitama, Boyacá – Colombia</p>
+            </div>
+
+            <div class="footer-info-block">
+                <h4>Atención</h4>
+                <p>Lunes a Sábado · 8:00 a.m. – 7:00 p.m.<br>Domingos y festivos · Con cita previa</p>
+            </div>
+        </div>
+
+        <hr class="footer-divider">
+
+        <p class="copyright">
+            &copy; 2026 Mona Keratina Duitama. Todos los derechos reservados.
+        </p>
+    </div>
+</footer>
+
+{% endblock %}
+
+{% block footer %}{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'servicios_web/vendor/ogl.umd.js' %}"></script>
+<script src="{% static 'servicios_web/js/metaballs.js' %}"></script>
+<script src="{% static 'core/js/index.js' %}"></script>
+{% endblock %}

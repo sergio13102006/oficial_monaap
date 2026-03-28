@@ -1,0 +1,141 @@
+{% extends "core/panel_admin_base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <!-- ENCABEZADO -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="text-danger fw-bold">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                Eliminar Proveedor
+            </h2>
+            <p class="text-muted">
+                Esta acción es permanente y no se puede deshacer.
+            </p>
+        </div>
+    </div>
+
+    <!-- CARD -->
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-md-10">
+            <div class="card shadow-lg border-danger rounded-3">
+
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-trash-fill me-2"></i>
+                        Confirmación de Eliminación
+                    </h5>
+                </div>
+
+                <div class="card-body p-4">
+
+                    <!-- INFO PROVEEDOR -->
+                    <div class="alert alert-warning rounded-3 mb-4">
+                        <h6 class="fw-bold">
+                            <i class="bi bi-info-circle-fill me-2"></i>
+                            Proveedor seleccionado
+                        </h6>
+                        <p class="mb-1">
+                            <strong>Nombre:</strong>
+                            <span class="text-danger fw-bold">
+                                {{ proveedor.nombre_proveedor }}
+                            </span>
+                        </p>
+                        <p class="mb-0">
+                            <strong>NIT:</strong> {{ proveedor.nit }}
+                        </p>
+                    </div>
+
+                    <!-- ALERTA -->
+                    <div class="alert alert-danger rounded-3">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        <strong>Advertencia:</strong>
+                        Se eliminarán todos los datos relacionados con este proveedor.
+                    </div>
+
+                    <!-- FORM -->
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{% url 'proveedores:lista_proveedor' %}"
+                               class="btn btn-outline-secondary btn-lg rounded-pill">
+                                <i class="bi bi-arrow-left me-2"></i>Cancelar
+                            </a>
+
+                            <button type="button"
+                                    class="btn btn-danger btn-lg rounded-pill"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#modalConfirmarEliminacion">
+                                <i class="bi bi-trash-fill me-2"></i>Eliminar
+                            </button>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL -->
+    <div class="modal fade" id="modalConfirmarEliminacion" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow-lg rounded-3">
+
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        Confirmar eliminación
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white"
+                            data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body text-center p-4">
+                    <p class="fs-5">
+                        ¿Eliminar definitivamente al proveedor
+                        <strong class="text-danger">
+                            {{ proveedor.nombre_proveedor }}
+                        </strong>?
+                    </p>
+
+                    <div class="form-check mt-4 text-start">
+                        <input class="form-check-input"
+                               type="checkbox"
+                               id="checkConfirmar">
+                        <label class="form-check-label fw-bold">
+                            Confirmo que deseo eliminar este proveedor
+                        </label>
+                    </div>
+                </div>
+
+                <div class="modal-footer justify-content-between">
+                    <button type="button"
+                            class="btn btn-outline-secondary rounded-pill"
+                            data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+
+                    <form method="post" id="formEliminarProveedor">
+                        {% csrf_token %}
+                        <button type="submit"
+                                class="btn btn-danger btn-lg"
+                                id="btnConfirmarEliminacion">
+                            Sí, eliminar definitivamente
+                        </button>
+                    </form>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'proveedor/js/eliminar_proveedor.js' %}"></script>
+{% endblock %}

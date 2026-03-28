@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Recuperación de Contraseña</title>
+</head>
+<body style="margin:0; padding:0; background-color:#120b08; font-family: 'Segoe UI', Arial, sans-serif;">
+
+  <table width="100%" cellpadding="0" cellspacing="0">
+    <tr>
+      <td align="center" style="padding:40px 10px;">
+
+        <table width="600" cellpadding="0" cellspacing="0" style="
+          background-color:#f5f0e0;
+          border-radius:18px;
+          overflow:hidden;
+          box-shadow:0 12px 40px rgba(0,0,0,0.35);
+        ">
+
+          <!-- HEADER CAFÉ -->
+          <tr>
+            <td align="center" style="
+              background:linear-gradient(135deg,#1f1918,#3b2f2f);
+              padding:40px 30px;
+            ">
+              <h1 style="
+                color:#f5f0e0; 
+                margin:0 0 10px 0; 
+                letter-spacing:3px;
+                font-size:28px;
+                font-weight:700;
+              ">
+                🔐 MONA KERATINA
+              </h1>
+              <p style="
+                color:#cda89b; 
+                margin:0;
+                font-size:14px;
+                letter-spacing:1px;
+              ">
+                Código de verificación de seguridad
+              </p>
+            </td>
+          </tr>
+
+          <!-- CONTENIDO -->
+          <tr>
+            <td style="padding:40px; color:#3b2f2f;">
+
+              <p style="
+                font-size:16px; 
+                line-height:1.8;
+                margin-top:0;
+              ">
+                ¡Hola!<br><br>
+                Recibimos una solicitud para restablecer tu contraseña. 
+                Aquí te dejamos el <strong>CÓDIGO DE RECUPERACIÓN</strong>:
+              </p>
+
+              <div style="
+                margin:35px auto;
+                padding:30px;
+                text-align:center;
+                background:#ffffff;
+                border:3px solid #3b2f2f;
+                border-radius:14px;
+                font-size:42px;
+                font-weight:bold;
+                letter-spacing:8px;
+                color:#3b2f2f;
+                width:85%;
+                box-shadow:0 4px 12px rgba(59,47,47,0.15);
+              ">
+                {{ codigo }}
+              </div>
+
+              <div style="
+                background:#fef9f5;
+                border-left:5px solid #6d5c5c;
+                padding:15px;
+                border-radius:8px;
+                margin:20px 0;
+                font-size:14px;
+              ">
+                <strong style="color:#3b2f2f;">⏱️ Importante:</strong><br>
+                • Este código es válido por <strong>10 minutos</strong><br>
+                • No compartas este código con nadie<br>
+                • Si no solicitaste esto, ignora este correo
+              </div>
+
+              <p style="
+                font-size:15px; 
+                line-height:1.6;
+                color:#555;
+              ">
+                Ingresa este código en la página de recuperación para crear una nueva contraseña.
+              </p>
+
+              <p style="
+                margin-top:35px;
+                padding-top:20px;
+                border-top:1px solid #e0d9c8;
+                font-size:14px;
+                color:#6d5c5c;
+              ">
+                Saludos,<br>
+                <strong style="color:#1f1918;">Equipo Mona Keratina</strong>
+              </p>
+
+            </td>
+          </tr>
+
+          <!-- FOOTER -->
+          <tr>
+            <td align="center" style="
+              background:#3b2f2f;
+              color:#cda89b;
+              padding:20px;
+              font-size:12px;
+              line-height:1.6;
+            ">
+              © {{ year }} Mona Keratina · Todos los derechos reservados<br>
+              <span style="font-size:11px; color:#8b7a76;">Este es un correo automático, no respondas a este mensaje</span>
+            </td>
+          </tr>
+
+        </table>
+
+      </td>
+    </tr>
+  </table>
+
+</body>
+</html>

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MonApp - Recuperación de Usuario</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #F5F0E0;
+            margin: 0;
+            padding: 0;
+        }
+        .email-container {
+            max-width: 600px;
+            margin: 40px auto;
+            background: white;
+            border-radius: 14px;
+            box-shadow: 0 4px 20px rgba(59,47,47,0.15);
+            overflow: hidden;
+        }
+        .email-header {
+            background: #3B2F2F;
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        .email-header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 700;
+        }
+        .email-body {
+            padding: 40px 30px;
+            color: #333;
+            line-height: 1.6;
+        }
+        .email-body p {
+            margin: 15px 0;
+        }
+        .username-box {
+            background: #F5F0E0;
+            border: 2px solid #3B2F2F;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            margin: 25px 0;
+        }
+        .username-box .label {
+            font-size: 13px;
+            color: #6D5C5C;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+        .username-box .username {
+            font-size: 24px;
+            font-weight: 700;
+            color: #3B2F2F;
+            letter-spacing: 0.5px;
+        }
+        .btn-login {
+            display: inline-block;
+            background: #3B2F2F;
+            color: white !important;
+            text-decoration: none;
+            padding: 15px 40px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 15px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .btn-login:hover {
+            background: #6D5C5C;
+        }
+        .button-container {
+            text-align: center;
+            margin: 25px 0;
+        }
+        .email-footer {
+            background: #F5F0E0;
+            padding: 25px 30px;
+            text-align: center;
+            color: #6D5C5C;
+            font-size: 13px;
+            border-top: 1px solid #e0d9c8;
+        }
+        .info-box {
+            background: #e8f4fd;
+            border-left: 4px solid #3B2F2F;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+            font-size: 14px;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="email-header">
+            <h1>👤 Recuperación de Usuario</h1>
+        </div>
+        
+        <div class="email-body">
+            <p>Hola <strong>{{ user.get_full_name|default:user.username }}</strong>,</p>
+            
+            <p>Hemos recibido una solicitud para recuperar tu nombre de usuario en <strong>MONA KERATINA</strong>.</p>
+            
+            <p>Tu nombre de usuario es:</p>
+            
+            <div class="username-box">
+                <div class="label">Tu usuario</div>
+                <div class="username">{{ user.username }}</div>
+            </div>
+            
+            <div class="info-box">
+                <strong>💡 Consejo:</strong> Anota tu usuario en un lugar seguro para no olvidarlo.
+            </div>
+            
+            <p>Si no solicitaste esta información, puedes ignorar este correo de forma segura.</p>
+            
+            <p style="margin-top: 30px;">
+                Saludos,<br>
+                <strong>Equipo MONA KERATINA</strong>
+            </p>
+        </div>
+        
+        <div class="email-footer">
+            <p>
+                Este es un correo automático, por favor no respondas a este mensaje.
+            </p>
+            <p style="margin-top: 10px;">
+                © MONA KERATINA - Todos los derechos reservados ({{ year }})
+            </p>
+        </div>
+    </div>
+</body>
+</html>

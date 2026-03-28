@@ -1,0 +1,190 @@
+<form method="post" action="{{ action_url }}" enctype="multipart/form-data" class="producto-form" data-producto-codigo="{{ producto.codigo|default:'' }}">
+  {% csrf_token %}
+
+  <div class="pm-grid">
+
+    <!-- =========================
+         COLUMNA IZQUIERDA
+    ========================== -->
+    <section class="pm-col-stack">
+
+      <!-- Card: Información -->
+      <div class="pm-card">
+        <div class="pm-card-h">
+          <div>
+            <div class="pm-title">Información del producto</div>
+            <div class="pm-sub">Datos principales</div>
+          </div>
+        </div>
+
+        <div class="pm-card-b">
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label">Marca</label>
+              {{ form.marca }}
+            </div>
+
+            <div class="col-12">
+              <label class="form-label">Nombre del producto</label>
+              {{ form.nombre }}
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Precio</label>
+              <div class="input-group">
+                <span class="input-group-text">$</span>
+                {{ form.precio }}
+              </div>
+              <span class="pw-cop-preview mt-1" id="cop_preview_producto"></span>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Unidad</label>
+
+              <div class="select-pro">
+                {{ form.unidad_medida }}
+                <span class="select-icon">
+                  <i class="bi bi-chevron-down"></i>
+                </span>
+              </div>
+
+            </div>
+            <div class="col-12">
+              <label class="form-label">Descripción</label>
+              {{ form.descripcion }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card: Imagen (uploader) -->
+      <div class="pm-card">
+        <div class="pm-card-h">
+          <div class="pm-h-inline">
+            <div>
+              <div class="pm-title">Imagen del producto</div>
+              <div class="pm-sub">Sube una imagen desde tu equipo</div>
+            </div>
+            <span class="pm-pill">Archivo</span>
+          </div>
+        </div>
+
+        <div class="pm-card-b">
+          <ul class="nav nav-pills gap-2 mb-3" id="imgTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button class="nav-link active"
+                      data-bs-toggle="pill"
+                      data-bs-target="#tabArchivo"
+                      type="button"
+                      role="tab">
+                Archivo
+              </button>
+            </li>
+          </ul>
+
+          <div class="tab-content">
+            <!-- Archivo -->
+            <div class="tab-pane fade show active" id="tabArchivo" role="tabpanel">
+              <label for="id_imagen" class="dropzone-pro dropzone-pro-lg">
+                <div class="dz-icon">📷</div>
+                <div class="dz-title">Arrastra y suelta tu imagen aquí</div>
+                <div class="dz-subtitle">o haz clic para seleccionar (JPG, PNG, WEBP)</div>
+                <div class="dz-filename" id="dzFilename">Ningún archivo seleccionado</div>
+              </label>
+
+              <!-- input real oculto -->
+              <div class="d-none">
+                {{ form.imagen }}
+              </div>
+            </div>
+          </div>
+
+          
+          <div class="text-muted small mt-2" id="previewProductoImagenMsg"></div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- =========================
+         COLUMNA DERECHA
+    ========================== -->
+    <section class="pm-col-stack">
+
+      <!-- Card: Clasificación -->
+      <div class="pm-card">
+        <div class="pm-card-h">
+          <div>
+            <div class="pm-title">Clasificación</div>
+            <div class="pm-sub">Organización</div>
+          </div>
+        </div>
+
+        <div class="pm-card-b">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Línea</label>
+              {{ form.linea }}
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">Presentación</label>
+              {{ form.presentacion }}
+            </div>
+
+            <div class="col-12">
+              <label class="form-label d-block mb-2">Estado</label>
+
+              <!-- ✅ Pastilla Monaapp -->
+              <div class="estado-pill" id="estadoPill">
+                {{ form.activo }}
+                <button type="button" class="estado-opt" data-val="0">Inactivo</button>
+                <button type="button" class="estado-opt" data-val="1">Activo</button>
+              </div>
+
+              <div class="form-text mt-2">Activa o desactiva el producto sin borrarlo.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card: Vista previa (rellena debajo de Estado) -->
+      <div class="pm-card pm-grow">
+        <div class="pm-card-h">
+          <div>
+            <div class="pm-title">Vista previa</div>
+            <div class="pm-sub">Así se verá la imagen</div>
+          </div>
+        </div>
+
+        <div class="pm-card-b">
+          <div class="preview-frame">
+            <button type="button"
+                    class="img-preview-remove d-none"
+                    id="imgPreviewRemove"
+                    aria-label="Quitar imagen">
+              &times;
+            </button>
+
+            <img id="previewProductoImagen"
+                 data-initial-src="{% if producto and producto.imagen %}{{ producto.imagen.url }}{% endif %}"
+                 alt="Vista previa" />
+
+            <div class="preview-empty" id="previewEmpty">
+              <div class="preview-empty-icon">🖼️</div>
+              <div class="text-muted">Aún no hay imagen</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="mt-4 d-flex justify-content-end gap-2">
+    <button type="button" class="btn btn-light border px-4" data-bs-dismiss="modal">Cancelar</button>
+    <button type="submit" class="btn btn-primary px-4">{{ submit_label }}</button>
+  </div>
+
+</form>

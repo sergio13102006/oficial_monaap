@@ -1,0 +1,46 @@
+{% load static %}
+
+<div style="text-align: center; padding: 20px 0;">
+    <div style="width: 80px; height: 80px; border-radius: 50%; background: rgba(99, 76, 64, 0.1); margin: 0 auto 24px; display: flex; align-items: center; justify-content: center;">
+        <i class="bi bi-exclamation-triangle" style="font-size: 2.5rem; color: #d4a574;"></i>
+    </div>
+    
+    <h3 style="font-size: 1.5rem; font-weight: 600; color: #111; margin-bottom: 12px;">
+        ¿Desactivar Usuario?
+    </h3>
+    
+    <p style="font-size: 1rem; color: #666; margin-bottom: 28px;">
+        El usuario quedará inactivo y podrá reactivarse después.
+    </p>
+    
+    <div class="alert alert-warning" style="text-align: left; max-width: 100%; margin: 0 auto 24px;">
+        <i class="bi bi-person-fill" style="font-size: 1.2rem;"></i>
+        <div style="display: inline-block; margin-left: 10px;">
+            <strong style="font-size: 1.1rem; display: block; margin-bottom: 8px;">{{ usuario.get_full_name|default:usuario.username }}</strong>
+            {% if usuario.perfil and usuario.perfil.documento %}
+            <span style="display: block; opacity: 0.85; font-size: 0.95rem;">
+                <i class="bi bi-card-text" style="margin-right: 6px;"></i> {{ usuario.perfil.documento }}
+            </span>
+            {% endif %}
+            {% if usuario.groups.exists %}
+            <span style="display: block; opacity: 0.85; font-size: 0.95rem; margin-top: 4px;">
+                <i class="bi bi-shield-check" style="margin-right: 6px;"></i> {{ usuario.groups.first.name }}
+            </span>
+            {% endif %}
+            {% if usuario.email %}
+            <span style="display: block; opacity: 0.85; font-size: 0.95rem; margin-top: 4px;">
+                <i class="bi bi-envelope" style="margin-right: 6px;"></i> {{ usuario.email }}
+            </span>
+            {% endif %}
+        </div>
+    </div>
+
+    <div style="display: flex; gap: 12px; margin-top: 32px;">
+        <button type="button" class="btn btn-outline-secondary" style="flex: 1;" data-usuario-action="close-delete">
+            <i class="bi bi-x-lg"></i> Cancelar
+        </button>
+        <button type="button" class="btn btn-danger" style="flex: 1;" data-usuario-action="confirm-delete" data-usuario-id="{{ usuario.id }}">
+            <i class="bi bi-person-fill-dash"></i> Sí, Desactivar
+        </button>
+    </div>
+</div>

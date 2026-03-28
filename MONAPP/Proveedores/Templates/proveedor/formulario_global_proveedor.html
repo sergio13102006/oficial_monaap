@@ -1,0 +1,95 @@
+<form method="post"
+      action="{{ action_url }}"
+      id="proveedorForm"
+      class="proveedor-form"
+      data-proveedor-id="{{ form.instance.pk|default:'' }}"
+      data-proveedor-validar-url="{% url 'proveedores:validar_nombre_proveedor' %}">
+
+  {% csrf_token %}
+
+  <div class="container-fluid">
+
+    <h5 class="mb-4">
+      <i class="bi bi-truck me-2"></i>
+      Información del Proveedor
+    </h5>
+xx
+    <div class="row g-3">
+
+      <!-- NIT -->
+      <div class="col-md-4">
+        <label class="form-label">NIT</label>
+        <div class="proveedor-input-wrap">
+          {{ form.nit }}
+          <span class="proveedor-valid-icon"><i class="bi bi-check-lg"></i></span>
+          <span class="proveedor-invalid-icon"><i class="bi bi-exclamation-circle-fill"></i></span>
+        </div>
+        {% for e in form.nit.errors %}
+          <div class="proveedor-field-error">{{ e }}</div>
+        {% endfor %}
+      </div>
+
+      <!-- Nombre -->
+      <div class="col-md-8">
+        <label class="form-label">Nombre Proveedor</label>
+        <div class="proveedor-input-wrap">
+          {{ form.nombre_proveedor }}
+          <span class="proveedor-valid-icon"><i class="bi bi-check-lg"></i></span>
+          <span class="proveedor-invalid-icon"><i class="bi bi-exclamation-circle-fill"></i></span>
+        </div>
+        {% for e in form.nombre_proveedor.errors %}
+          <div class="proveedor-field-error">{{ e }}</div>
+        {% endfor %}
+      </div>
+
+      <!-- Teléfono -->
+      <div class="col-md-4">
+        <label class="form-label">Teléfono</label>
+        <div class="proveedor-input-wrap">
+          {{ form.telefono_proveedor }}
+          <span class="proveedor-valid-icon"><i class="bi bi-check-lg"></i></span>
+          <span class="proveedor-invalid-icon"><i class="bi bi-exclamation-circle-fill"></i></span>
+        </div>
+        {% for e in form.telefono_proveedor.errors %}
+          <div class="proveedor-field-error">{{ e }}</div>
+        {% endfor %}
+      </div>
+
+      <!-- Correo -->
+      <div class="col-md-4">
+        <label class="form-label">Correo</label>
+        <div class="proveedor-input-wrap">
+          {{ form.correo_proveedor }}
+          <span class="proveedor-valid-icon"><i class="bi bi-check-lg"></i></span>
+          <span class="proveedor-invalid-icon"><i class="bi bi-exclamation-circle-fill"></i></span>
+        </div>
+        {% for e in form.correo_proveedor.errors %}
+          <div class="proveedor-field-error">{{ e }}</div>
+        {% endfor %}
+      </div>
+
+      <!-- Dirección -->
+      <div class="col-12">
+        <label class="form-label">Dirección</label>
+        <div class="proveedor-input-wrap">
+          {{ form.direccion_proveedor }}
+          <span class="proveedor-valid-icon"><i class="bi bi-check-lg"></i></span>
+          <span class="proveedor-invalid-icon"><i class="bi bi-exclamation-circle-fill"></i></span>
+        </div>
+        {% for e in form.direccion_proveedor.errors %}
+          <div class="proveedor-field-error">{{ e }}</div>
+        {% endfor %}
+      </div>
+
+    </div>
+
+    <div class="d-flex justify-content-end mt-4">
+      <button type="submit"
+              class="btn-pill-dark proveedores-btn-addy"
+              id="btnGuardarProveedor">
+        Guardar proveedor
+      </button>
+    </div>
+
+  </div>
+</form>

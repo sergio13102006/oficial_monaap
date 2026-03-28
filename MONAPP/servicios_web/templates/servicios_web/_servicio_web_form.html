@@ -1,0 +1,153 @@
+<div class="product-form-card border-0 shadow-none m-0">
+    <form id="servicioWebForm"
+          method="post"
+          enctype="multipart/form-data"
+          data-is-edit="{% if servicio_web %}1{% else %}0{% endif %}"
+          data-servicio-id="{% if servicio_web %}{{ servicio_web.id_servicio_web }}{% endif %}"
+          action="{% if servicio_web %}{% url 'servicios_web:editar_servicio_web' servicio_web.id_servicio_web %}{% else %}{% url 'servicios_web:crear_servicio_web' %}{% endif %}">
+
+        {% csrf_token %}
+
+        <div class="row g-3">
+            <div class="col-md-12">
+                <div class="form-section-title">Información Básica</div>
+            </div>
+
+            <div class="col-md-8">
+                <label for="{{ form.nombre.id_for_label }}" class="form-label">
+                    {{ form.nombre.label }}
+                </label>
+                {{ form.nombre }}
+
+                {% if form.nombre.errors %}
+                    <div class="invalid-feedback d-block">
+                        {{ form.nombre.errors|striptags }}
+                    </div>
+                {% else %}
+                    <div class="invalid-feedback"></div>
+                {% endif %}
+            </div>
+
+            <div class="col-md-4">
+                <label for="{{ form.precio.id_for_label }}" class="form-label">
+                    {{ form.precio.label }}
+                </label>
+
+                <div class="input-group">
+                    <span class="input-group-text">$</span>
+                    {{ form.precio }}
+                </div>
+
+                {% if form.precio.errors %}
+                    <div class="invalid-feedback d-block">
+                        {{ form.precio.errors|striptags }}
+                    </div>
+                {% else %}
+                    <div class="invalid-feedback d-block"></div>
+                {% endif %}
+            </div>
+
+            <div class="col-12">
+                <label for="{{ form.descripcion.id_for_label }}" class="form-label">
+                    {{ form.descripcion.label }}
+                </label>
+                {{ form.descripcion }}
+
+                {% if form.descripcion.errors %}
+                    <div class="invalid-feedback d-block">
+                        {{ form.descripcion.errors|striptags }}
+                    </div>
+                {% else %}
+                    <div class="invalid-feedback"></div>
+                {% endif %}
+            </div>
+
+            <div class="col-md-12 mt-4">
+                <div class="form-section-title">Multimedia</div>
+            </div>
+
+            <div class="col-md-6">
+                <label for="{{ form.imagen.id_for_label }}" class="form-label">
+                    {{ form.imagen.label }}
+                </label>
+                {{ form.imagen }}
+
+                {% if form.imagen.errors %}
+                    <div class="invalid-feedback d-block">
+                        {{ form.imagen.errors|striptags }}
+                    </div>
+                {% else %}
+                    <div class="invalid-feedback"></div>
+                {% endif %}
+
+                <div class="form-text">
+                    Imagen principal para la tarjeta del servicio (opcional).
+                </div>
+
+                {% if servicio_web and servicio_web.imagen %}
+                    <div class="mt-2">
+                        <small class="text-muted">
+                            Imagen actual: {{ servicio_web.imagen.name }}
+                        </small>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="col-md-6">
+                <label for="{{ form.video.id_for_label }}" class="form-label">
+                    {{ form.video.label }}
+                </label>
+                {{ form.video }}
+
+                {% if form.video.errors %}
+                    <div class="invalid-feedback d-block">
+                        {{ form.video.errors|striptags }}
+                    </div>
+                {% else %}
+                    <div class="invalid-feedback"></div>
+                {% endif %}
+
+                <div class="form-text">
+                    Video opcional. Máximo 20 segundos.
+                </div>
+
+                {% if servicio_web and servicio_web.video %}
+                    <div class="mt-2">
+                        <small class="text-muted">
+                            Video actual: {{ servicio_web.video.name }}
+                        </small>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="col-md-6 mt-3">
+                <div class="form-check form-switch">
+                    {{ form.activo }}
+                    <label class="form-check-label" for="{{ form.activo.id_for_label }}">
+                        Servicio Activo
+                    </label>
+                </div>
+                <div class="form-text">
+                    Si está inactivo, no se mostrará en la página web.
+                </div>
+            </div>
+        </div>
+
+        <div class="form-actions border-top pt-3 mt-4 d-flex justify-content-end gap-2">
+            {% if is_modal %}
+                <button type="button" class="btn btn-secondary btn-cancel" data-bs-dismiss="modal">
+                    Cancelar
+                </button>
+            {% else %}
+                <a href="{% url 'servicios_web:lista_servicios_web' %}" class="btn btn-secondary btn-cancel">
+                    Cancelar
+                </a>
+            {% endif %}
+
+            <button type="submit" id="btnGuardarServicioWeb" class="btn btn-primary btn-save text-white" disabled>
+                <i class="bi bi-check-lg me-1"></i>
+                {% if servicio_web %}Actualizar{% else %}Guardar{% endif %} Servicio
+            </button>
+        </div>
+    </form>
+</div>

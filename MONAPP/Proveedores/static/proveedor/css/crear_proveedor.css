@@ -1,0 +1,556 @@
+/* ===============================
+   CONTENEDOR GENERAL
+================================ */
+.proveedor-form {
+    max-width: 1200px;
+    margin: auto;
+}
+
+/* ===============================
+   HEADER
+================================ */
+.proveedor-header {
+    background: #6c757d;
+    padding: 9px 10px;
+    border-radius: 6px;
+    margin-bottom: 10px;
+}
+
+.proveedor-header h2 {
+    margin: 0;
+    font-weight: 600;
+    color: #fff;
+}
+
+/* ===============================
+   CARDS
+================================ */
+.proveedor-card {
+    background: #ffffff;
+    border-radius: 6px;
+    padding: 15px 23px;
+    box-shadow: 0 3px 15px rgba(0, 0, 0, .06);
+    margin-bottom: 15px;
+}
+
+.proveedor-card .card-title {
+    font-size: 11px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #495057;
+}
+
+/* ===============================
+   GRID FORM
+================================ */
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+}
+
+.form-grid .full {
+    grid-column: span 3;
+}
+
+.form-grid label {
+    font-size: 12px;
+    font-weight: 500;
+    margin-bottom: 3px;
+    display: block;
+    color: #495057;
+}
+
+.form-grid input,
+.form-grid select {
+    width: 100%;
+    border-radius: 16px;
+    padding: 3px 5px;
+    border: 1px solid #d6cfc9;
+    font-size: 12px;
+}
+
+/* ===============================
+   AUTOCOMPLETE FIX (NIT)
+================================ */
+.ui-autocomplete {
+    background: #fff !important;
+    border-radius: 3px;
+    box-shadow: 0 5px 30px rgba(0, 0, 0, .15);
+    border: none;
+    overflow: hidden;
+}
+
+.ui-autocomplete li {
+    padding: 3px 6px;
+    cursor: pointer;
+}
+
+.ui-autocomplete li:hover {
+    background: #f3ede9;
+}
+
+/* ===============================
+   BOTONES
+================================ */
+.proveedor-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 5px;
+    margin-top: 30px;
+}
+
+.btn-guardar {
+    background: #198754;
+    color: #fff;
+    border: none;
+    padding: 3px 15px;
+    border-radius: 995px;
+    font-weight: 600;
+}
+
+.btn-guardar:hover {
+    background: #157347;
+}
+
+.btn-cancelar {
+    background: #6c757d;
+    color: #fff;
+    padding: 3px 15px;
+    border-radius: 995px;
+    text-decoration: none;
+}
+
+.proveedor-form .btn,
+.ultra-modal .btn {
+    border-radius: 16px;
+}
+
+/* =========================================
+   VALIDACION VISUAL EXACTA TIPO SERVICIOS
+========================================= */
+
+.proveedor-input-wrap {
+    position: relative;
+}
+
+.proveedor-input-wrap input,
+.proveedor-input-wrap select,
+.proveedor-input-wrap textarea,
+.proveedor-input-wrap .form-control,
+.proveedor-input-wrap .form-select {
+    width: 100%;
+    padding-right: 2.6rem !important;
+    transition: border-color .2s ease, box-shadow .2s ease, background-color .2s ease;
+    background-image: none !important;
+    border-radius: 16px !important;
+}
+
+/* QUITAR ICONOS NATIVOS DE BOOTSTRAP */
+.proveedor-input-wrap input.is-valid,
+.proveedor-input-wrap input.is-invalid,
+.proveedor-input-wrap select.is-valid,
+.proveedor-input-wrap select.is-invalid,
+.proveedor-input-wrap textarea.is-valid,
+.proveedor-input-wrap textarea.is-invalid,
+.proveedor-input-wrap .form-control.is-valid,
+.proveedor-input-wrap .form-control.is-invalid,
+.proveedor-input-wrap .form-select.is-valid,
+.proveedor-input-wrap .form-select.is-invalid {
+    background-image: none !important;
+}
+
+/* ICONOS */
+.proveedor-valid-icon,
+.proveedor-invalid-icon {
+    position: absolute;
+    right: 0.85rem;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 5;
+    pointer-events: none;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    line-height: 1;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+.proveedor-input-wrap textarea ~ .proveedor-valid-icon,
+.proveedor-input-wrap textarea ~ .proveedor-invalid-icon {
+    top: 1rem;
+    transform: none;
+}
+
+.proveedor-valid-icon i {
+    font-size: 1.2rem !important;
+    line-height: 1 !important;
+    color: #198754 !important;
+    -webkit-text-fill-color: #198754 !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+}
+
+.proveedor-invalid-icon i {
+    font-size: 1rem !important;
+    line-height: 1 !important;
+    color: #dc3545 !important;
+    -webkit-text-fill-color: #dc3545 !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+}
+
+/* ===== ESTADO VALIDO ===== */
+.proveedor-input-wrap input.is-valid,
+.proveedor-input-wrap select.is-valid,
+.proveedor-input-wrap textarea.is-valid,
+.proveedor-input-wrap .form-control.is-valid,
+.proveedor-input-wrap .form-select.is-valid,
+.proveedor-input-wrap.is-ok input,
+.proveedor-input-wrap.is-ok select,
+.proveedor-input-wrap.is-ok textarea,
+.proveedor-input-wrap.is-ok .form-control,
+.proveedor-input-wrap.is-ok .form-select {
+    border: 2px solid #198754 !important;
+    background-color: #ffffff !important;
+    box-shadow: none !important;
+    color: #212529 !important;
+    -webkit-text-fill-color: #212529 !important;
+}
+
+.proveedor-input-wrap input.is-valid:focus,
+.proveedor-input-wrap select.is-valid:focus,
+.proveedor-input-wrap textarea.is-valid:focus,
+.proveedor-input-wrap .form-control.is-valid:focus,
+.proveedor-input-wrap .form-select.is-valid:focus,
+.proveedor-input-wrap.is-ok input:focus,
+.proveedor-input-wrap.is-ok select:focus,
+.proveedor-input-wrap.is-ok textarea:focus,
+.proveedor-input-wrap.is-ok .form-control:focus,
+.proveedor-input-wrap.is-ok .form-select:focus {
+    border-color: #198754 !important;
+    box-shadow: 0 0 0 0.2rem rgba(25, 135, 84, 0.15) !important;
+}
+
+.proveedor-input-wrap input.is-valid ~ .proveedor-valid-icon,
+.proveedor-input-wrap select.is-valid ~ .proveedor-valid-icon,
+.proveedor-input-wrap textarea.is-valid ~ .proveedor-valid-icon,
+.proveedor-input-wrap .form-control.is-valid ~ .proveedor-valid-icon,
+.proveedor-input-wrap .form-select.is-valid ~ .proveedor-valid-icon,
+.proveedor-input-wrap.is-ok .proveedor-valid-icon {
+    display: inline-flex !important;
+}
+
+/* OCULTAR ERROR SI ESTA VALIDO */
+.proveedor-input-wrap input.is-valid ~ .proveedor-invalid-icon,
+.proveedor-input-wrap select.is-valid ~ .proveedor-invalid-icon,
+.proveedor-input-wrap textarea.is-valid ~ .proveedor-invalid-icon,
+.proveedor-input-wrap .form-control.is-valid ~ .proveedor-invalid-icon,
+.proveedor-input-wrap .form-select.is-valid ~ .proveedor-invalid-icon,
+.proveedor-input-wrap.is-ok .proveedor-invalid-icon {
+    display: none !important;
+}
+
+/* ===== ESTADO INVALIDO ===== */
+.proveedor-input-wrap input.is-invalid,
+.proveedor-input-wrap select.is-invalid,
+.proveedor-input-wrap textarea.is-invalid,
+.proveedor-input-wrap .form-control.is-invalid,
+.proveedor-input-wrap .form-select.is-invalid,
+.proveedor-input-wrap.is-error input,
+.proveedor-input-wrap.is-error select,
+.proveedor-input-wrap.is-error textarea,
+.proveedor-input-wrap.is-error .form-control,
+.proveedor-input-wrap.is-error .form-select,
+.proveedor-input-wrap.has-error input,
+.proveedor-input-wrap.has-error select,
+.proveedor-input-wrap.has-error textarea,
+.proveedor-input-wrap.has-error .form-control,
+.proveedor-input-wrap.has-error .form-select {
+    border: 2px solid #dc3545 !important;
+    background-color: #ffffff !important;
+    box-shadow: none !important;
+    color: #212529 !important;
+    -webkit-text-fill-color: #212529 !important;
+}
+
+.proveedor-input-wrap input.is-invalid:focus,
+.proveedor-input-wrap select.is-invalid:focus,
+.proveedor-input-wrap textarea.is-invalid:focus,
+.proveedor-input-wrap .form-control.is-invalid:focus,
+.proveedor-input-wrap .form-select.is-invalid:focus,
+.proveedor-input-wrap.is-error input:focus,
+.proveedor-input-wrap.is-error select:focus,
+.proveedor-input-wrap.is-error textarea:focus,
+.proveedor-input-wrap.is-error .form-control:focus,
+.proveedor-input-wrap.is-error .form-select:focus,
+.proveedor-input-wrap.has-error input:focus,
+.proveedor-input-wrap.has-error select:focus,
+.proveedor-input-wrap.has-error textarea:focus,
+.proveedor-input-wrap.has-error .form-control:focus,
+.proveedor-input-wrap.has-error .form-select:focus {
+    border-color: #dc3545 !important;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.15) !important;
+}
+
+.proveedor-input-wrap input.is-invalid ~ .proveedor-invalid-icon,
+.proveedor-input-wrap select.is-invalid ~ .proveedor-invalid-icon,
+.proveedor-input-wrap textarea.is-invalid ~ .proveedor-invalid-icon,
+.proveedor-input-wrap .form-control.is-invalid ~ .proveedor-invalid-icon,
+.proveedor-input-wrap .form-select.is-invalid ~ .proveedor-invalid-icon,
+.proveedor-input-wrap.is-error .proveedor-invalid-icon,
+.proveedor-input-wrap.has-error .proveedor-invalid-icon {
+    display: inline-flex !important;
+}
+
+/* OCULTAR CHULO SI ESTA INVALIDO */
+.proveedor-input-wrap input.is-invalid ~ .proveedor-valid-icon,
+.proveedor-input-wrap select.is-invalid ~ .proveedor-valid-icon,
+.proveedor-input-wrap textarea.is-invalid ~ .proveedor-valid-icon,
+.proveedor-input-wrap .form-control.is-invalid ~ .proveedor-valid-icon,
+.proveedor-input-wrap .form-select.is-invalid ~ .proveedor-valid-icon,
+.proveedor-input-wrap.is-error .proveedor-valid-icon,
+.proveedor-input-wrap.has-error .proveedor-valid-icon {
+    display: none !important;
+}
+
+/* TEXTO DE ERROR */
+.proveedor-field-error,
+.text-danger.small {
+    display: block;
+    margin-top: 0.4rem;
+    color: #dc3545 !important;
+    font-size: 0.875rem !important;
+    font-weight: 500;
+    line-height: 1.25;
+}
+
+.proveedor-field-error ul,
+.text-danger.small ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.proveedor-field-error li,
+.text-danger.small li {
+    margin: 0;
+}
+
+/* ==========================================
+   MODAL AJAX PROVEEDOR - ESTILO MONA
+========================================== */
+.ultra-modal .modal-dialog {
+    max-width: 1150px;
+}
+
+.ultra-modal .modal-content.ultra-card {
+    border: none;
+    border-radius: 18px;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, .18);
+}
+
+/* HEADER OSCURO COMO LA CAPTURA */
+.ultra-modal .ultra-header {
+    background: linear-gradient(90deg, #2a0703 0%, #402019 38%, #5a3529 70%, #6f4938 100%);
+    padding: 18px 24px;
+    border-bottom: none;
+    min-height: 68px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.ultra-modal .ultra-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    background: transparent;
+    border: 1.5px solid rgba(255, 255, 255, .75);
+    flex-shrink: 0;
+}
+
+.ultra-modal .ultra-icon i {
+    font-size: 16px;
+    line-height: 1;
+    color: #fff;
+}
+
+.ultra-modal .ultra-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.1;
+    margin: 0;
+}
+
+.ultra-modal .ultra-subtitle {
+    font-size: 12px;
+    color: rgba(255, 255, 255, .78);
+    margin-top: 2px;
+    line-height: 1.2;
+}
+
+/* BOTÓN CERRAR BLANCO */
+.ultra-modal .btn-close-white,
+.ultra-modal .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+    opacity: .95;
+    box-shadow: none !important;
+}
+
+.ultra-modal .btn-close:hover {
+    opacity: 1;
+    transform: scale(1.03);
+}
+
+/* CUERPO */
+.ultra-modal .modal-body {
+    background: #ffffff;
+    padding: 24px 26px !important;
+}
+
+/* FOOTER OPCIONAL */
+.ultra-modal .modal-footer {
+    border-top: 1px solid #f0e8e2;
+    padding: 16px 24px 22px;
+    background: #fff;
+}
+
+/* ==========================================
+   TOP DEL FORMULARIO DENTRO DEL MODAL
+========================================== */
+.proveedor-form-top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.proveedor-form-top-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: #f4ece7;
+    color: #5d3b2e;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.proveedor-form-top-icon i {
+    font-size: 18px;
+}
+
+.proveedor-form-title {
+    font-weight: 700;
+    color: #382822;
+}
+
+/* ==============================
+   ANIMACIÓN BOTÓN CERRAR MODAL
+============================== */
+.ultra-modal .btn-close,
+.proveedor-detail-header .btn-close {
+    transition: transform 0.28s ease, opacity 0.2s ease;
+    transform-origin: center;
+}
+
+.ultra-modal .btn-close:hover,
+.proveedor-detail-header .btn-close:hover {
+    transform: rotate(90deg) scale(1.08);
+    opacity: 1;
+}
+
+/* ===============================
+   RESPONSIVE
+================================ */
+@media (max-width: 1199.98px) {
+    .ultra-modal .modal-dialog {
+        max-width: 96vw;
+        margin: 1rem auto;
+    }
+}
+
+@media (max-width: 991.98px) {
+    .proveedor-form {
+        max-width: 100%;
+    }
+
+    .proveedor-card {
+        padding: 14px;
+    }
+
+    .form-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .form-grid .full {
+        grid-column: span 2;
+    }
+
+    .ultra-modal .modal-body {
+        padding: 16px !important;
+    }
+
+    .proveedor-actions {
+        margin-top: 16px;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .container-fluid {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .form-grid .full {
+        grid-column: span 1;
+    }
+
+    .proveedor-actions {
+        justify-content: stretch;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .proveedor-actions .btn-guardar,
+    .proveedor-actions .btn-cancelar {
+        width: 100%;
+        text-align: center;
+    }
+
+    .ultra-modal .modal-dialog {
+        max-width: calc(100vw - 12px);
+        margin: 6px auto;
+    }
+
+    .ultra-modal .ultra-header {
+        padding: 14px 14px;
+        min-height: 60px;
+    }
+
+    .ultra-modal .modal-body {
+        padding: 12px !important;
+    }
+}

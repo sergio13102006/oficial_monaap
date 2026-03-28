@@ -1,0 +1,194 @@
+<div class="container-fluid px-4 py-4">
+{% if es_edicion %}
+<span id="itemsActualesData" data-items="{{ items_actuales_json|escapejs }}" style="display:none"></span>
+{% endif %}
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form method="post" novalidate id="formCrearVenta">
+                {% csrf_token %}
+
+                <div class="row g-3">
+
+                    <!-- CLIENTE -->
+                    <div class="col-md-6">
+                        <label class="form-label">Cliente</label>
+                        {{ form.cliente }}
+                    </div>
+
+                   <label class="form-label">Tipo</label>
+
+                    <!-- TIPO DE VENTA -->
+                        <!-- Producto-->
+                    <div class="d-flex gap-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="tipo_item" id="tipo_producto" value="producto">
+                            <label class="form-check-label">Producto</label>
+                        </div>
+                    
+                        <!-- SERVICIO -->
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="tipo_item" id="tipo_servicio" value="servicio">
+                            <label class="form-check-label">Servicio</label>
+                        </div>
+                    </div>
+
+                    <!-- PRODUCTO -->
+                    <div class="col-md-6 d-none" id="grupoProducto">
+                        <label class="form-label">Producto</label>
+                        <select
+                            id="id_producto"
+                            class="form-select"
+                        >
+                            <option value="">Seleccione un producto</option>
+                            {% for item in productos_stock %}
+                                <option 
+                                    value="{{ item.producto.codigo }}"
+                                    data-precio="{{ item.producto.precio }}"
+                                    data-stock="{{ item.stock }}"
+                                >
+                                    {{ item.producto.codigo }} - {{ item.producto.nombre }}
+                                </option>
+
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <!-- SERVICIO -->
+                    <div class="col-md-6 d-none" id="grupoServicio">
+                        <label class="form-label">Servicio</label>
+                        <select
+                            id="id_servicio"
+                            class="form-select">
+                            <option value="">Seleccione un servicio</option>
+                            {% for s in servicios %}
+                                <option
+                                    value="{{ s.id_servicio }}"
+                                    data-precio="{{ s.precio }}"
+                                >
+                                    {{ s.nombre }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                                        <!-- PERSONAL -->
+                    <div class="col-md-6 d-none" id="grupoPersonal">
+                        <label class="form-label">Persona que realizó el servicio</label>
+                        <select
+                            id="id_personal"
+                            class="form-select"
+                        >
+                            <option value="">Seleccione personal</option>
+                            {% for p in personal %}
+                                <option value="{{ p.id }}">
+                                    {{ p.nombres }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- STOCK INFO -->
+                    <div class="col-12">
+                        <small id="stockInfo" class="text-muted d-none"></small>
+                    </div>
+
+
+                    <!-- CANTIDAD -->
+                    <div class="col-md-4"  id="grupoCantidad">
+                        <label class="form-label">Cantidad</label>
+                        <input 
+                            type="number"
+                            id="id_cantidad"
+                            class="form-control"
+                            min="1"
+                        >
+                        <small id="cantidadError" class="text-danger d-none">
+                            No hay suficientes unidades en stock
+                        </small>
+                    </div>
+
+                     <!-- BOTÓN AGREGAR ITEM -->
+                    <div class="col-12">
+                        <button
+                            type="button"
+                            id="btnAgregarItem"
+                            class="btn btn-agregar-verde btn-sm mt-2"
+                            disabled
+                        >
+                            <i class="fas fa-plus me-1"></i> Nuevo producto / servicio
+                        </button>
+                    </div>
+
+
+                    <!-- PRECIO UNITARIO -->
+                    <div class="col-md-4">
+                        <label class="form-label">Precio unitario</label>
+                        <input 
+                        type="number"
+                        id="id_precio_unitario"
+                        class="form-control"
+                        readonly
+                    >
+                    </div>
+
+                    <!-- SUBTOTAL -->
+                    <div class="col-md-4">
+                        <label class="form-label">Subtotal</label>
+                        <input
+                            type="number"
+                            id="id_subtotal"
+                            class="form-control"
+                            readonly
+                            tabindex="-1"
+                        >
+                    </div>
+
+                </div>
+
+                <hr>
+
+                <h6>Detalle de la venta</h6>
+
+                <div class="table-card">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0 styled-table" id="tablaItems">
+                    <thead>
+                        <tr>
+                            <th>Producto / Servicio</th>
+                            <th class="text-end">Precio</th>
+                            <th class="text-center">Cantidad</th>
+                            <th class="text-end">Subtotal</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+                <input type="hidden" name="items" id="itemsInput">
+
+                <div class="text-end fw-bold">
+                    Total: $<span id="totalVenta">0.00</span>
+                </div>
+
+
+                <div class="d-flex justify-content-end gap-2 mt-4">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+                    <button
+                        id="btnGuardarVenta"
+                        type="submit"
+                        class="btn btn-guardar-venta"
+                        disabled
+                    >
+                        Guardar venta
+                    </button>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+
+</div>

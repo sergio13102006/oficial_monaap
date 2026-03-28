@@ -1,0 +1,24 @@
+<div class="search-toggle-wrapper {% if modo == 'inline' %}busqueda-global--inline{% endif %}{% if search_value %} is-open{% endif %}">
+  <button
+    type="button"
+    class="btn-search-toggle"
+    aria-label="{% if search_value %}Cerrar búsqueda{% else %}Buscar{% endif %}"
+    title="{% if search_value %}Cerrar búsqueda{% else %}Buscar{% endif %}"
+    aria-expanded="{% if search_value %}true{% else %}false{% endif %}">
+    <span class="icon-wrapper">
+      <i class="bi bi-search search-icon" aria-hidden="true"></i>
+      <i class="bi bi-x-lg close-icon" aria-hidden="true"></i>
+    </span>
+  </button>
+
+  <div class="search-toggle-box {% if search_value %}is-open{% endif %}">
+    <input
+      type="text"
+      name="{{ name|default:'q' }}"
+      class="search-toggle-input"
+      value="{{ search_value|default_if_none:'' }}"
+      placeholder="{{ placeholder|default:'Buscar...' }}"
+      aria-label="{{ placeholder|default:'Buscar...' }}"
+      autocomplete="off">
+  </div>
+</div>

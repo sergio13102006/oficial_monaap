@@ -1,0 +1,14 @@
+{% extends "core/panel_admin_base.html" %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item"><a href="{% url 'proveedores:lista_proveedor' %}">Proveedores</a></li>
+<li class="breadcrumb-item active" aria-current="page">Nuevo proveedor</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <h3 class="mb-3">Nuevo proveedor</h3>
+
+  {% include "proveedor/formulario_global_proveedor.html" %}
+</div>
+{% endblock %}

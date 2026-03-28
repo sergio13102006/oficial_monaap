@@ -1,0 +1,277 @@
+{% load humanize %}
+{% load ventas_extras %}
+
+<div class="container-fluid">
+
+  {# ── TARJETAS DE TOTALES ── #}
+  {% if incluir_total %}
+  <div class="row g-3 mb-4">
+    <div class="{% if comparativo %}col-md-6{% else %}col-md-4{% endif %}">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-body">
+          <h6 class="text-muted mb-1">Total rango principal</h6>
+          <h4 class="mb-0 text-success">$ {{ total_principal|floatformat:2|intcomma }}</h4>
+          <small class="text-muted">{{ fecha_inicio }} — {{ fecha_fin }}</small>
+        </div>
+      </div>
+    </div>
+    {% if comparativo %}
+    <div class="col-md-6">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-body">
+          <h6 class="text-muted mb-1">Total rango comparativo</h6>
+          <h4 class="mb-0 text-primary">$ {{ total_comparativo|floatformat:2|intcomma }}</h4>
+          <small class="text-muted">{{ fecha_inicio_comp }} — {{ fecha_fin_comp }}</small>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  {% if comparativo %}
+  {# ══ TABLA COMPARATIVA UNIFICADA (día a día) ══ #}
+  <div class="card shadow-sm border-0 mb-4">
+    <div class="card-body">
+      <div class="d-flex align-items-center gap-2 mb-3 flex-wrap">
+        <h5 class="mb-0">Comparativo por día</h5>
+        <span class="badge bg-success bg-opacity-10 text-success border border-success-subtle px-2">
+          Principal: {{ fecha_inicio }} — {{ fecha_fin }}
+        </span>
+        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle px-2">
+          Comparativo: {{ fecha_inicio_comp }} — {{ fecha_fin_comp }}
+        </span>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover table-bordered align-middle mb-0 text-center">
+          <thead>
+            <tr class="table-dark">
+              <th rowspan="2" class="align-middle">#</th>
+              <th colspan="2" class="text-success border-end">Rango principal</th>
+              <th colspan="2" class="text-info">Rango comparativo</th>
+              <th rowspan="2" class="align-middle">Variación</th>
+            </tr>
+            <tr class="table-secondary">
+              <th class="text-success-emphasis">Fecha</th>
+              <th class="text-success-emphasis border-end">Total</th>
+              <th class="text-primary-emphasis">Fecha</th>
+              <th class="text-primary-emphasis">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% with maxlen=grafica_principal_labels|length %}
+            {% if grafica_principal_labels or grafica_comp_labels %}
+              {% for p_label in grafica_principal_labels %}
+                {% with forloop_counter=forloop.counter0 p_val=grafica_principal_data|index:forloop.counter0 c_label=grafica_comp_labels|index:forloop.counter0 c_val=grafica_comp_data|index:forloop.counter0 %}
+                <tr>
+                  <td class="text-muted small">{{ forloop.counter }}</td>
+                  <td class="text-success-emphasis fw-semibold">{{ p_label }}</td>
+                  <td class="border-end text-success-emphasis fw-semibold">$ {{ p_val|floatformat:2|intcomma }}</td>
+                  <td class="text-primary-emphasis fw-semibold">
+                    {% if c_label %}{{ c_label }}{% else %}<span class="text-muted">—</span>{% endif %}
+                  </td>
+                  <td class="text-primary-emphasis fw-semibold">
+                    {% if c_val is not None %}$ {{ c_val|floatformat:2|intcomma }}{% else %}<span class="text-muted">—</span>{% endif %}
+                  </td>
+                  <td>
+                    {% if c_val is not None %}
+                      {% with diff=p_val|subtract:c_val %}
+                        {% if diff > 0 %}
+                          <span class="text-success fw-semibold">▲ +${{ diff|floatformat:2|intcomma }}</span>
+                        {% elif diff < 0 %}
+                          <span class="text-danger fw-semibold">▼ -${{ diff|abs_value|floatformat:2|intcomma }}</span>
+                        {% else %}
+                          <span class="text-secondary">= igual</span>
+                        {% endif %}
+                      {% endwith %}
+                    {% else %}
+                      <span class="text-muted">—</span>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% endwith %}
+              {% endfor %}
+              {# Filas extra del comparativo si tiene más días que el principal #}
+              {% for c_label in grafica_comp_labels %}
+                {% with idx=forloop.counter0 %}
+                {% if idx >= grafica_principal_labels|length %}
+                  {% with c_val=grafica_comp_data|index:idx %}
+                  <tr>
+                    <td class="text-muted small">{{ forloop.counter }}</td>
+                    <td><span class="text-muted">—</span></td>
+                    <td class="border-end"><span class="text-muted">—</span></td>
+                    <td class="text-primary-emphasis fw-semibold">{{ c_label }}</td>
+                    <td class="text-primary-emphasis fw-semibold">$ {{ c_val|floatformat:2|intcomma }}</td>
+                    <td><span class="text-muted">—</span></td>
+                  </tr>
+                  {% endwith %}
+                {% endif %}
+                {% endwith %}
+              {% endfor %}
+            {% else %}
+              <tr>
+                <td colspan="6" class="text-center text-muted py-4">
+                  No hay datos para comparar en los rangos seleccionados.
+                </td>
+              </tr>
+            {% endif %}
+            {% endwith %}
+          </tbody>
+          {% if incluir_total %}
+          <tfoot class="table-light fw-bold">
+            <tr>
+              <td>Total</td>
+              <td colspan="2" class="text-success border-end">$ {{ total_principal|floatformat:2|intcomma }}</td>
+              <td colspan="2" class="text-primary">$ {{ total_comparativo|floatformat:2|intcomma }}</td>
+              <td>
+                {% with diff_total=total_principal|subtract:total_comparativo %}
+                  {% if diff_total > 0 %}
+                    <span class="text-success">▲ +${{ diff_total|floatformat:2|intcomma }}</span>
+                  {% elif diff_total < 0 %}
+                    <span class="text-danger">▼ -${{ diff_total|abs_value|floatformat:2|intcomma }}</span>
+                  {% else %}
+                    <span class="text-secondary">= igual</span>
+                  {% endif %}
+                {% endwith %}
+              </td>
+            </tr>
+          </tfoot>
+          {% endif %}
+        </table>
+      </div>
+    </div>
+  </div>
+
+  {# ══ DETALLE INDIVIDUAL — PRINCIPAL ══ #}
+  <div class="card shadow-sm border-0 mb-3">
+    <div class="card-header bg-success bg-opacity-10 border-0 py-2">
+      <h6 class="mb-0 text-success-emphasis">
+        Detalle — Rango principal
+        <small class="text-muted fw-normal ms-2">{{ fecha_inicio }} — {{ fecha_fin }}</small>
+      </h6>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-sm table-hover align-middle mb-0">
+          <thead class="table-success">
+            <tr>
+              {% for c in columnas %}<th>{{ columnas_map|get_item:c }}</th>{% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for venta in ventas %}
+            <tr>
+              {% for c in columnas %}
+                {% if c == "codigo_venta" %}<td>{{ venta.codigo_venta }}</td>
+                {% elif c == "cliente" %}<td>{{ venta.cliente }}</td>
+                {% elif c == "productos_servicios" %}
+                  <td>{% for d in venta.detalles.all %}<div>{% if d.producto %}{{ d.producto.nombre }}{% endif %}{% if d.servicio %}{{ d.servicio.nombre }}{% endif %} <span class="text-muted">x{{ d.cantidad }}</span></div>{% empty %}<span class="text-muted">Sin detalles</span>{% endfor %}</td>
+                {% elif c == "fecha" %}<td>{{ venta.fecha|date:"d/m/Y H:i" }}</td>
+                {% elif c == "total" %}<td>$ {{ venta.total|floatformat:2|intcomma }}</td>
+                {% elif c == "estado" %}<td>{{ venta.estado|title }}</td>
+                {% endif %}
+              {% endfor %}
+            </tr>
+            {% empty %}
+            <tr><td colspan="{{ columnas|length }}" class="text-center text-muted py-3">Sin ventas en este rango.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  {# ══ DETALLE INDIVIDUAL — COMPARATIVO ══ #}
+  <div class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-primary bg-opacity-10 border-0 py-2">
+      <h6 class="mb-0 text-primary-emphasis">
+        Detalle — Rango comparativo
+        <small class="text-muted fw-normal ms-2">{{ fecha_inicio_comp }} — {{ fecha_fin_comp }}</small>
+      </h6>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-sm table-hover align-middle mb-0">
+          <thead class="table-primary">
+            <tr>
+              {% for c in columnas %}<th>{{ columnas_map|get_item:c }}</th>{% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for venta in ventas_comp %}
+            <tr>
+              {% for c in columnas %}
+                {% if c == "codigo_venta" %}<td>{{ venta.codigo_venta }}</td>
+                {% elif c == "cliente" %}<td>{{ venta.cliente }}</td>
+                {% elif c == "productos_servicios" %}
+                  <td>{% for d in venta.detalles.all %}<div>{% if d.producto %}{{ d.producto.nombre }}{% endif %}{% if d.servicio %}{{ d.servicio.nombre }}{% endif %} <span class="text-muted">x{{ d.cantidad }}</span></div>{% empty %}<span class="text-muted">Sin detalles</span>{% endfor %}</td>
+                {% elif c == "fecha" %}<td>{{ venta.fecha|date:"d/m/Y H:i" }}</td>
+                {% elif c == "total" %}<td>$ {{ venta.total|floatformat:2|intcomma }}</td>
+                {% elif c == "estado" %}<td>{{ venta.estado|title }}</td>
+                {% endif %}
+              {% endfor %}
+            </tr>
+            {% empty %}
+            <tr><td colspan="{{ columnas|length }}" class="text-center text-muted py-3">Sin ventas en este rango.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  {% else %}
+  {# ══ MODO NORMAL: una sola tabla ══ #}
+  <div class="card shadow-sm border-0 mb-4">
+    <div class="card-body">
+      <h5 class="mb-3">Vista previa de tabla</h5>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead class="table-dark">
+            <tr>
+              {% for c in columnas %}<th>{{ columnas_map|get_item:c }}</th>{% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for venta in ventas %}
+            <tr>
+              {% for c in columnas %}
+                {% if c == "codigo_venta" %}<td>{{ venta.codigo_venta }}</td>
+                {% elif c == "cliente" %}<td>{{ venta.cliente }}</td>
+                {% elif c == "productos_servicios" %}
+                  <td>{% for d in venta.detalles.all %}<div>{% if d.producto %}{{ d.producto.nombre }}{% endif %}{% if d.servicio %}{{ d.servicio.nombre }}{% endif %} <span class="text-muted">x{{ d.cantidad }}</span></div>{% empty %}<span class="text-muted">Sin detalles</span>{% endfor %}</td>
+                {% elif c == "fecha" %}<td>{{ venta.fecha|date:"d/m/Y H:i" }}</td>
+                {% elif c == "total" %}<td>$ {{ venta.total|floatformat:2|intcomma }}</td>
+                {% elif c == "estado" %}<td>{{ venta.estado|title }}</td>
+                {% endif %}
+              {% endfor %}
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="{{ columnas|length }}" class="text-center text-muted py-4">
+                No hay ventas para este rango.
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {# ── GRÁFICAS ── #}
+  {% if incluir_grafica %}
+  <div class="card shadow-sm border-0 mb-4">
+    <div class="card-body">
+      <h5 class="mb-3">{% if comparativo %}Gráfica comparativa de ventas{% else %}Gráfica diaria — rango principal{% endif %}</h5>
+      <div style="position: relative; height: 260px;">
+        <canvas id="graficaPreviewPrincipal"></canvas>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+
+
+</div>
