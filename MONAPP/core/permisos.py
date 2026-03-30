@@ -46,6 +46,9 @@ PERMISOS_MODULOS = {
 PUBLIC_USER_URLS = {
     "login",
     "recuperar",
+    "password_reset_done",
+    "password_reset_confirm",
+    "password_reset_complete",
     "verificar_codigo",
     "nueva_password",
 }

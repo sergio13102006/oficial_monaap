@@ -122,7 +122,6 @@ function initGestionForm() {
   const msgCheck = root.getElementById('msgCheckboxError');
   const btnImprimirPDF = root.getElementById('btnImprimirPDF');
   const btnImprimirWord = root.getElementById('btnImprimirWord');
-  const btnReporte = root.getElementById('btnReportePdfPreview');
   const modalCliente = root.getElementById('modalCrearCliente');
   const formCliente = root.getElementById('formCrearCliente');
   const btnGuardarCliente = root.getElementById('btnGuardarClienteModal');
@@ -281,20 +280,6 @@ function initGestionForm() {
 
   btnImprimirPDF?.addEventListener('click', (e) => { e.preventDefault(); const html = generarHTMLDocumento(datosFormulario(form)); const w = window.open('data:text/html;charset=utf-8,' + encodeURIComponent(html), '_blank', 'width=860,height=720'); if (!w) return toast('Permite las ventanas emergentes e intenta de nuevo.', 'warning'); setTimeout(() => { try { w.print(); } catch {} }, 700); });
   btnImprimirWord?.addEventListener('click', (e) => { e.preventDefault(); const html = generarHTMLDocumento(datosFormulario(form)); const blob = new Blob(['\ufeff' + html], { type: 'application/msword;charset=utf-8' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `Alisado_${(selectedCliente()?.nombre || 'cliente').replace(/\s+/g, '_')}_${new Date().toISOString().slice(0,10)}.doc`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); toast('Documento Word descargado correctamente.', 'success'); });
-
-  if (btnReporte) {
-    btnReporte.addEventListener('click', function () {
-      const base = this.dataset.previewBase || '';
-      const formFiltros = root.getElementById('filtrosForm');
-      if (!base || !formFiltros) return;
-      const params = new URLSearchParams();
-      ['buscar','forma_natural','porosidad','textura','estado_pago'].forEach((n) => {
-        const el = formFiltros.querySelector(`[name="${n}"]`);
-        params.set(n, el ? el.value : '');
-      });
-      this.dataset.previewUrl = `${base}?${params.toString()}`;
-    }, true);
-  }
 
   setStep(1);
   updateInfoCliente();

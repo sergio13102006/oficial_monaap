@@ -1,40 +1,38 @@
-﻿{% load humanize %}
+{% load static %}
+{% load humanize %}
 
 <link rel="stylesheet" href="{% static 'gestion_alisados/css/gestion_alisados.css' %}">
 
-<div class="p-2">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <div>
-            <h5 class="fw-bold mb-1">GestiÃ³n de datos</h5>
-            <div class="text-muted small">
-                Registro de {{ gestion.fecha_hora|date:"d/m/Y H:i" }}
+<div class="detail-modal-shell">
+    <div class="detail-modal-hero">
+        <div class="d-flex flex-column flex-lg-row justify-content-between gap-3 align-items-lg-start">
+            <div>
+                <h5>Gestión de datos</h5>
+                <small>Registro de {{ gestion.cliente.nombre }} {{ gestion.cliente.apellido }}</small>
+                <div class="gestion-detail-badges mt-3">
+                    <span class="gestion-detail-badge">
+                        <i class="bi bi-person"></i> {{ gestion.cliente.numero_documento }}
+                    </span>
+                    <span class="gestion-detail-badge">
+                        <i class="bi bi-calendar-event"></i> {{ gestion.fecha_hora|date:"d/m/Y H:i" }}
+                    </span>
+                    <span class="gestion-detail-badge">
+                        <i class="bi bi-person-badge"></i> {{ gestion.procedimiento_realizado_por }}
+                    </span>
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="detail-modal-section">
-        <h6><i class="bi bi-person"></i> InformaciÃ³n del Cliente</h6>
-        <div class="detail-modal-row-client">
+    <div class="detail-modal-section-card">
+        <h6><i class="bi bi-cash-coin"></i> Resumen financiero</h6>
+        <div class="detail-modal-grid">
             <div class="detail-modal-item">
-                <span class="detail-modal-label">Nombre completo</span>
-                <span class="detail-modal-value">{{ gestion.cliente.nombre }} {{ gestion.cliente.apellido }}</span>
-            </div>
-            <div class="detail-modal-item">
-                <span class="detail-modal-label">Documento</span>
-                <span class="detail-modal-value">{{ gestion.cliente.numero_documento }}</span>
-            </div>
-        </div>
-    </div>
-
-    <div class="detail-modal-section">
-        <h6><i class="bi bi-cash-coin"></i> InformaciÃ³n del Servicio y Pago</h6>
-        <div class="detail-modal-row">
-            <div class="detail-modal-item">
-                <span class="detail-modal-label">Precio del alisado</span>
+                <span class="detail-modal-label">Precio</span>
                 <span class="detail-modal-value">${{ gestion.precio_alisado|intcomma }} COP</span>
             </div>
             <div class="detail-modal-item">
-                <span class="detail-modal-label">Anticipo del cliente</span>
+                <span class="detail-modal-label">Anticipo</span>
                 <span class="detail-modal-value">${{ gestion.anticipo_cliente|intcomma }} COP</span>
             </div>
             <div class="detail-modal-item">
@@ -51,22 +49,23 @@
                 <span class="detail-modal-label">Medio de pago</span>
                 <span class="detail-modal-value">{{ gestion.get_medio_pago_display }}</span>
             </div>
-            <div class="detail-modal-item">
-                <span class="detail-modal-label">Oferta especial</span>
-                <span class="detail-modal-value">{{ gestion.get_es_oferta_especial_display }}</span>
-            </div>
         </div>
-        {% if gestion.descripcion_oferta %}
-        <div class="mt-3">
-            <span class="detail-modal-label">DescripciÃ³n de la oferta</span>
+        {% if gestion.es_oferta_especial and gestion.descripcion_oferta %}
+        <div class="detail-modal-item mt-3">
+            <span class="detail-modal-label">Oferta especial</span>
             <span class="detail-modal-value long">{{ gestion.descripcion_oferta }}</span>
+        </div>
+        {% elif gestion.es_oferta_especial %}
+        <div class="detail-modal-item mt-3">
+            <span class="detail-modal-label">Oferta especial</span>
+            <span class="detail-modal-value">{{ gestion.get_es_oferta_especial_display }}</span>
         </div>
         {% endif %}
     </div>
 
-    <div class="detail-modal-section">
-        <h6><i class="bi bi-scissors"></i> InformaciÃ³n del Procedimiento</h6>
-        <div class="detail-modal-row">
+    <div class="detail-modal-section-card">
+        <h6><i class="bi bi-scissors"></i> Procedimiento</h6>
+        <div class="detail-modal-grid">
             <div class="detail-modal-item">
                 <span class="detail-modal-label">Realizado por</span>
                 <span class="detail-modal-value">{{ gestion.procedimiento_realizado_por }}</span>
@@ -84,15 +83,19 @@
                 <span class="detail-modal-value">{{ gestion.get_requiere_resellado_display }}</span>
             </div>
             <div class="detail-modal-item">
+                <span class="detail-modal-label">Despunte hoy</span>
+                <span class="detail-modal-value">{{ gestion.get_despunte_hoy_display }}</span>
+            </div>
+            <div class="detail-modal-item">
                 <span class="detail-modal-label">Fecha y hora</span>
                 <span class="detail-modal-value">{{ gestion.fecha_hora|date:"d/m/Y H:i" }}</span>
             </div>
         </div>
     </div>
 
-    <div class="detail-modal-section">
-        <h6><i class="bi bi-person-lines-fill"></i> CaracterÃ­sticas del Cabello</h6>
-        <div class="detail-modal-row">
+    <div class="detail-modal-section-card">
+        <h6><i class="bi bi-person-lines-fill"></i> Características del cabello</h6>
+        <div class="detail-modal-grid">
             <div class="detail-modal-item"><span class="detail-modal-label">Porosidad</span><span class="detail-modal-value">{{ gestion.get_porosidad_display }}</span></div>
             <div class="detail-modal-item"><span class="detail-modal-label">Textura</span><span class="detail-modal-value">{{ gestion.get_textura_display }}</span></div>
             <div class="detail-modal-item"><span class="detail-modal-label">Forma natural</span><span class="detail-modal-value">{{ gestion.get_forma_natural_display }}</span></div>
@@ -101,97 +104,82 @@
             <div class="detail-modal-item"><span class="detail-modal-label">Densidad</span><span class="detail-modal-value">{{ gestion.get_densidad_display }}</span></div>
             <div class="detail-modal-item"><span class="detail-modal-label">Piel cabelludo</span><span class="detail-modal-value">{{ gestion.get_piel_cabelludo_display }}</span></div>
             <div class="detail-modal-item"><span class="detail-modal-label">Alopecia</span><span class="detail-modal-value">{{ gestion.get_alopecia_display }}</span></div>
-            <div class="detail-modal-item"><span class="detail-modal-label">CaÃ­da de cabello</span><span class="detail-modal-value">{{ gestion.get_caida_cabello_display }}</span></div>
+            <div class="detail-modal-item"><span class="detail-modal-label">Caída de cabello</span><span class="detail-modal-value">{{ gestion.get_caida_cabello_display }}</span></div>
             <div class="detail-modal-item"><span class="detail-modal-label">Caspa</span><span class="detail-modal-value">{{ gestion.get_caspa_display }}</span></div>
         </div>
     </div>
 
-    <div class="detail-modal-section">
-        <h6><i class="bi bi-heart-pulse"></i> Estado de Salud y Condiciones Especiales</h6>
-        <div class="detail-modal-row">
+    <div class="detail-modal-section-card">
+        <h6><i class="bi bi-heart-pulse"></i> Salud y cuidados</h6>
+        <div class="detail-modal-grid">
             <div class="detail-modal-item"><span class="detail-modal-label">Lactante</span><span class="detail-modal-value">{{ gestion.get_lactante_display }}</span></div>
             <div class="detail-modal-item"><span class="detail-modal-label">Gestante</span><span class="detail-modal-value">{{ gestion.get_gestante_display }}</span></div>
             <div class="detail-modal-item"><span class="detail-modal-label">Tiroides</span><span class="detail-modal-value">{{ gestion.get_sufre_tiroides_display }}</span></div>
-            <div class="detail-modal-item"><span class="detail-modal-label">Despunte hoy</span><span class="detail-modal-value">{{ gestion.get_despunte_hoy_display }}</span></div>
-        </div>
-        {% if gestion.medicamento_tiroides %}
-        <div class="mt-3">
-            <span class="detail-modal-label">Medicamento para tiroides</span>
-            <span class="detail-modal-value long">{{ gestion.medicamento_tiroides }}</span>
-        </div>
-        {% endif %}
-    </div>
-
-    <div class="detail-modal-section">
-        <h6><i class="bi bi-droplet"></i> Procesos QuÃ­micos Previos</h6>
-        <div class="detail-modal-pills">
-            {% if gestion.procesos_tintura %}
-                <span class="detail-modal-pill ok">âœ“ Tintura</span>
-            {% endif %}
-            {% if gestion.procesos_decoloracion %}
-                <span class="detail-modal-pill ok">âœ“ DecoloraciÃ³n</span>
-            {% endif %}
-            {% if gestion.procesos_ondulados %}
-                <span class="detail-modal-pill ok">âœ“ Ondulados Perm</span>
-            {% endif %}
-            {% if gestion.procesos_extracciones %}
-                <span class="detail-modal-pill ok">âœ“ Extracciones</span>
-            {% endif %}
-            {% if gestion.procesos_alisados %}
-                <span class="detail-modal-pill ok">âœ“ Alisados</span>
-            {% endif %}
-            {% if gestion.procesos_super_aclarante %}
-                <span class="detail-modal-pill ok">âœ“ Super Aclarante</span>
-            {% endif %}
-            {% if not gestion.procesos_tintura and not gestion.procesos_decoloracion and not gestion.procesos_ondulados and not gestion.procesos_extracciones and not gestion.procesos_alisados and not gestion.procesos_super_aclarante %}
-                <span class="detail-modal-value">No registra procesos quÃ­micos previos.</span>
-            {% endif %}
-        </div>
-        {% if gestion.procesos_otro %}
-        <div class="mt-3">
-            <span class="detail-modal-label">Otros procesos</span>
-            <span class="detail-modal-value long">{{ gestion.procesos_otro }}</span>
-        </div>
-        {% endif %}
-    </div>
-
-    <div class="detail-modal-section">
-        <h6><i class="bi bi-calendar-check"></i> HÃ¡bitos y Cuidados</h6>
-        <div class="detail-modal-row">
             <div class="detail-modal-item"><span class="detail-modal-label">Cuenta con secador</span><span class="detail-modal-value">{{ gestion.get_cuenta_con_secador_display }}</span></div>
             <div class="detail-modal-item"><span class="detail-modal-label">Usa casco</span><span class="detail-modal-value">{{ gestion.get_usa_casco_display }}</span></div>
-            <div class="detail-modal-item"><span class="detail-modal-label">Se baÃ±a con agua caliente</span><span class="detail-modal-value">{{ gestion.get_se_bana_agua_caliente_display }}</span></div>
-            <div class="detail-modal-item"><span class="detail-modal-label">Requiere refuerzo 15 dÃ­as</span><span class="detail-modal-value">{{ gestion.get_requiere_refuerzo_15dias_display }}</span></div>
+            <div class="detail-modal-item"><span class="detail-modal-label">Agua caliente</span><span class="detail-modal-value">{{ gestion.get_se_bana_agua_caliente_display }}</span></div>
+            <div class="detail-modal-item"><span class="detail-modal-label">Refuerzo 15 días</span><span class="detail-modal-value">{{ gestion.get_requiere_refuerzo_15dias_display }}</span></div>
             <div class="detail-modal-item"><span class="detail-modal-label">Realiza ejercicio</span><span class="detail-modal-value">{{ gestion.get_realiza_ejercicio_display }}</span></div>
         </div>
         {% if gestion.frecuencia_ejercicio %}
-        <div class="mt-3">
+        <div class="detail-modal-item mt-3">
             <span class="detail-modal-label">Frecuencia de ejercicio</span>
-            <span class="detail-modal-value long">{{ gestion.frecuencia_ejercicio }}</span>
+            <span class="detail-modal-value">{{ gestion.frecuencia_ejercicio }}</span>
         </div>
         {% endif %}
-        <div class="mt-3">
-            <span class="detail-modal-label">Frecuencia de recogido del cabello</span>
-            <span class="detail-modal-value long">{{ gestion.frecuencia_recoge_cabello }}</span>
+        {% if gestion.medicamento_tiroides %}
+        <div class="detail-modal-item mt-3">
+            <span class="detail-modal-label">Medicamento para tiroides</span>
+            <span class="detail-modal-value">{{ gestion.medicamento_tiroides }}</span>
         </div>
-        <div class="mt-3">
-            <span class="detail-modal-label">Productos capilares utilizados</span>
-            <span class="detail-modal-value long">{{ gestion.productos_capilares }}</span>
-        </div>
+        {% endif %}
     </div>
 
-    <div class="detail-modal-section">
-        <h6><i class="bi bi-clipboard-check"></i> Recomendaciones y Anotaciones</h6>
-        <span class="detail-modal-value long">{{ gestion.recomendaciones_post_cuidados }}</span>
+    <div class="detail-modal-section-card">
+        <h6><i class="bi bi-droplet"></i> Procesos químicos previos</h6>
+        <div class="detail-modal-pills">
+            {% if gestion.procesos_tintura %}<span class="detail-modal-pill ok">✓ Tintura</span>{% endif %}
+            {% if gestion.procesos_decoloracion %}<span class="detail-modal-pill ok">✓ Decoloración</span>{% endif %}
+            {% if gestion.procesos_ondulados %}<span class="detail-modal-pill ok">✓ Ondulados Perm</span>{% endif %}
+            {% if gestion.procesos_extracciones %}<span class="detail-modal-pill ok">✓ Extracciones</span>{% endif %}
+            {% if gestion.procesos_alisados %}<span class="detail-modal-pill ok">✓ Alisados</span>{% endif %}
+            {% if gestion.procesos_super_aclarante %}<span class="detail-modal-pill ok">✓ Super Aclarante</span>{% endif %}
+            {% if not gestion.procesos_tintura and not gestion.procesos_decoloracion and not gestion.procesos_ondulados and not gestion.procesos_extracciones and not gestion.procesos_alisados and not gestion.procesos_super_aclarante %}
+                <span class="detail-modal-pill">No registra procesos químicos previos</span>
+            {% endif %}
+        </div>
+        {% if gestion.procesos_otro %}
+        <div class="detail-modal-item mt-3">
+            <span class="detail-modal-label">Otros procesos</span>
+            <span class="detail-modal-value">{{ gestion.procesos_otro }}</span>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="detail-modal-section-card">
+        <h6><i class="bi bi-clipboard-check"></i> Recomendaciones</h6>
+        <div class="detail-modal-item">
+            <span class="detail-modal-value long">{{ gestion.recomendaciones_post_cuidados }}</span>
+        </div>
+        <div class="detail-modal-item mt-3">
+            <span class="detail-modal-label">Frecuencia de recogido del cabello</span>
+            <span class="detail-modal-value">{{ gestion.frecuencia_recoge_cabello }}</span>
+        </div>
+        <div class="detail-modal-item mt-3">
+            <span class="detail-modal-label">Productos capilares utilizados</span>
+            <span class="detail-modal-value">{{ gestion.productos_capilares }}</span>
+        </div>
     </div>
 
     {% if gestion.firma_consentimiento %}
-    <div class="detail-modal-section">
+    <div class="detail-modal-section-card">
         <h6><i class="bi bi-pen"></i> Firma del consentimiento</h6>
         <div class="text-center">
-            <img src="{{ gestion.firma_consentimiento.url }}" alt="Firma del cliente" class="detail-modal-signature img-fluid border rounded">
+            <img src="{{ gestion.firma_consentimiento.url }}" alt="Firma del cliente" class="img-fluid border rounded gestion-detail-signature">
         </div>
     </div>
     {% endif %}
-</div>
 
+    {% if user.is_staff or user.is_superuser %}
+    {% endif %}
+</div>

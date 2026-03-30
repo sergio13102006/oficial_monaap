@@ -1,4 +1,4 @@
-﻿{% extends 'core/panel_admin_base.html' %}
+{% extends 'core/panel_admin_base.html' %}
 {% load static %}
 {% load humanize %}
 
@@ -15,293 +15,220 @@
 
 {% block content %}
 <div class="container-fluid">
-    <div class="card shadow">
-        <div class="card-header text-white d-flex justify-content-between align-items-center gestion-modal-header">
-            <h4 class="mb-0">Gestion de datos</h4>
+    <div class="gestion-detail-hero">
+        <div class="d-flex flex-column flex-xl-row justify-content-between gap-3 align-items-xl-start">
             <div>
+                <div class="gestion-detail-hero__title">Gestión de datos</div>
+                <div class="gestion-detail-hero__subtitle">
+                    Registro completo de {{ gestion.cliente.nombre }} {{ gestion.cliente.apellido }}
+                </div>
+                <div class="gestion-detail-badges">
+                    <span class="gestion-detail-badge">
+                        <i class="bi bi-person"></i> {{ gestion.cliente.numero_documento }}
+                    </span>
+                    <span class="gestion-detail-badge">
+                        <i class="bi bi-calendar-event"></i> {{ gestion.fecha_hora|date:"d/m/Y H:i" }}
+                    </span>
+                    <span class="gestion-detail-badge">
+                        <i class="bi bi-person-badge"></i> {{ gestion.procedimiento_realizado_por }}
+                    </span>
+                </div>
+            </div>
+
+            <div class="gestion-detail-actions">
+                {% if user.is_staff or user.is_superuser %}
+                <a href="#"
+                   class="btn btn-outline-light js-delete-gestion-swal"
+                   data-delete-url="{% url 'gestion_alisados:eliminar_gestion_alisado' gestion.pk %}"
+                   data-delete-redirect-url="{% url 'gestion_alisados:lista_gestion_alisados' %}"
+                   data-gestion-label="{{ gestion.cliente.nombre }} {{ gestion.cliente.apellido }} - {{ gestion.fecha_hora|date:'d/m/Y H:i' }}">
+                    <i class="bi bi-trash"></i> Eliminar
+                </a>
+                {% endif %}
                 <a href="{% url 'gestion_alisados:lista_gestion_alisados' %}" class="btn btn-light">
                     <i class="bi bi-arrow-left"></i> Volver
                 </a>
             </div>
         </div>
-        <div class="card-body">
-            <!-- InformaciÃ³n del Servicio y Pago -->
-            <div class="detail-section">
-                <h5><i class="bi bi-cash-coin"></i> InformaciÃ³n del Servicio y Pago</h5>
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="detail-row">
-                            <span class="detail-label">Precio del Alisado:</span>
-                            <span class="detail-value">${{ gestion.precio_alisado|intcomma }} COP</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Â¿Es oferta especial?:</span>
-                            <span class="detail-value">{{ gestion.get_es_oferta_especial_display }}</span>
-                        </div>
-                        {% if gestion.descripcion_oferta %}
-                        <div class="detail-row">
-                            <span class="detail-label">DescripciÃ³n de la oferta:</span>
-                            <span class="detail-value">{{ gestion.descripcion_oferta }}</span>
-                        </div>
-                        {% endif %}
-                    </div>
-                    <div class="col-md-6">
-                        <div class="detail-row">
-                            <span class="detail-label">Anticipo del Cliente:</span>
-                            <span class="detail-value">${{ gestion.anticipo_cliente|intcomma }} COP</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Medio de Pago:</span>
-                            <span class="detail-value">{{ gestion.get_medio_pago_display }}</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Saldo Pendiente:</span>
-                            <span class="detail-value">
-                                {% if gestion.saldo_pendiente > 0 %}
-                                    <span class="badge bg-warning text-dark">${{ gestion.saldo_pendiente|intcomma }} COP</span>
-                                {% else %}
-                                    <span class="badge bg-success">Pagado</span>
-                                {% endif %}
-                            </span>
-                        </div>
-                    </div>
-                </div>
+
+        <div class="gestion-detail-summary-grid">
+            <div class="gestion-detail-summary-card">
+                <span class="gestion-detail-summary-label">Precio</span>
+                <span class="gestion-detail-summary-value">${{ gestion.precio_alisado|intcomma }} COP</span>
+                <span class="gestion-detail-summary-note">Valor del servicio</span>
             </div>
-            
-            <!-- InformaciÃ³n del Procedimiento -->
-            <div class="detail-section">
-                <h5><i class="bi bi-scissors"></i> InformaciÃ³n del Procedimiento</h5>
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="detail-row">
-                            <span class="detail-label">Procedimiento realizado por:</span>
-                            <span class="detail-value">{{ gestion.procedimiento_realizado_por }}</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Fecha y Hora:</span>
-                            <span class="detail-value">{{ gestion.fecha_hora|date:"d/m/Y H:i" }}</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Tipo de Alisado:</span>
-                            <span class="detail-value">{{ gestion.tipo_alisado }}</span>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="detail-row">
-                            <span class="detail-label">Â¿Requiere Resellado?:</span>
-                            <span class="detail-value">{{ gestion.get_requiere_resellado_display }}</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Porcentaje de Alisado:</span>
-                            <span class="detail-value">{{ gestion.porcentaje_alisado }}%</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Â¿Despunte Hoy?:</span>
-                            <span class="detail-value">{{ gestion.get_despunte_hoy_display }}</span>
-                        </div>
-                    </div>
-                </div>
+            <div class="gestion-detail-summary-card">
+                <span class="gestion-detail-summary-label">Anticipo</span>
+                <span class="gestion-detail-summary-value">${{ gestion.anticipo_cliente|intcomma }} COP</span>
+                <span class="gestion-detail-summary-note">Abono realizado por el cliente</span>
             </div>
-            
-            <!-- CaracterÃ­sticas del Cabello -->
-            <div class="detail-section">
-                <h5><i class="bi bi-person"></i> CaracterÃ­sticas del Cabello</h5>
-                <div class="row">
-                    <div class="col-md-4">
-                        <div class="detail-row">
-                            <span class="detail-label">Porosidad:</span>
-                            <span class="detail-value">{{ gestion.get_porosidad_display }}</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Textura:</span>
-                            <span class="detail-value">{{ gestion.get_textura_display }}</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Forma Natural:</span>
-                            <span class="detail-value">{{ gestion.get_forma_natural_display }}</span>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="detail-row">
-                            <span class="detail-label">Elasticidad:</span>
-                            <span class="detail-value">{{ gestion.get_elasticidad_display }}</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Longitud:</span>
-                            <span class="detail-value">{{ gestion.get_longitud_display }}</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Densidad:</span>
-                            <span class="detail-value">{{ gestion.get_densidad_display }}</span>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="detail-row">
-                            <span class="detail-label">Piel Cabelludo:</span>
-                            <span class="detail-value">{{ gestion.get_piel_cabelludo_display }}</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Alopecia:</span>
-                            <span class="detail-value">{{ gestion.get_alopecia_display }}</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">CaÃ­da de Cabello:</span>
-                            <span class="detail-value">{{ gestion.get_caida_cabello_display }}</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Caspa:</span>
-                            <span class="detail-value">{{ gestion.get_caspa_display }}</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Estado de Salud -->
-            <div class="detail-section">
-                <h5><i class="bi bi-heart-pulse"></i> Estado de Salud y Condiciones Especiales</h5>
-                <div class="row">
-                    <div class="col-md-4">
-                        <div class="detail-row">
-                            <span class="detail-label">Â¿Lactante?:</span>
-                            <span class="detail-value">{{ gestion.get_lactante_display }}</span>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="detail-row">
-                            <span class="detail-label">Â¿Gestante?:</span>
-                            <span class="detail-value">{{ gestion.get_gestante_display }}</span>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="detail-row">
-                            <span class="detail-label">Â¿Sufre de Tiroides?:</span>
-                            <span class="detail-value">{{ gestion.get_sufre_tiroides_display }}</span>
-                        </div>
-                    </div>
-                </div>
-                {% if gestion.medicamento_tiroides %}
-                <div class="detail-row mt-2">
-                    <span class="detail-label">Medicamento para Tiroides:</span>
-                    <span class="detail-value">{{ gestion.medicamento_tiroides }}</span>
-                </div>
-                {% endif %}
-            </div>
-            
-            <!-- Procesos QuÃ­micos -->
-            <div class="detail-section">
-                <h5><i class="bi bi-droplet"></i> Procesos QuÃ­micos Previos</h5>
-                <div class="checkbox-list">
-                    {% if gestion.procesos_tintura %}
-                    <div class="checkbox-item">
-                        <i class="bi bi-check-circle-fill text-success"></i> Tintura
-                    </div>
+            <div class="gestion-detail-summary-card">
+                <span class="gestion-detail-summary-label">Saldo</span>
+                <span class="gestion-detail-summary-value">
+                    {% if gestion.saldo_pendiente > 0 %}
+                        ${{ gestion.saldo_pendiente|intcomma }} COP
+                    {% else %}
+                        Pagado
                     {% endif %}
-                    {% if gestion.procesos_decoloracion %}
-                    <div class="checkbox-item">
-                        <i class="bi bi-check-circle-fill text-success"></i> DecoloraciÃ³n
-                    </div>
-                    {% endif %}
-                    {% if gestion.procesos_ondulados %}
-                    <div class="checkbox-item">
-                        <i class="bi bi-check-circle-fill text-success"></i> Ondulados Perm
-                    </div>
-                    {% endif %}
-                    {% if gestion.procesos_extracciones %}
-                    <div class="checkbox-item">
-                        <i class="bi bi-check-circle-fill text-success"></i> Extracciones
-                    </div>
-                    {% endif %}
-                    {% if gestion.procesos_alisados %}
-                    <div class="checkbox-item">
-                        <i class="bi bi-check-circle-fill text-success"></i> Alisados
-                    </div>
-                    {% endif %}
-                    {% if gestion.procesos_super_aclarante %}
-                    <div class="checkbox-item">
-                        <i class="bi bi-check-circle-fill text-success"></i> Super Aclarante
-                    </div>
-                    {% endif %}
-                </div>
-                {% if gestion.procesos_otro %}
-                <div class="detail-row mt-3">
-                    <span class="detail-label">Otros Procesos:</span>
-                    <span class="detail-value">{{ gestion.procesos_otro }}</span>
-                </div>
-                {% endif %}
+                </span>
+                <span class="gestion-detail-summary-note">Estado de la cuenta</span>
             </div>
-            
-            <!-- HÃ¡bitos y Cuidados -->
-            <div class="detail-section">
-                <h5><i class="bi bi-calendar-check"></i> HÃ¡bitos y Cuidados</h5>
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="detail-row">
-                            <span class="detail-label">Â¿Cuenta con Secador?:</span>
-                            <span class="detail-value">{{ gestion.get_cuenta_con_secador_display }}</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Â¿Usa Casco?:</span>
-                            <span class="detail-value">{{ gestion.get_usa_casco_display }}</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Â¿Se BaÃ±a con Agua Caliente?:</span>
-                            <span class="detail-value">{{ gestion.get_se_bana_agua_caliente_display }}</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="detail-label">Â¿Requiere Refuerzo de 15 DÃ­as?:</span>
-                            <span class="detail-value">{{ gestion.get_requiere_refuerzo_15dias_display }}</span>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="detail-row">
-                            <span class="detail-label">Â¿Realiza Ejercicio?:</span>
-                            <span class="detail-value">{{ gestion.get_realiza_ejercicio_display }}</span>
-                        </div>
-                        {% if gestion.frecuencia_ejercicio %}
-                        <div class="detail-row">
-                            <span class="detail-label">Frecuencia de Ejercicio:</span>
-                            <span class="detail-value">{{ gestion.frecuencia_ejercicio }}</span>
-                        </div>
-                        {% endif %}
-                    </div>
-                </div>
-                <div class="detail-row mt-2">
-                    <span class="detail-label">Frecuencia de Recogido del Cabello:</span>
-                    <p class="detail-value">{{ gestion.frecuencia_recoge_cabello }}</p>
-                </div>
-                <div class="detail-row">
-                    <span class="detail-label">Productos Capilares Utilizados:</span>
-                    <p class="detail-value">{{ gestion.productos_capilares }}</p>
-                </div>
-            </div>
-            
-            <!-- Recomendaciones -->
-            <div class="detail-section">
-                <h5><i class="bi bi-clipboard-check"></i> Recomendaciones y Anotaciones</h5>
-                <div class="detail-row">
-                    <p class="detail-value">{{ gestion.recomendaciones_post_cuidados }}</p>
-                </div>
-            </div>
-            
-            <!-- Firma del Consentimiento -->
-            {% if gestion.firma_consentimiento %}
-            <div class="detail-section">
-                <h5><i class="bi bi-pen"></i> Firma del Consentimiento Informado</h5>
-                <div class="detail-row">
-                    <div class="text-center">
-                        <img src="{{ gestion.firma_consentimiento.url }}" alt="Firma del cliente" class="img-fluid border rounded gestion-firma-img">
-                    </div>
-                </div>
-            </div>
-            {% endif %}
-            
-            <div class="d-flex justify-content-between mt-4">
-                <a href="{% url 'gestion_alisados:lista_gestion_alisados' %}" class="btn btn-secondary">
-                    <i class="bi bi-arrow-left"></i> Volver a la Lista
-                </a>
+            <div class="gestion-detail-summary-card">
+                <span class="gestion-detail-summary-label">Oferta</span>
+                <span class="gestion-detail-summary-value">{{ gestion.get_es_oferta_especial_display }}</span>
+                <span class="gestion-detail-summary-note">
+                    {% if gestion.descripcion_oferta %}Con descripción{% else %}Sin descripción adicional{% endif %}
+                </span>
             </div>
         </div>
     </div>
+
+    <div class="gestion-detail-section-card">
+        <h5><i class="bi bi-cash-coin"></i> Información del Servicio y Pago</h5>
+        <div class="gestion-detail-grid">
+            <div class="gestion-detail-item">
+                <span class="detail-label">Precio del alisado</span>
+                <span class="detail-value">${{ gestion.precio_alisado|intcomma }} COP</span>
+            </div>
+            <div class="gestion-detail-item">
+                <span class="detail-label">Anticipo del cliente</span>
+                <span class="detail-value">${{ gestion.anticipo_cliente|intcomma }} COP</span>
+            </div>
+            <div class="gestion-detail-item">
+                <span class="detail-label">Medio de pago</span>
+                <span class="detail-value">{{ gestion.get_medio_pago_display }}</span>
+            </div>
+            <div class="gestion-detail-item">
+                <span class="detail-label">Saldo pendiente</span>
+                <span class="detail-value">
+                    {% if gestion.saldo_pendiente > 0 %}
+                        <span class="badge bg-warning text-dark">${{ gestion.saldo_pendiente|intcomma }} COP</span>
+                    {% else %}
+                        <span class="badge bg-success">Pagado</span>
+                    {% endif %}
+                </span>
+            </div>
+            {% if gestion.es_oferta_especial %}
+            <div class="gestion-detail-item gestion-detail-full">
+                <span class="detail-label">Descripción de la oferta</span>
+                <span class="detail-value">{{ gestion.descripcion_oferta }}</span>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="gestion-detail-section-card">
+        <h5><i class="bi bi-scissors"></i> Información del Procedimiento</h5>
+        <div class="gestion-detail-grid">
+            <div class="gestion-detail-item">
+                <span class="detail-label">Realizado por</span>
+                <span class="detail-value">{{ gestion.procedimiento_realizado_por }}</span>
+            </div>
+            <div class="gestion-detail-item">
+                <span class="detail-label">Fecha y hora</span>
+                <span class="detail-value">{{ gestion.fecha_hora|date:"d/m/Y H:i" }}</span>
+            </div>
+            <div class="gestion-detail-item">
+                <span class="detail-label">Tipo de alisado</span>
+                <span class="detail-value">{{ gestion.tipo_alisado }}</span>
+            </div>
+            <div class="gestion-detail-item">
+                <span class="detail-label">Porcentaje de alisado</span>
+                <span class="detail-value">{{ gestion.porcentaje_alisado }}%</span>
+            </div>
+            <div class="gestion-detail-item">
+                <span class="detail-label">Requiere resellado</span>
+                <span class="detail-value">{{ gestion.get_requiere_resellado_display }}</span>
+            </div>
+            <div class="gestion-detail-item">
+                <span class="detail-label">Despunte hoy</span>
+                <span class="detail-value">{{ gestion.get_despunte_hoy_display }}</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="gestion-detail-section-card">
+        <h5><i class="bi bi-person-lines-fill"></i> Características del Cabello</h5>
+        <div class="gestion-detail-grid">
+            <div class="gestion-detail-item"><span class="detail-label">Porosidad</span><span class="detail-value">{{ gestion.get_porosidad_display }}</span></div>
+            <div class="gestion-detail-item"><span class="detail-label">Textura</span><span class="detail-value">{{ gestion.get_textura_display }}</span></div>
+            <div class="gestion-detail-item"><span class="detail-label">Forma natural</span><span class="detail-value">{{ gestion.get_forma_natural_display }}</span></div>
+            <div class="gestion-detail-item"><span class="detail-label">Elasticidad</span><span class="detail-value">{{ gestion.get_elasticidad_display }}</span></div>
+            <div class="gestion-detail-item"><span class="detail-label">Longitud</span><span class="detail-value">{{ gestion.get_longitud_display }}</span></div>
+            <div class="gestion-detail-item"><span class="detail-label">Densidad</span><span class="detail-value">{{ gestion.get_densidad_display }}</span></div>
+            <div class="gestion-detail-item"><span class="detail-label">Piel cabelludo</span><span class="detail-value">{{ gestion.get_piel_cabelludo_display }}</span></div>
+            <div class="gestion-detail-item"><span class="detail-label">Alopecia</span><span class="detail-value">{{ gestion.get_alopecia_display }}</span></div>
+            <div class="gestion-detail-item"><span class="detail-label">Caída de cabello</span><span class="detail-value">{{ gestion.get_caida_cabello_display }}</span></div>
+            <div class="gestion-detail-item"><span class="detail-label">Caspa</span><span class="detail-value">{{ gestion.get_caspa_display }}</span></div>
+        </div>
+    </div>
+
+    <div class="gestion-detail-section-card">
+        <h5><i class="bi bi-heart-pulse"></i> Estado de Salud y Condiciones Especiales</h5>
+        <div class="gestion-detail-grid">
+            <div class="gestion-detail-item"><span class="detail-label">Lactante</span><span class="detail-value">{{ gestion.get_lactante_display }}</span></div>
+            <div class="gestion-detail-item"><span class="detail-label">Gestante</span><span class="detail-value">{{ gestion.get_gestante_display }}</span></div>
+            <div class="gestion-detail-item"><span class="detail-label">Tiroides</span><span class="detail-value">{{ gestion.get_sufre_tiroides_display }}</span></div>
+            <div class="gestion-detail-item"><span class="detail-label">Cuenta con secador</span><span class="detail-value">{{ gestion.get_cuenta_con_secador_display }}</span></div>
+            <div class="gestion-detail-item"><span class="detail-label">Usa casco</span><span class="detail-value">{{ gestion.get_usa_casco_display }}</span></div>
+            <div class="gestion-detail-item"><span class="detail-label">Se baña con agua caliente</span><span class="detail-value">{{ gestion.get_se_bana_agua_caliente_display }}</span></div>
+            <div class="gestion-detail-item"><span class="detail-label">Requiere refuerzo 15 días</span><span class="detail-value">{{ gestion.get_requiere_refuerzo_15dias_display }}</span></div>
+            <div class="gestion-detail-item"><span class="detail-label">Realiza ejercicio</span><span class="detail-value">{{ gestion.get_realiza_ejercicio_display }}</span></div>
+            {% if gestion.frecuencia_ejercicio %}
+            <div class="gestion-detail-item gestion-detail-full">
+                <span class="detail-label">Frecuencia de ejercicio</span>
+                <span class="detail-value">{{ gestion.frecuencia_ejercicio }}</span>
+            </div>
+            {% endif %}
+            {% if gestion.medicamento_tiroides %}
+            <div class="gestion-detail-item gestion-detail-full">
+                <span class="detail-label">Medicamento para tiroides</span>
+                <span class="detail-value">{{ gestion.medicamento_tiroides }}</span>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="gestion-detail-section-card">
+        <h5><i class="bi bi-droplet"></i> Procesos Químicos Previos</h5>
+        <div class="gestion-detail-pills">
+            {% if gestion.procesos_tintura %}<span class="gestion-detail-pill ok">✓ Tintura</span>{% endif %}
+            {% if gestion.procesos_decoloracion %}<span class="gestion-detail-pill ok">✓ Decoloración</span>{% endif %}
+            {% if gestion.procesos_ondulados %}<span class="gestion-detail-pill ok">✓ Ondulados Perm</span>{% endif %}
+            {% if gestion.procesos_extracciones %}<span class="gestion-detail-pill ok">✓ Extracciones</span>{% endif %}
+            {% if gestion.procesos_alisados %}<span class="gestion-detail-pill ok">✓ Alisados</span>{% endif %}
+            {% if gestion.procesos_super_aclarante %}<span class="gestion-detail-pill ok">✓ Super Aclarante</span>{% endif %}
+            {% if not gestion.procesos_tintura and not gestion.procesos_decoloracion and not gestion.procesos_ondulados and not gestion.procesos_extracciones and not gestion.procesos_alisados and not gestion.procesos_super_aclarante %}
+                <span class="gestion-detail-pill">No registra procesos químicos previos</span>
+            {% endif %}
+        </div>
+        {% if gestion.procesos_otro %}
+        <div class="gestion-detail-item mt-3">
+            <span class="detail-label">Otros procesos</span>
+            <span class="detail-value">{{ gestion.procesos_otro }}</span>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="gestion-detail-section-card">
+        <h5><i class="bi bi-calendar-check"></i> Hábitos y Cuidados</h5>
+        <div class="gestion-detail-grid">
+            <div class="gestion-detail-item"><span class="detail-label">Frecuencia de recogido del cabello</span><span class="detail-value">{{ gestion.frecuencia_recoge_cabello }}</span></div>
+            <div class="gestion-detail-item"><span class="detail-label">Productos capilares utilizados</span><span class="detail-value">{{ gestion.productos_capilares }}</span></div>
+            <div class="gestion-detail-item gestion-detail-full">
+                <span class="detail-label">Recomendaciones y anotaciones</span>
+                <span class="detail-value">{{ gestion.recomendaciones_post_cuidados }}</span>
+            </div>
+        </div>
+    </div>
+
+    {% if gestion.firma_consentimiento %}
+    <div class="gestion-detail-section-card">
+        <h5><i class="bi bi-pen"></i> Firma del consentimiento informado</h5>
+        <div class="text-center">
+            <img src="{{ gestion.firma_consentimiento.url }}" alt="Firma del cliente" class="img-fluid border rounded gestion-detail-signature">
+        </div>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}
-

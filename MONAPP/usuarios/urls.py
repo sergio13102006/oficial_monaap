@@ -12,9 +12,10 @@ urlpatterns = [
     
     # Perfil de usuario
     path('perfil/', views.perfil_view, name='perfil'),
-    path('recuperar/', views.solicitar_recuperacion, name='recuperar'),
-    path('verificar/', views.verificar_codigo, name='verificar_codigo'),
-    path('nueva-password/', views.nueva_password, name='nueva_password'),
+    path('recuperar/', views.PasswordResetRequestView.as_view(), name='recuperar'),
+    path('recuperar/enviado/', views.PasswordResetDonePageView.as_view(), name='password_reset_done'),
+    path('recuperar/<uidb64>/<token>/', views.PasswordResetConfirmNotifyView.as_view(), name='password_reset_confirm'),
+    path('recuperar/completado/', views.PasswordResetCompletePageView.as_view(), name='password_reset_complete'),
     # Panel de administración
     path('usuarios/', views.lista_usuarios_view, name='lista_usuarios'),
     path('usuarios/crear/', views.crear_usuario_view, name='crear_usuario'),

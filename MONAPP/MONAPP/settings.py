@@ -13,7 +13,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = config("SECRET_KEY", default="django-insecure-change-me")
-
 # SECURITY WARNING: don't run with debug turned on in production!
 # Acepta valores comunes: true/false/1/0/on/off/yes/no y también "release"/"prod" => False.
 _debug_raw = str(config("DEBUG", default="True")).strip().lower()
@@ -81,6 +80,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'core.context_processors.permisos_usuario',
+                'usuarios.context_processors.login_security',
             ],
         },
     },
@@ -121,14 +121,19 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'monappadso@gmail.com'
-EMAIL_HOST_PASSWORD = 'odvd jycx ilml iggy'
+EMAIL_HOST_USER = config("EMAIL_HOST_USER", default="monappadso@gmail.com")
+EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD", default="")
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 # URLs de redirección
-LOGIN_URL = 'usuarios:login'
+LOGIN_URL = 'core:index'
 LOGIN_REDIRECT_URL = 'core:dashboard'
-LOGOUT_REDIRECT_URL = 'usuarios:login'
+LOGOUT_REDIRECT_URL = 'core:index'
+
+# Login endurecido
+LOGIN_RECAPTCHA_SITE_KEY = config("RECAPTCHA_SITE_KEY", default="")
+LOGIN_RECAPTCHA_SECRET_KEY = config("RECAPTCHA_SECRET_KEY", default="")
+LOGIN_SECURITY_FORCE_CAPTCHA = config("LOGIN_SECURITY_FORCE_CAPTCHA", default=True, cast=bool)
 
 # Configuración de sesiones
 SESSION_COOKIE_AGE = 3600  # 1 hora

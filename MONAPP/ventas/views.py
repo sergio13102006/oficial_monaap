@@ -751,7 +751,7 @@ def construir_queryset_reporte_ventas(request):
 
     incluir_total = request.GET.get("incluir_total") == "1"
     comparativo = request.GET.get("comparativo") == "1"
-    incluir_grafica = (request.GET.get("incluir_grafica") == "1") and comparativo
+    incluir_grafica = request.GET.get("incluir_grafica") == "1"
     tipo_grafica = request.GET.get("tipo_grafica", "bar").strip()
     if tipo_grafica not in {"bar", "line", "pie"}:
         tipo_grafica = "bar"
@@ -809,7 +809,7 @@ def construir_queryset_reporte_ventas(request):
 
     # Las gráficas solo se generan cuando hay comparativo activo
     # (para mantener el mismo comportamiento solicitado: gráfica únicamente en modo comparativo).
-    incluir_grafica = bool(incluir_grafica and fecha_inicio_comp and fecha_fin_comp)
+    incluir_grafica = bool(incluir_grafica)
 
     grafica_principal_labels = []
     grafica_principal_data = []

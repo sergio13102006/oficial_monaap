@@ -13,19 +13,7 @@
 {% block page_title %}Gestion de datos{% endblock %}
 {% block page_subtitle %}Control de registros, filtros y seguimiento de alisados{% endblock %}
 {% block page_actions %}
-<button type="button"
-   class="btn-pill-dark js-open-comprobante"
-   id="btnReportePdfPreview"
-   data-bs-toggle="modal"
-   data-bs-target="#modalComprobante"
-   data-preview-base="{% url 'gestion_alisados:reporte_gestion_preview' %}"
-   data-preview-url="{% url 'gestion_alisados:reporte_gestion_preview' %}?buscar={{ buscar|urlencode }}&forma_natural={{ forma_natural|urlencode }}&porosidad={{ porosidad|urlencode }}&textura={{ textura|urlencode }}&estado_pago={{ estado_pago|urlencode }}"
-   data-download-name="reporte_gestion_datos"
-   data-modal-title="Reporte de gestion de datos"
-   aria-label="Descargar reporte de gestiÃ³n de datos en PDF">
-    <i class="bi bi-file-earmark-pdf" aria-hidden="true"></i> Reporte PDF
-</button>
-<button type="button" class="btn-pill-dark js-open-gestion-form-modal" data-form-title="Nueva gestiÃ³n de datos" data-form-url="{% url 'gestion_alisados:crear_gestion_alisado' %}?modal=1" data-bs-toggle="modal" data-bs-target="#modalFormGestion">
+<button type="button" class="btn-pill-dark js-open-gestion-form-modal" data-form-title="Nueva gestión de datos" data-form-url="{% url 'gestion_alisados:crear_gestion_alisado' %}?modal=1" data-bs-toggle="modal" data-bs-target="#modalFormGestion">
     <i class="bi bi-plus-circle"></i> Nueva Gestion
 </button>
 {% endblock %}
@@ -105,7 +93,6 @@
         {% include 'gestion_alisados/lista_gestion_alisados_global.html' %}
     </div>
 </div>
-<!-- Modal para Formulario de GestiÃ³n -->
 <div class="modal fade" id="modalFormGestion" tabindex="-1" aria-labelledby="modalFormGestionLabel" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-xl-custom">
         <div class="modal-content gestion-modal-content">
@@ -155,13 +142,10 @@
     </div>
 </div>
 
-{% include "compras/comprobante_compra.html" %}
-
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<script src="{% static 'compras/js/comprobante.js' %}"></script>
+<script src="{% static 'gestion_alisados/js/form_gestion_alisado.js' %}?v={% now 'U' %}"></script>
 <script src="{% static 'gestion_alisados/js/gestion_alisados.js' %}?v={% now 'U' %}"></script>
 {% endblock %}
 

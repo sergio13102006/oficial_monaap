@@ -5,11 +5,11 @@
     <div id="notificacionToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="true" data-bs-delay="4000">
         <div class="toast-header gestion-toast-header">
             <i class="bi bi-check-circle-fill me-2" id="toastIcon"></i>
-            <strong class="me-auto" id="toastTitle">NotificaciÃ³n</strong>
+            <strong class="me-auto" id="toastTitle">Notificación</strong>
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
         </div>
         <div class="toast-body" id="toastMessage">
-            Mensaje de notificaciÃ³n
+            Mensaje de notificación
         </div>
     </div>
 </div>
@@ -21,22 +21,22 @@
 <div class="progress-steps gestion-step-spacing">
     <div class="step-item active" data-step="1">
         <div class="step-circle">1</div>
-        <div class="step-label">InformaciÃ³n General</div>
+        <div class="step-label">Información General</div>
     </div>
     <div class="step-item" data-step="2">
         <div class="step-circle">2</div>
-        <div class="step-label">CaracterÃ­sticas y Cuidados</div>
+        <div class="step-label">Características y Cuidados</div>
     </div>
 </div>
 
 <form method="post" enctype="multipart/form-data" id="gestionAlisadoForm" action="{{ action_url|default:request.path }}" novalidate data-es-edicion="{% if gestion %}1{% else %}0{% endif %}" data-ultima-gestion-url="{% url 'gestion_alisados:ultima_gestion_cliente' %}">
                         {% csrf_token %}
                         
-                        <!-- PASO 1: InformaciÃ³n General -->
+                        <!-- PASO 1: Información General -->
                         <div class="form-step active" id="step1">
 
-                        <!-- SecciÃ³n: SelecciÃ³n de Cliente -->
-                        <div class="section-title">SelecciÃ³n de Cliente</div>
+                        <!-- Sección: Selección de Cliente -->
+                        <div class="section-title">Selección de Cliente</div>
                         <div class="row">
                             <div class="col-md-12 mb-3">
                                 <label for="{{ form.cliente.id_for_label }}" class="form-label">
@@ -58,8 +58,8 @@
 
                         </div>
                         
-                        <!-- SecciÃ³n: InformaciÃ³n del Servicio y Pago -->
-                        <div class="section-title">InformaciÃ³n del Servicio y Pago</div>
+                        <!-- Sección: Información del Servicio y Pago -->
+                        <div class="section-title">Información del Servicio y Pago</div>
                         
                         <div class="row">
                             <div class="col-md-6 mb-3">
@@ -127,8 +127,8 @@
                             </div>
                         </div>
                         
-                        <!-- SecciÃ³n: InformaciÃ³n del Procedimiento -->
-                        <div class="section-title">InformaciÃ³n del Procedimiento</div>
+                        <!-- Sección: Información del Procedimiento -->
+                        <div class="section-title">Información del Procedimiento</div>
                         
                         <div class="row">
                             <div class="col-md-6 mb-3">
@@ -169,8 +169,8 @@
                             </div>
                         </div>
                         
-                        <!-- SecciÃ³n: CaracterÃ­sticas del Cabello -->
-                        <div class="section-title">CaracterÃ­sticas del Cabello</div>
+                        <!-- Sección: Características del Cabello -->
+                        <div class="section-title">Características del Cabello</div>
                         
                         <div class="row">
                             <div class="col-md-4 mb-3">
@@ -260,10 +260,10 @@
                         
                         </div><!-- Fin del Paso 1 -->
                         
-                        <!-- PASO 2: CaracterÃ­sticas y Cuidados -->
+                        <!-- PASO 2: Características y Cuidados -->
                         <div class="form-step" id="step2">
                         
-                        <!-- SecciÃ³n: Estado de Salud -->
+                        <!-- Sección: Estado de Salud -->
                         <div class="section-title">Estado de Salud y Condiciones Especiales</div>
                         
                         <div class="row">
@@ -307,8 +307,8 @@
                             </div>
                         </div>
                         
-                        <!-- SecciÃ³n: Procesos QuÃ­micos -->
-                        <div class="section-title">Procesos QuÃ­micos Previos</div>
+                        <!-- Sección: Procesos Químicos -->
+                        <div class="section-title">Procesos Químicos Previos</div>
                         
                         <div class="checkbox-group mb-3">
                             <div class="form-check">
@@ -362,8 +362,8 @@
                             {% endif %}
                         </div>
                         
-                        <!-- SecciÃ³n: HÃ¡bitos y Cuidados -->
-                        <div class="section-title">HÃ¡bitos y Cuidados</div>
+                        <!-- Sección: Hábitos y Cuidados -->
+                        <div class="section-title">Hábitos y Cuidados</div>
                         
                         <div class="row">
                             <div class="col-md-6 mb-3">
@@ -430,7 +430,7 @@
                             {% endif %}
                         </div>
                         
-                        <!-- SecciÃ³n: Recomendaciones -->
+                        <!-- Sección: Recomendaciones -->
                         <div class="section-title">Recomendaciones y Anotaciones</div>
                         
                         <div class="mb-3">
@@ -450,81 +450,81 @@
         <div class="modal-content">
             <div class="modal-header text-white gestion-toast-header">
                 <h5 class="modal-title" id="modalConsentimientoLabel">
-                    <i class="bi bi-file-earmark-text"></i> Consentimiento Informado - TÃ©rminos y Condiciones
+                    <i class="bi bi-file-earmark-text"></i> Consentimiento Informado - Términos y Condiciones
                 </h5>
             </div>
             <div class="modal-body gestion-modal-shell">
                 <div class="alert alert-warning">
                     <i class="bi bi-exclamation-triangle-fill"></i>
-                    <strong>Por favor leer primariamente la informaciÃ³n de la pÃ¡gina 02</strong>
+                    <strong>Por favor leer primariamente la información de la página 02</strong>
                 </div>
                 
-                <h5 class="text-primary mt-4">SISTEMA ÃšNICO DE HABILITACIÃ“N/SERVICIOS Y PÃGINA 02</h5>
-                <p>El procedimiento puede generar molestias, casos ocasionales y/o reacciones alÃ©rgicas.</p>
+                <h5 class="text-primary mt-4">SISTEMA ÚNICO DE HABILITACIÓN/SERVICIOS Y PÁGINA 02</h5>
+                <p>El procedimiento puede generar molestias, casos ocasionales y/o reacciones alérgicas.</p>
                 
                 <h5 class="text-primary mt-4">RECOMENDACIONES Y ADVERTENCIAS</h5>
                 <ol>
-                    <li>El tratamiento es un PROCEDIMIENTO que tiene limitada duraciÃ³n y en su estancia no reja necesariamente de manera permanente.</li>
-                    <li>El tratamiento puede producir daÃ±os si no se siguen las recomendaciones indicadas (uso de acondicionador, shampoo sin sal, etc.)</li>
-                    <li>El tratamiento puede generar enrojecimiento del cuero cabelludo, irritaciÃ³n, ardor de los ojos, sensaciÃ³n de quemazÃ³n, resequedad del cabello y otros efectos temporales.</li>
-                    <li>No existe garantÃ­a, excepciÃ³n de nuestros tÃ©rminos y condiciones. En caso de no cumplir las recomendaciones no se acepta ningÃºn reclamo.</li>
-                    <li>La sesiÃ³n de retoque Ãºnicamente procede cuando el procedimiento se efectÃºa de manera adecuada.</li>
-                    <li>He sido informado adecuadamente sobre cÃ³mo actÃºa el tratamiento, los posibles efectos secundarios que se pueden presentar y los resultados esperados.</li>
+                    <li>El tratamiento es un PROCEDIMIENTO que tiene limitada duración y en su estancia no reja necesariamente de manera permanente.</li>
+                    <li>El tratamiento puede producir daños si no se siguen las recomendaciones indicadas (uso de acondicionador, shampoo sin sal, etc.)</li>
+                    <li>El tratamiento puede generar enrojecimiento del cuero cabelludo, irritación, ardor de los ojos, sensación de quemazón, resequedad del cabello y otros efectos temporales.</li>
+                    <li>No existe garantía, excepción de nuestros términos y condiciones. En caso de no cumplir las recomendaciones no se acepta ningún reclamo.</li>
+                    <li>La sesión de retoque únicamente procede cuando el procedimiento se efectúa de manera adecuada.</li>
+                    <li>He sido informado adecuadamente sobre cómo actúa el tratamiento, los posibles efectos secundarios que se pueden presentar y los resultados esperados.</li>
                     <li>Nuestros productos tienen lixivia.</li>
                     <li>El anticipo no hace parte fundamental en el resultado del tratamiento realizado. El cliente es responsable.</li>
-                    <li>Algunos tratamientos tienen como contraindicaciÃ³n el alisado, en este caso, el cliente deberÃ¡ asumir las consecuencias de su decisiÃ³n.</li>
+                    <li>Algunos tratamientos tienen como contraindicación el alisado, en este caso, el cliente deberá asumir las consecuencias de su decisión.</li>
                     <li>Entiendo que para obtener los mejores resultados posibles, las intervenciones necesarias pueden ser realizadas en diferentes etapas.</li>
-                    <li>TambiÃ©n se han informado de las ventajas de no someterse al procedimiento.</li>
-                    <li><strong>ADVERTENCIA: ALGUNOS DE NUESTROS PROCEDIMIENTOS PUEDEN SUBIR DE TONO O ACLARAR DEL CABELLO SOBRE TODO EN CABELLOS CON DECOLORACIÃ“N.</strong></li>
+                    <li>También se han informado de las ventajas de no someterse al procedimiento.</li>
+                    <li><strong>ADVERTENCIA: ALGUNOS DE NUESTROS PROCEDIMIENTOS PUEDEN SUBIR DE TONO O ACLARAR DEL CABELLO SOBRE TODO EN CABELLOS CON DECOLORACIÓN.</strong></li>
                 </ol>
                 
                 <h5 class="text-primary mt-4">CUIDADOS</h5>
                 <ol>
                     <li>Lavar el cabello con shampoo sin sal o cualquier producto capilar sin sal, el USO DE ACONDICIONADOR es obligatorio.</li>
                     <li>SECAR EL CABELLO CON SECADOR INDICADO NO LO LAVES.</li>
-                    <li>SI TE ACUESTAS O VAS A DORMIR: EL LEVANTARTE DEBERÃS SECAR EL CABELLO MARCAS MARCADAS O FRIZZ, ES TOTALMENTE NORMAL.</li>
-                    <li>Peinar justo despuÃ©s de aplicar el producto el cabello mojado, no serÃ¡ conveniente que la persona realice peinados ajustados.</li>
-                    <li>Si el cabello se dejarÃ¡ secar al aire libre peinar constantemente hasta que se encuentre completamente seco.</li>
+                    <li>SI TE ACUESTAS O VAS A DORMIR: AL LEVANTARTE DEBERÁS SECAR EL CABELLO, MARCAS MARCADAS O FRIZZ, ES TOTALMENTE NORMAL.</li>
+                    <li>Peinar justo después de aplicar el producto sobre el cabello mojado, no será conveniente que la persona realice peinados ajustados.</li>
+                    <li>Si el cabello se dejará secar al aire libre, peinar constantemente hasta que se encuentre completamente seco.</li>
                     <li>No exponer cualquiera de nuestros tratamientos a componentes marinos del cloro.</li>
-                    <li>Mantener el tratamiento indicado por la persona que aplicÃ³ el tratamiento.</li>
-                    <li>Avisar oportunamente de cualquier cambio o reacciÃ³n desfavorable que no haya sido explicada.</li>
-                    <li>PodrÃ¡ aplicar tinte 15 dÃ­as despuÃ©s del tratamiento. DespuÃ©s del procedimiento de reconexiÃ³n molecular se podrÃ¡ decolorar en 4 meses.</li>
-                    <li>Debes traer a la cita todas las indicaciones del asesor (shampoo, secador, plancha, etc.) para ser instruida en el uso correcto del tratamiento de alisado, para esto LAVADA la clienta podrÃ¡ recibir de venir a nuestras instalaciones por SEGUNDA sesiÃ³n: NO COBRO, algunos casos el dÃ­a del procedimiento sin excepciÃ³n de tratamiento igual 15ml pesos sin algunos casos viene incluido.</li>
+                    <li>Mantener el tratamiento indicado por la persona que aplicó el tratamiento.</li>
+                    <li>Avisar oportunamente de cualquier cambio o reacción desfavorable que no haya sido explicada.</li>
+                    <li>Podrá aplicar tinte 15 días después del tratamiento. Después del procedimiento de reconexión molecular se podrá decolorar en 4 meses.</li>
+                    <li>Debes traer a la cita todas las indicaciones del asesor (shampoo, secador, plancha, etc.) para ser instruida en el uso correcto del tratamiento de alisado. En algunos casos, la clienta podrá venir nuevamente a nuestras instalaciones por segunda sesión sin cobro; otros casos el día del procedimiento incluyen un valor adicional.</li>
                 </ol>
                 
-                <h5 class="text-primary mt-4">COMPROMISOS DEL TRATAMIENTO - PORCENTAJES DE TRATADO O ELIMINACIÃ“N DE ONDA</h5>
+                <h5 class="text-primary mt-4">COMPROMISOS DEL TRATAMIENTO - PORCENTAJES DE TRATADO O ELIMINACIÓN DE ONDA</h5>
                 <ol>
                     <li>El resultado del procedimiento de alisado progresivo depende de los postis cuidados y sus respectivos:
                         <ul>
-                            <li><strong>ALISADO FOTÃ“NICO:</strong> duraciÃ³n de 4a 5 a 6 meses y elimina hasta 80% de la onda.</li>
-                            <li><strong>CIRUGIA CAPILAR:</strong> duraciÃ³n de hasta 3 meses y elimina el 70% de la onda.</li>
-                            <li><strong>RECONEXIÃ“N MOLECULAR:</strong> duraciÃ³n de hasta 6 meses y elimina hasta el 80% de la onda.</li>
-                            <li><strong>AMINOÃCIDOS CANNABIS:</strong> duraciÃ³n de 4 hasta 6 meses y elimina hasta el 85% de la onda.</li>
+                            <li><strong>ALISADO FOTÓNICO:</strong> duración de 4 a 6 meses y elimina hasta 80% de la onda.</li>
+                            <li><strong>CIRUGIA CAPILAR:</strong> duración de hasta 3 meses y elimina el 70% de la onda.</li>
+                            <li><strong>RECONEXIÓN MOLECULAR:</strong> duración de hasta 6 meses y elimina hasta el 80% de la onda.</li>
+                            <li><strong>AMINOÁCIDOS CANNABIS:</strong> duración de 4 a 6 meses y elimina hasta el 85% de la onda.</li>
                         </ul>
                     </li>
-                    <li>El procedimiento de retoque puede requerir de sesiones adicionales para lograr el efecto deseado. SEGÃšN EL PROCEDIMIENTO aplicado (puede durar de 4 a 6 meses), en este caso, el cliente deberÃ¡ asumir los gastos del REFUERZO DE ALISADO que se realizarÃ¡ de 10 a 15 dÃ­as despuÃ©s de la primera copia con o sin medicamentos, exÃ¡menes mÃ©dicos.</li>
-                    <li>Acepto que en caso de presentarse cualquier complicaciÃ³n, mantencion y similares estarÃ¡n en su totalidad a cargo del paciente.</li>
-                    <li>Tengo conocimiento que realizado el procedimiento NO HAY LUGAR a devoluciÃ³n de dinero.</li>
+                    <li>El procedimiento de retoque puede requerir de sesiones adicionales para lograr el efecto deseado. Según el procedimiento aplicado (puede durar de 4 a 6 meses), en este caso, el cliente deberá asumir los gastos del refuerzo de alisado que se realizará de 10 a 15 días después de la primera copia con o sin medicamentos, exámenes médicos.</li>
+                    <li>Acepto que en caso de presentarse cualquier complicación, mantención y similares estarán en su totalidad a cargo del paciente.</li>
+                    <li>Tengo conocimiento que realizado el procedimiento NO HAY LUGAR a devolución de dinero.</li>
                 </ol>
                 
                 <div class="alert alert-info mt-4">
                     <i class="bi bi-info-circle-fill"></i>
-                    <strong>Â¡PUEDES TOMARLE FOTO A ESTA INFORMACIÃ“N!</strong><br>
-                    DespuÃ©s de pagado y REALIZADO el procedimiento adicional. La lÃ­nea de atenciÃ³n al cliente estÃ¡ para resolver cualquier inquietud o consulta relacionado con el servicio ofrecido.
+                    <strong>¡PUEDES TOMARLE FOTO A ESTA INFORMACIÓN!</strong><br>
+                    Después de pagado y REALIZADO el procedimiento adicional. La línea de atención al cliente está para resolver cualquier inquietud o consulta relacionada con el servicio ofrecido.
                 </div>
                 
                 <div class="card bg-light mt-4 p-3">
                     <h6 class="fw-bold">ACEPTO Y AUTORIZO:</h6>
-                    <p class="mb-2">He leÃ­do y comprendido toda la informaciÃ³n anterior y acepto los tÃ©rminos y condiciones del tratamiento de alisado.</p>
+                    <p class="mb-2">He leído y comprendido toda la información anterior y acepto los términos y condiciones del tratamiento de alisado.</p>
                     
                     <div id="wrapperCheckboxAceptacion">
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" id="checkboxAceptacion" required>
-                            <label ...>Acepto todos los tÃ©rminos...</label>
+                            <label ...>Acepto todos los términos...</label>
                         </div>
                         <div id="msgCheckboxError">
                             <i class="bi bi-exclamation-triangle-fill"></i>
-                            Debes aceptar los tÃ©rminos y condiciones para continuar.
+                            Debes aceptar los términos y condiciones para continuar.
                         </div>
                     </div>
                     
@@ -544,7 +544,7 @@
                     
                     <div class="alert alert-info">
                         <i class="bi bi-info-circle-fill"></i>
-                        <strong>InformaciÃ³n del cliente seleccionado:</strong><br>
+                        <strong>Información del cliente seleccionado:</strong><br>
                         <span id="infoClienteConsentimiento">Seleccione un cliente en el formulario</span>
                     </div>
                     

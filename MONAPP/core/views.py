@@ -2,7 +2,6 @@ from datetime import date
 from pathlib import Path
 
 from django.contrib import messages
-from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.conf import settings
@@ -10,7 +9,7 @@ from django.http import FileResponse, JsonResponse
 from django.shortcuts import redirect, render
 from django.db.models import Sum
 
-from usuarios.forms import LoginForm
+from usuarios.views import login_view as usuarios_login_view
 
 from clientes.models import Cliente
 from servicios.models import Servicio
@@ -22,15 +21,8 @@ def index(request):
     show_login_modal = request.GET.get("login") == "1" or bool(request.GET.get("next"))
 
     if request.method == "POST":
-        form = LoginForm(request, data=request.POST)
+        return usuarios_login_view(request)
 
-        if form.is_valid():
-            user = form.get_user()
-            login(request, user)
-            return redirect(request.POST.get("next") or "core:dashboard")
-
-        messages.error(request, "Usuario o contraseña incorrectos.")
-        show_login_modal = True
 
     servicios = Servicio.objects.filter(activo=True)
     promociones = Promocion.objects.filter(activa=True)
@@ -297,4 +289,5 @@ def solo_admin(view_func):
         return view_func(request, *args, **kwargs)
 
     return wrapper
+
 

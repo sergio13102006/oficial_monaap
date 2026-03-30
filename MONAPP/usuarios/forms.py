@@ -1,8 +1,9 @@
 import re
 
 from django import forms
-from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
+from django.contrib.auth.forms import AuthenticationForm, UserCreationForm, PasswordResetForm
 from django.contrib.auth.models import User, Group
+from django.db.models import Q
 from core.form_validations import ValidationFormMixin
 from .models import PerfilUsuario
 
@@ -17,6 +18,43 @@ def _texto_seguro(valor):
 
 def _solo_numeros(valor):
     return bool(_NUMEROS_RE.match((valor or '').strip()))
+
+
+class IdentifierPasswordResetForm(PasswordResetForm):
+    email = forms.CharField(
+        label='Correo o identificador',
+        max_length=150,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'correo@ejemplo.com o documento',
+            'autocomplete': 'username',
+        }),
+    )
+
+    def get_users(self, email):
+        value = (email or '').strip()
+        if not value:
+            return
+
+        for user in User._default_manager.filter(
+            Q(email__iexact=value)
+            | Q(username__iexact=value)
+            | Q(perfil__documento__iexact=value),
+            is_active=True,
+        ).distinct():
+            if user.has_usable_password():
+                yield user
+
+    def clean_email(self):
+        value = (self.cleaned_data.get('email') or '').strip()
+        if not value:
+            raise forms.ValidationError('Ingresa un correo o identificador válido.')
+
+        usuarios = list(self.get_users(value) or [])
+        if not usuarios:
+            raise forms.ValidationError('El correo no está registrado. Ingresa uno válido.')
+
+        return value
 
 
 class LoginForm(AuthenticationForm):

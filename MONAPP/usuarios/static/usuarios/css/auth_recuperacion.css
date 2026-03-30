@@ -85,6 +85,57 @@ input[type="password"]::-webkit-credentials-auto-fill-button { visibility: hidde
 .bar-seg.weak { background: #e74c3c; }
 .bar-seg.ok { background: #f39c12; }
 .bar-seg.strong { background: #27ae60; }
+.requisitos-card {
+  margin-top: 14px;
+  padding: 14px 15px 12px;
+  border: 1px solid rgba(59,47,47,.12);
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(255,255,255,.92), rgba(248,243,235,.96));
+  box-shadow: 0 10px 28px rgba(59,47,47,.06);
+}
+.requisitos-title {
+  font-size: .74rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.4px;
+  color: var(--brown);
+  margin-bottom: 8px;
+}
+.requisitos-list {
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+.requisitos-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: .82rem;
+  color: var(--brown);
+  line-height: 1.2;
+}
+.requisitos-list li small {
+  margin-left: auto;
+  font-size: .68rem;
+  color: var(--mid);
+  font-weight: 500;
+}
+.req-icon {
+  width: 18px;
+  flex: 0 0 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .72rem;
+  line-height: 1;
+  color: #8f7e79;
+}
+.req-muted { color: #9b918a; }
+.requisitos-list li.is-pass .req-icon { color: #27ae60; }
+.requisitos-list li.is-fail .req-icon { color: #c0392b; }
+.requisitos-list li.is-pass span:last-of-type { color: #234d36; }
+.requisitos-list li.is-fail span:last-of-type { color: #7a2b24; }
+.requisitos-list li.is-neutral .req-icon { color: #9b918a; }
 .match-ok { color: #27ae60; }
 .match-fail { color: #e74c3c; }
 #leftCanvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }

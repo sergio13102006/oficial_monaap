@@ -32,7 +32,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const modalInfoTitle = document.getElementById('modalGestionInfoLabel');
     const modalInfoContent = document.getElementById('modalGestionInfoContent');
     const modalFormTitle = document.getElementById('modalFormGestionLabel');
-    const btnReporte = document.getElementById('btnReportePdfPreview');
 
     const spinnerHTML = `
         <div class="text-center py-5">
@@ -128,7 +127,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    async function eliminarGestionConSweetAlert(deleteUrl, label) {
+    async function eliminarGestionConSweetAlert(deleteUrl, label, redirectUrl = '') {
         if (!deleteUrl) return;
 
         if (typeof Swal === 'undefined') {
@@ -174,7 +173,11 @@ document.addEventListener('DOMContentLoaded', function () {
                         showConfirmButton: false,
                     });
                 }
-                window.location.reload();
+                if (redirectUrl) {
+                    window.location.href = redirectUrl;
+                } else {
+                    window.location.reload();
+                }
                 return;
             }
 
@@ -196,32 +199,15 @@ document.addEventListener('DOMContentLoaded', function () {
         const deleteTrigger = event.target.closest('.js-delete-gestion-swal');
         if (!deleteTrigger) return;
         event.preventDefault();
-        eliminarGestionConSweetAlert(deleteTrigger.dataset.deleteUrl, deleteTrigger.dataset.gestionLabel || '');
+        eliminarGestionConSweetAlert(
+            deleteTrigger.dataset.deleteUrl,
+            deleteTrigger.dataset.gestionLabel || '',
+            deleteTrigger.dataset.deleteRedirectUrl || ''
+        );
     });
 
-    if (btnReporte) {
-        btnReporte.addEventListener('click', function () {
-            const form = document.getElementById('filtrosForm');
-            const params = new URLSearchParams();
-
-            if (form) {
-                const buscarInput = form.querySelector('input[name="buscar"]');
-                const formaInput = form.querySelector('select[name="forma_natural"]');
-                const porosidadInput = form.querySelector('select[name="porosidad"]');
-                const texturaInput = form.querySelector('select[name="textura"]');
-                const estadoInput = form.querySelector('select[name="estado_pago"]');
-
-                params.set('buscar', buscarInput ? buscarInput.value : '');
-                params.set('forma_natural', formaInput ? formaInput.value : '');
-                params.set('porosidad', porosidadInput ? porosidadInput.value : '');
-                params.set('textura', texturaInput ? texturaInput.value : '');
-                params.set('estado_pago', estadoInput ? estadoInput.value : '');
-            }
-
-            const baseUrl = btnReporte.dataset.previewBase || '';
-            btnReporte.dataset.previewUrl = baseUrl + '?' + params.toString();
-        }, true);
-    }
 });
 
-window.initGestionForm = initGestionForm;
+if (typeof initGestionForm === 'function') {
+    window.initGestionForm = initGestionForm;
+}

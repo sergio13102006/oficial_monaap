@@ -1,4 +1,4 @@
-// ---------------------------
+﻿// ---------------------------
 // Utils
 // ---------------------------
 function esAjaxRequestHeaders() {
@@ -13,7 +13,7 @@ function money(n) {
 }
 
 // ============================================================
-// 1) INIT CREAR VENTA (REUTILIZABLE: página y modal)
+// 1) INIT CREAR VENTA (REUTILIZABLE: pÃ¡gina y modal)
 // ============================================================
 function initCrearVenta(scope = document) {
   // Buscar el FORM (si no existe, salir)
@@ -50,7 +50,7 @@ function initCrearVenta(scope = document) {
   const itemsInput = form.querySelector("#itemsInput");
   const errorCantidad = form.querySelector("#cantidadError");
 
-  // Si faltan piezas críticas, salir sin romper
+  // Si faltan piezas crÃ­ticas, salir sin romper
   const tieneModuloCrearVenta =
     !!btnAgregarItem &&
     !!btnGuardarVenta &&
@@ -93,7 +93,7 @@ function initCrearVenta(scope = document) {
         <td class="text-center">${item.cantidad}</td>
         <td class="text-end">$${money(item.subtotal)}</td>
         <td class="text-center">
-          <button type="button" class="btn btn-sm btn-danger" data-index="${i}">✖</button>
+          <button type="button" class="btn btn-sm btn-danger" data-index="${i}">âœ–</button>
         </td>
       `;
       tablaItemsBody.appendChild(tr);
@@ -143,7 +143,7 @@ function initCrearVenta(scope = document) {
   function validarCantidad() {
     const cantidadStr = String(inputCantidad.value || "").trim();
 
-    //  Si está vacío (todavía no han escrito), NO mostrar error
+    //  Si estÃ¡ vacÃ­o (todavÃ­a no han escrito), NO mostrar error
     if (cantidadStr === "") {
       if (errorCantidad) errorCantidad.classList.add("d-none");
       inputSubtotal.value = "";
@@ -154,7 +154,7 @@ function initCrearVenta(scope = document) {
     const cantidad = parseInt(cantidadStr, 10);
     const precio = toNum(inputPrecio.value);
 
-    //  Si no es número válido, tampoco mostramos error agresivo
+    //  Si no es nÃºmero vÃ¡lido, tampoco mostramos error agresivo
     if (isNaN(cantidad) || cantidad <= 0) {
       if (errorCantidad) errorCantidad.classList.add("d-none");
       inputSubtotal.value = "";
@@ -162,7 +162,7 @@ function initCrearVenta(scope = document) {
       return;
     }
 
-    //  Si se pasa del stock, ahí sí mostramos el error
+    //  Si se pasa del stock, ahÃ­ sÃ­ mostramos el error
     if (cantidad > stockActual) {
       if (errorCantidad) errorCantidad.classList.remove("d-none");
       btnAgregarItem.disabled = true;
@@ -300,7 +300,7 @@ function initCrearVenta(scope = document) {
       if (!cantidad || cantidad <= 0 || cantidad > stockActual) {
         Swal?.fire?.({
           icon: "warning",
-          title: "Cantidad inválida o superior al stock disponible",
+          title: "Cantidad invÃ¡lida o superior al stock disponible",
         });
         return;
       }
@@ -326,7 +326,7 @@ function initCrearVenta(scope = document) {
       if (!selectPersonal || selectPersonal.selectedIndex === 0) {
         Swal?.fire?.({
           icon: "warning",
-          title: "Selecciona la persona que realizó el servicio",
+          title: "Selecciona la persona que realizÃ³ el servicio",
         });
         return;
       }
@@ -351,7 +351,7 @@ function initCrearVenta(scope = document) {
   });
 
   // ---------------------------
-  // Eliminar item (delegación)
+  // Eliminar item (delegaciÃ³n)
   // ---------------------------
   tablaItemsBody.addEventListener("click", (e) => {
     const btn = e.target.closest("button[data-index]");
@@ -374,11 +374,11 @@ function initCrearVenta(scope = document) {
     if (!btnAgregarItem) return;
 
     if (tipoProducto.checked) {
-      btnAgregarItem.innerHTML = "➕ Agregar producto";
+      btnAgregarItem.innerHTML = "âž• Agregar producto";
     } else if (tipoServicio.checked) {
-      btnAgregarItem.innerHTML = "➕ Agregar servicio";
+      btnAgregarItem.innerHTML = "âž• Agregar servicio";
     } else {
-      btnAgregarItem.innerHTML = "➕ Agregar producto / servicio";
+      btnAgregarItem.innerHTML = "âž• Agregar producto / servicio";
     }
   }
 
@@ -423,7 +423,7 @@ function initCrearVenta(scope = document) {
   applyTomSelect(selectPersonal);
 }
 
-// Init al cargar cualquier página
+// Init al cargar cualquier pÃ¡gina
 document.addEventListener("DOMContentLoaded", () => {
   initCrearVenta(document);
 });
@@ -449,7 +449,7 @@ document.addEventListener("click", async function (e) {
 
   const modal = new bootstrap.Modal(modalEl);
 
-  contenido.innerHTML = `<div class="text-center text-muted py-4">Cargando…</div>`;
+  contenido.innerHTML = `<div class="text-center text-muted py-4">Cargandoâ€¦</div>`;
 
   try {
     const res = await fetch(url, { headers: esAjaxRequestHeaders() });
@@ -458,7 +458,7 @@ document.addEventListener("click", async function (e) {
     const data = await res.json();
     contenido.innerHTML = data.html || "";
 
-    // ✅ activar lógica del formulario dentro del modal
+    // âœ… activar lÃ³gica del formulario dentro del modal
     initCrearVenta(modalEl);
 
     modal.show();
@@ -473,13 +473,13 @@ document.addEventListener("submit", async function (e) {
   const form = e.target;
   if (!form.matches("#formCrearVenta")) return;
 
-  // Solo si está dentro del modal
+  // Solo si estÃ¡ dentro del modal
   const modalEl = form.closest("#modalNuevaVenta");
   if (!modalEl) return;
 
   e.preventDefault();
 
-  // El form NO tiene action en tu parcial, entonces usamos el data-url del botón
+  // El form NO tiene action en tu parcial, entonces usamos el data-url del botÃ³n
   const btnNueva = document.getElementById("btnNuevaVenta");
   const url = btnNueva ? btnNueva.dataset.url : window.location.href;
 
@@ -631,7 +631,7 @@ document.addEventListener("click", async function (e) {
 
       cont.innerHTML = `
         <div class="row g-2 mb-3">
-          <div class="col-md-6"><strong>Código venta:</strong> ${v.codigo_venta || "-"}</div>
+          <div class="col-md-6"><strong>CÃ³digo venta:</strong> ${v.codigo_venta || "-"}</div>
           <div class="col-md-6"><strong>Fecha:</strong> ${v.fecha || "-"}</div>
           <div class="col-md-6"><strong>Cliente:</strong> ${v.cliente || "-"}</div>
           <div class="col-md-6"><strong>Estado:</strong> ${v.estado || "-"}</div>
@@ -698,7 +698,7 @@ function precargarItemsEdicion(form, items) {
   var totalEl = form.querySelector("#totalVenta");
   if (!tablaBody || !itemsInput) return;
 
-  // Inyectar ítems directamente en el input hidden y renderizar la tabla
+  // Inyectar Ã­tems directamente en el input hidden y renderizar la tabla
   itemsInput.value = JSON.stringify(items);
 
   var total = 0;
@@ -710,7 +710,7 @@ function precargarItemsEdicion(form, items) {
       + '<td class="text-end">$' + (item.precio||0).toFixed(2) + '</td>'
       + '<td class="text-center">' + (item.cantidad||1) + '</td>'
       + '<td class="text-end">$' + (item.subtotal||0).toFixed(2) + '</td>'
-      + '<td class="text-center"><button type="button" class="btn btn-sm btn-danger" data-index="' + i + '">✖</button></td>';
+      + '<td class="text-center"><button type="button" class="btn btn-sm btn-danger" data-index="' + i + '">âœ–</button></td>';
     tablaBody.appendChild(tr);
   });
   if (totalEl) totalEl.textContent = total.toFixed(2);
@@ -769,7 +769,7 @@ document.addEventListener("input", function(e) {
     var val = parseInt(cant.value) || 0;
     var errEl = document.querySelector('.err-stock-' + id);
 
-    // No permitir escribir más de lo disponible (1..stock)
+    // No permitir escribir mÃ¡s de lo disponible (1..stock)
     if (stock <= 0) {
       cant.value = 0;
       cant.classList.add("is-invalid");
@@ -876,7 +876,7 @@ function recalcTotalEditar() {
   if (totalEl) totalEl.textContent = "$ " + total.toLocaleString("es-CO", {minimumFractionDigits:2});
 }
 
-// Eliminar función precargarItemsEdicion si existe (ya no se usa)
+// Eliminar funciÃ³n precargarItemsEdicion si existe (ya no se usa)
 
 
 // ============================================================
@@ -890,7 +890,7 @@ document.addEventListener(
 
     if (typeof Swal === "undefined") {
       console.error(
-        "❌ SweetAlert2 no está cargado. Revisa el orden de scripts.",
+        "âŒ SweetAlert2 no estÃ¡ cargado. Revisa el orden de scripts.",
       );
       return;
     }
@@ -904,14 +904,14 @@ document.addEventListener(
     const vaAActivar = estadoAntes === "anulada";
 
     const titulo = vaAActivar
-      ? "¿Seguro de activar nuevamente la venta?"
-      : "¿Seguro de anular la venta?";
+      ? "Â¿Seguro de activar nuevamente la venta?"
+      : "Â¿Seguro de anular la venta?";
 
     const texto = vaAActivar
-      ? "La venta quedará ACTIVA nuevamente."
-      : "La venta quedará ANULADA.";
+      ? "La venta quedarÃ¡ ACTIVA nuevamente."
+      : "La venta quedarÃ¡ ANULADA.";
 
-    const confirmText = vaAActivar ? "Sí, activar" : "Sí, anular";
+    const confirmText = vaAActivar ? "SÃ­, activar" : "SÃ­, anular";
 
     Swal.fire({
       title: titulo,
@@ -1011,22 +1011,12 @@ document.addEventListener("change", function (e) {
 
   const inicioComp = bloque.querySelector('input[name="fecha_inicio_comp"]');
   const finComp = bloque.querySelector('input[name="fecha_fin_comp"]');
-  const form = document.getElementById("formReporteVentas");
-  const checkGrafica = form ? form.querySelector('input[name="incluir_grafica"]') : null;
-  const labelGrafica = checkGrafica ? checkGrafica.closest("label") : null;
   const bloqueTipo = document.getElementById("bloqueTipoGraficaVentas");
 
   if (checkComparativo.checked) {
     bloque.classList.remove("d-none");
     if (inicioComp) inicioComp.required = true;
     if (finComp) finComp.required = true;
-
-    // Gráfica solo disponible en modo comparativo
-    if (checkGrafica) checkGrafica.disabled = false;
-    if (labelGrafica) {
-      labelGrafica.style.opacity = "";
-      labelGrafica.style.pointerEvents = "";
-    }
   } else {
     bloque.classList.add("d-none");
     if (inicioComp) {
@@ -1037,54 +1027,25 @@ document.addEventListener("change", function (e) {
       finComp.required = false;
       finComp.value = "";
     }
-
-    // Desactivar gráfica si no hay comparativo
-    if (checkGrafica) {
-      checkGrafica.checked = false;
-      checkGrafica.disabled = true;
-    }
-    if (bloqueTipo) bloqueTipo.classList.add("d-none");
-    if (labelGrafica) {
-      labelGrafica.style.opacity = "0.55";
-      labelGrafica.style.pointerEvents = "none";
-    }
   }
 });
 
-// Estado inicial del checkbox de gráfica: solo habilitado si comparativo está activo.
+// Estado inicial del bloque comparativo.
 document.addEventListener("DOMContentLoaded", function () {
   const form = document.getElementById("formReporteVentas");
   if (!form) return;
 
   const checkComparativo = document.getElementById("checkComparativoVentas");
-  const comparativoActivo = !!(checkComparativo && checkComparativo.checked);
-
-  const checkGrafica = form.querySelector('input[name="incluir_grafica"]');
-  const labelGrafica = checkGrafica ? checkGrafica.closest("label") : null;
   const bloqueTipo = document.getElementById("bloqueTipoGraficaVentas");
 
-  if (!comparativoActivo) {
-    if (checkGrafica) {
-      checkGrafica.checked = false;
-      checkGrafica.disabled = true;
-    }
+  if (!(checkComparativo && checkComparativo.checked)) {
     if (bloqueTipo) bloqueTipo.classList.add("d-none");
-    if (labelGrafica) {
-      labelGrafica.style.opacity = "0.55";
-      labelGrafica.style.pointerEvents = "none";
-    }
-  } else {
-    if (checkGrafica) checkGrafica.disabled = false;
-    if (labelGrafica) {
-      labelGrafica.style.opacity = "";
-      labelGrafica.style.pointerEvents = "";
-    }
   }
 });
 
 
 // ============================================================
-// VALIDACION DE FECHAS — REPORTE
+// VALIDACION DE FECHAS â€” REPORTE
 // ============================================================
 
 function hoy() {
@@ -1132,7 +1093,7 @@ function validarFechasReporte(form) {
   var dFic = parseDate(fic);
   var dFfc = parseDate(ffc);
 
-  // ── Rango principal ────────────────────────────────────
+  // â”€â”€ Rango principal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   if (!fi) {
     setFieldError("id_fecha_inicio", "err_fecha_inicio", "La fecha inicial es obligatoria.");
     errores.push("fecha_inicio");
@@ -1159,7 +1120,7 @@ function validarFechasReporte(form) {
     errores.push("mismo_dia");
   }
 
-  // ── Rango comparativo ──────────────────────────────────
+  // â”€â”€ Rango comparativo â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   if (esComparativo) {
     if (!fic) {
       setFieldError("id_fecha_inicio_comp", "err_fecha_inicio_comp", "La fecha inicial comparativa es obligatoria.");
@@ -1188,8 +1149,8 @@ function validarFechasReporte(form) {
     // Rango comparativo no puede ser igual al principal
     if (dFi && dFf && dFic && dFfc &&
         dFi.getTime() === dFic.getTime() && dFf.getTime() === dFfc.getTime()) {
-      setFieldError("id_fecha_inicio_comp", "err_fecha_inicio_comp", "El rango comparativo no puede ser idéntico al rango principal.");
-      setFieldError("id_fecha_fin_comp", "err_fecha_fin_comp", "El rango comparativo no puede ser idéntico al rango principal.");
+      setFieldError("id_fecha_inicio_comp", "err_fecha_inicio_comp", "El rango comparativo no puede ser idÃ©ntico al rango principal.");
+      setFieldError("id_fecha_fin_comp", "err_fecha_fin_comp", "El rango comparativo no puede ser idÃ©ntico al rango principal.");
       errores.push("comp_igual_principal");
     }
   }
@@ -1278,7 +1239,7 @@ document.addEventListener("click", async function (e) {
 
     // Renderizar gráfica (si la pidió el usuario)
     await new Promise((resolve) => requestAnimationFrame(resolve));
-    if (data.incluir_grafica && data.comparativo) {
+    if (data.incluir_grafica) {
       const pLabels = data.grafica_principal_labels || [];
       const pData   = data.grafica_principal_data   || [];
       const cLabels = data.grafica_comp_labels || [];
@@ -1316,7 +1277,7 @@ document.addEventListener("click", async function (e) {
       if (pLabels.length) {
         datasets.push({
           label: data.comparativo
-            ? "Principal (" + (data.fecha_inicio || "") + " — " + (data.fecha_fin || "") + ")"
+            ? "Principal (" + (data.fecha_inicio || "") + " â€” " + (data.fecha_fin || "") + ")"
             : "Ventas",
           data: data.comparativo ? alinear(pLabels, pData, allLabels) : pData,
         });
@@ -1324,7 +1285,7 @@ document.addEventListener("click", async function (e) {
 
       if (data.comparativo && cLabels.length) {
         datasets.push({
-          label: "Comparativo (" + (data.fecha_inicio_comp || "") + " — " + (data.fecha_fin_comp || "") + ")",
+          label: "Comparativo (" + (data.fecha_inicio_comp || "") + " â€” " + (data.fecha_fin_comp || "") + ")",
           data: alinear(cLabels, cData, allLabels),
         });
       }
@@ -1397,7 +1358,7 @@ document.addEventListener("click", async function (e) {
 
   async function descargarPreviewComoPDF() {
     if (typeof html2pdf === "undefined") {
-      throw new Error("html2pdf.js no está disponible.");
+      throw new Error("html2pdf.js no estÃ¡ disponible.");
     }
 
     const wrapper = document.createElement("div");
@@ -1410,7 +1371,7 @@ document.addEventListener("click", async function (e) {
 
     const clone = sheet.cloneNode(true);
 
-    // Copiar contenido de canvases (Chart.js) a imágenes en el clon para que html2canvas lo renderice.
+    // Copiar contenido de canvases (Chart.js) a imÃ¡genes en el clon para que html2canvas lo renderice.
     const srcCanvases = Array.from(sheet.querySelectorAll("canvas"));
     const dstCanvases = Array.from(clone.querySelectorAll("canvas"));
     srcCanvases.forEach((srcCanvas, idx) => {
@@ -1513,7 +1474,7 @@ document.addEventListener("click", async function (e) {
   } else {
     result = await Swal.fire({
       title: "Descargar reporte",
-      text: "Se descargará en PDF.",
+      text: "Se descargarÃ¡ en PDF.",
       icon: "question",
       showCancelButton: true,
       confirmButtonText: "PDF",
@@ -1550,7 +1511,7 @@ document.addEventListener("click", async function (e) {
       Swal.fire({
         icon: "warning",
         title: "Sin archivo",
-        text: "No se encontró la ruta del Excel.",
+        text: "No se encontrÃ³ la ruta del Excel.",
       });
       return;
     }
@@ -1603,7 +1564,7 @@ document.addEventListener("submit", function (e) {
     Swal.fire({
       icon: "error",
       title: "No se pudo generar el PDF",
-      text: "No se encontró el botón de vista previa.",
+      text: "No se encontrÃ³ el botÃ³n de vista previa.",
     });
   }
 });
@@ -1614,10 +1575,7 @@ document.addEventListener("change", function (e) {
   const bloqueTipo = document.getElementById("bloqueTipoGraficaVentas");
   if (!bloqueTipo) return;
 
-  const checkComparativo = document.getElementById("checkComparativoVentas");
-  const comparativoActivo = !!(checkComparativo && checkComparativo.checked);
-
-  if (checkGrafica.checked && comparativoActivo) {
+  if (checkGrafica.checked) {
     bloqueTipo.classList.remove("d-none");
   } else {
     bloqueTipo.classList.add("d-none");
@@ -1693,7 +1651,7 @@ function renderFormDevolucion(cont, footer, data) {
     var disponibleBadge, accion, trOpacity;
 
     if (esServicio) {
-      disponibleBadge = '<span class="text-muted small">—</span>';
+      disponibleBadge = '<span class="text-muted small">â€”</span>';
       accion = '<span class="badge rounded-pill" style="background:rgba(100,100,100,0.09);color:#6c757d;font-size:.75rem">No aplica</span>';
       trOpacity = "opacity:.5";
     } else if (sinStock) {
@@ -1708,8 +1666,8 @@ function renderFormDevolucion(cont, footer, data) {
 
     return '<tr style="' + trOpacity + '">'
       + '<td class="fw-medium">' + tipoIcon + item.nombre + '</td>'
-      + '<td class="text-center">' + (esServicio ? '<span class="text-muted small">—</span>' : item.cantidad_original) + '</td>'
-      + '<td class="text-center text-muted">' + (esServicio ? '<span class="text-muted small">—</span>' : item.ya_devuelto) + '</td>'
+      + '<td class="text-center">' + (esServicio ? '<span class="text-muted small">â€”</span>' : item.cantidad_original) + '</td>'
+      + '<td class="text-center text-muted">' + (esServicio ? '<span class="text-muted small">â€”</span>' : item.ya_devuelto) + '</td>'
       + '<td class="text-center">' + disponibleBadge + '</td>'
       + '<td class="text-end fw-medium">$' + item.precio_unitario.toFixed(2) + '</td>'
       + '<td class="text-center" style="width:120px">' + accion + '</td>'
@@ -1870,7 +1828,7 @@ function getCookie(name) {
 }
 
 // ============================================================
-// BOTÓN X MODAL DEVOLUCIÓN — GIRO HORARIO/ANTIHORARIO
+// BOTÃ“N X MODAL DEVOLUCIÃ“N â€” GIRO HORARIO/ANTIHORARIO
 // ============================================================
 document.addEventListener("mouseleave", function(e) {
   if (!e.target.closest) return;
@@ -1883,7 +1841,7 @@ document.addEventListener("mouseleave", function(e) {
   icon.classList.remove("spin-reset");
   icon.classList.add("spin-back");
 
-  // Después de la transición, resetear a 0 sin animación
+  // DespuÃ©s de la transiciÃ³n, resetear a 0 sin animaciÃ³n
   setTimeout(function() {
     icon.classList.remove("spin-back");
     icon.classList.add("spin-reset");
@@ -1895,3 +1853,4 @@ document.addEventListener("mouseleave", function(e) {
     });
   }, 360);
 }, true);
+

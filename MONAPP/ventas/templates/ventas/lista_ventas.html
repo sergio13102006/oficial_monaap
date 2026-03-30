@@ -1,4 +1,4 @@
-{% extends "core/panel_admin_base.html" %}
+﻿{% extends "core/panel_admin_base.html" %}
 {% load static %}
 {% load humanize %}
 {% load sort_tags %}
@@ -238,7 +238,7 @@ Ventas
             data-id="{{ venta.id }}"
             data-url="{% url 'ventas:devolucion_items' venta.id %}"
             data-url-registrar="{% url 'ventas:registrar_devolucion' venta.id %}"
-            title="Registrar devolución"
+            title="Registrar devolución "
           >
             <i class="bi bi-arrow-return-left"></i>
           </button>
@@ -261,13 +261,13 @@ Ventas
 <!-- MODAL DETALLE -->
 <div class="modal fade" id="modalDetalleVenta" tabindex="-1">
   <div class="modal-dialog modal-lg modal-dialog-centered">
-    <div class="modal-content" style="border:none;border-radius:16px;overflow:hidden;box-shadow:0 8px 40px rgba(58,33,23,0.18);">
-      <div class="modal-header" style="background:linear-gradient(135deg,#1a0a0a 0%,#3a2117 60%,#4b2f2a 100%);border:none;padding:18px 24px;display:flex;align-items:center;justify-content:space-between;">
-        <h5 class="modal-title text-white fw-semibold" style="font-size:1rem;letter-spacing:.01em;"><i class="bi bi-eye me-2"></i>Detalle de venta</h5>
-        <button type="button" class="btn-close-dev" data-bs-dismiss="modal" aria-label="Cerrar"><span class="btn-close-dev__icon">✕</span></button>
+    <div class="modal-content ventas-modal-content">
+      <div class="modal-header ventas-modal-header">
+        <h5 class="modal-title ventas-modal-title"><i class="bi bi-eye me-2"></i>Detalle de venta</h5>
+        <button type="button" class="btn-close btn-close-white ventas-modal-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
       </div>
       <div class="modal-body" id="contenidoDetalleVenta">
-        <div class="text-center text-muted py-4">Selecciona una venta…</div>
+        <div class="text-center text-muted py-4 ventas-modal-empty-note">Selecciona una venta</div>
       </div>
     </div>
   </div>
@@ -276,13 +276,13 @@ Ventas
 <!-- MODAL EDITAR -->
 <div class="modal fade" id="modalEditarVenta" tabindex="-1">
   <div class="modal-dialog modal-xl modal-dialog-centered">
-    <div class="modal-content" style="border:none;border-radius:16px;overflow:hidden;box-shadow:0 8px 40px rgba(58,33,23,0.18);">
-      <div class="modal-header" style="background:linear-gradient(135deg,#1a0a0a 0%,#3a2117 60%,#4b2f2a 100%);border:none;padding:18px 24px;display:flex;align-items:center;justify-content:space-between;">
-        <h5 class="modal-title text-white fw-semibold" style="font-size:1rem;letter-spacing:.01em;"><i class="bi bi-pencil-square me-2"></i>Editar venta</h5>
-        <button type="button" class="btn-close-dev" data-bs-dismiss="modal" aria-label="Cerrar"><span class="btn-close-dev__icon">✕</span></button>
+    <div class="modal-content ventas-modal-content">
+      <div class="modal-header ventas-modal-header">
+        <h5 class="modal-title ventas-modal-title"><i class="bi bi-pencil-square me-2"></i>Editar venta</h5>
+        <button type="button" class="btn-close btn-close-white ventas-modal-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
       </div>
       <div class="modal-body" id="contenidoEditarVenta">
-        <div class="text-center text-muted py-4">Cargando…</div>
+        <div class="text-center text-muted py-4 ventas-modal-empty-note">Cargando...</div>
       </div>
     </div>
   </div>
@@ -291,14 +291,14 @@ Ventas
 <!-- MODAL NUEVA VENTA -->
 <div class="modal fade" id="modalNuevaVenta" tabindex="-1">
   <div class="modal-dialog modal-xl modal-dialog-centered">
-    <div class="modal-content" style="border:none;border-radius:16px;overflow:hidden;box-shadow:0 8px 40px rgba(58,33,23,0.18);">
-      <div class="modal-header" style="background:linear-gradient(135deg,#1a0a0a 0%,#3a2117 60%,#4b2f2a 100%);border:none;padding:18px 24px;display:flex;align-items:center;justify-content:space-between;">
-        <h5 class="modal-title text-white fw-semibold" style="font-size:1rem;letter-spacing:.01em;"><i class="fas fa-plus me-2"></i>Nueva venta</h5>
-        <button type="button" class="btn-close-dev" data-bs-dismiss="modal" aria-label="Cerrar"><span class="btn-close-dev__icon">✕</span></button>
+    <div class="modal-content ventas-modal-content">
+      <div class="modal-header ventas-modal-header">
+        <h5 class="modal-title ventas-modal-title"><i class="fas fa-plus me-2"></i>Nueva venta</h5>
+        <button type="button" class="btn-close btn-close-white ventas-modal-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
       </div>
 
       <div class="modal-body" id="contenidoNuevaVenta">
-        <div class="text-center text-muted py-4">Cargando formulario…</div>
+        <div class="text-center text-muted py-4 ventas-modal-empty-note">Cargando formulario...</div>
       </div>
     </div>
   </div>
@@ -312,11 +312,11 @@ Ventas
   aria-hidden="true"
 >
   <div class="modal-dialog modal-xl modal-dialog-centered">
-    <div class="modal-content" style="border:none;border-radius:16px;overflow:hidden;box-shadow:0 8px 40px rgba(58,33,23,0.18);">
+    <div class="modal-content ventas-modal-content">
       <form id="formReporteVentas">
-        <div class="modal-header" style="background:linear-gradient(135deg,#1a0a0a 0%,#3a2117 60%,#4b2f2a 100%);border:none;padding:18px 24px;display:flex;align-items:center;justify-content:space-between;">
-          <h5 class="modal-title text-white fw-semibold" style="font-size:1rem;letter-spacing:.01em;"><i class="bi bi-bar-chart-line me-2"></i>Configurar reporte de ventas</h5>
-          <button type="button" class="btn-close-dev" data-bs-dismiss="modal" aria-label="Cerrar"><span class="btn-close-dev__icon">✕</span></button>
+        <div class="modal-header ventas-modal-header">
+          <h5 class="modal-title ventas-modal-title"><i class="bi bi-bar-chart-line me-2"></i>Configurar reporte de ventas</h5>
+          <button type="button" class="btn-close btn-close-white ventas-modal-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
         </div>
 
         <div class="modal-body">
@@ -444,7 +444,7 @@ Ventas
 
                 <div class="col-12">
                   <label class="report-option">
-                    <input type="checkbox" name="incluir_grafica" value="1" disabled />
+                    <input type="checkbox" name="incluir_grafica" value="1" />
                     <span class="report-circle"></span>
                     <span class="report-label-text">Mostrar gráfica diaria</span>
                   </label>
@@ -554,15 +554,15 @@ Ventas
   <div
     class="modal-dialog modal-fullscreen-lg-down modal-xl modal-dialog-centered comprobante-print-dialog"
   >
-    <div class="modal-content comprobante-modal">
-      <div class="modal-header" style="background:linear-gradient(135deg,#1a0a0a 0%,#3a2117 60%,#4b2f2a 100%);border:none;padding:18px 24px;display:flex;align-items:center;justify-content:space-between;">
-        <h5 class="modal-title text-white fw-semibold" style="font-size:1rem;letter-spacing:.01em;"><i class="bi bi-eye me-2"></i>Vista previa del reporte</h5>
-        <button type="button" class="btn-close-dev" data-bs-dismiss="modal" aria-label="Cerrar"><span class="btn-close-dev__icon">✕</span></button>
+    <div class="modal-content comprobante-modal ventas-modal-content">
+      <div class="modal-header ventas-modal-header">
+        <h5 class="modal-title ventas-modal-title"><i class="bi bi-eye me-2"></i>Vista previa del reporte</h5>
+        <button type="button" class="btn-close btn-close-white ventas-modal-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
       </div>
       <div class="modal-body comprobante-modal-body" id="contenidoVistaPreviaReporte">
         <div id="reporteVentasPreviewBody" style="width:100%;">
-          <div class="text-center text-muted py-5">
-            Configura el reporte y pulsa “Vista previa”.
+          <div class="text-center text-muted py-5 ventas-modal-empty-note">
+            Configura el reporte y pulsa Vista previa.
           </div>
         </div>
       </div>
@@ -581,17 +581,15 @@ Ventas
 <!-- MODAL DEVOLUCIÓN -->
 <div class="modal fade" id="modalDevolucion" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-centered">
-    <div class="modal-content" style="border:none;border-radius:16px;overflow:hidden;box-shadow:0 8px 40px rgba(58,33,23,0.18);">
-      <div class="modal-header dev-modal-header" style="background:linear-gradient(135deg,#1a0a0a 0%,#3a2117 60%,#4b2f2a 100%);border:none;padding:18px 24px;display:flex;align-items:center;justify-content:space-between;">
-        <h5 class="modal-title text-white fw-semibold" style="font-size:1rem;letter-spacing:.01em;">
+    <div class="modal-content ventas-modal-content">
+      <div class="modal-header ventas-modal-header">
+        <h5 class="modal-title ventas-modal-title">
           <i class="bi bi-arrow-return-left me-2"></i>Registrar devolución
         </h5>
-        <button type="button" class="btn-close-dev" data-bs-dismiss="modal" aria-label="Cerrar">
-          <span class="btn-close-dev__icon">✕</span>
-        </button>
+        <button type="button" class="btn-close btn-close-white ventas-modal-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
       </div>
       <div class="modal-body" id="contenidoDevolucion" style="padding:24px;">
-        <div class="text-center text-muted py-4">Cargando…</div>
+        <div class="text-center text-muted py-4 ventas-modal-empty-note">Cargando...</div>
       </div>
       <div class="modal-footer d-none border-0 pt-0" id="footerDevolucion" style="padding:0 24px 20px;">
         <button type="button" class="btn btn-outline-secondary btn-sm px-4" data-bs-dismiss="modal">Cancelar</button>
@@ -614,3 +612,5 @@ Ventas
         referrerpolicy="no-referrer"></script>
 <script src="{% static 'ventas/js/ventas.js' %}"></script>
 {% endblock %}
+
+

@@ -184,6 +184,44 @@ input[type="password"]::-webkit-credentials-auto-fill-button { visibility: hidde
   transform: translateY(0);
 }
 
+.login-captcha-shell {
+  margin: 12px 0 10px;
+  padding: 12px 12px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(59, 47, 47, 0.16);
+  background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(247,241,232,.96));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.55);
+}
+
+.login-captcha-shell.d-none {
+  display: none !important;
+}
+
+.login-captcha-shell.is-visible {
+  display: block;
+}
+
+.login-captcha-label {
+  color: var(--color-cafe-principal);
+  font-size: 11px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.login-captcha-help {
+  margin-top: 8px;
+  color: var(--color-cafe-claro);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.login-captcha-shell .g-recaptcha {
+  max-width: 100%;
+  overflow: hidden;
+}
+
 /* Botón de recuperación mantiene el mismo color que el login */
 .btn-recovery {
   background: var(--color-cafe-principal) !important;
@@ -663,134 +701,6 @@ input[type="password"]::-webkit-credentials-auto-fill-button { visibility: hidde
   20% { opacity: .9; }
   70% { opacity: .8; }
   100% { transform: translateY(-120px) translateX(14px) scale(1.1); opacity: 0; }
-}
-
-#loginModal .captcha-wrapper {
-  margin-top: 4px;
-  margin-bottom: 16px;
-}
-
-#loginModal .recaptcha-box {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  background: #faf9f7;
-  border: 1px solid #d9d1cb;
-  border-radius: 12px;
-  padding: 12px 14px;
-  box-shadow: 0 1px 4px rgba(0,0,0,.06);
-  cursor: pointer;
-  user-select: none;
-}
-
-#loginModal .recaptcha-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-#loginModal .recaptcha-checkbox-wrap {
-  width: 26px;
-  height: 26px;
-  cursor: pointer;
-}
-
-#loginModal .recaptcha-checkbox {
-  width: 26px;
-  height: 26px;
-  border: 2px solid #b8b4af;
-  border-radius: 4px;
-  background: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-}
-
-#loginModal .spinner-ring {
-  display: none;
-  width: 18px;
-  height: 18px;
-  border: 3px solid #ddd;
-  border-top-color: var(--color-cafe-principal);
-  border-radius: 50%;
-  animation: captchaSpin .8s linear infinite;
-  position: absolute;
-}
-
-#loginModal .checkmark-svg {
-  width: 18px;
-  height: 18px;
-  opacity: 0;
-  transform: scale(.2);
-  transition: opacity .2s, transform .2s;
-}
-
-#loginModal .recaptcha-box.verifying .spinner-ring {
-  display: block;
-}
-
-#loginModal .recaptcha-box.verifying .checkmark-svg {
-  opacity: 0;
-}
-
-#loginModal .recaptcha-box.verified .checkmark-svg {
-  opacity: 1;
-  transform: scale(1);
-}
-
-#loginModal .recaptcha-box.verified .recaptcha-checkbox {
-  border-color: #2e7d32;
-  background: #f3fbf4;
-}
-
-#loginModal .recaptcha-box.captcha-required {
-  border-color: #dc3545;
-  box-shadow: 0 0 0 3px rgba(220,53,69,.12);
-}
-
-#loginModal .captcha-help-text {
-  min-height: 18px;
-  margin-top: 6px;
-  font-size: 12px;
-  color: #dc3545;
-  font-weight: 500;
-}
-
-#loginModal .recaptcha-label {
-  font-size: 14px;
-  color: #4d413d;
-  user-select: none;
-}
-
-#loginModal .recaptcha-right {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  min-width: 58px;
-}
-
-#loginModal .shield-icon {
-  width: 28px;
-  height: 34px;
-}
-
-#loginModal .recaptcha-brand-name {
-  font-size: 9px;
-  font-weight: 700;
-  color: #6d5c5c;
-  text-transform: uppercase;
-}
-
-#loginModal .recaptcha-brand-terms {
-  font-size: 8px;
-  color: #9a8e86;
-}
-
-@keyframes captchaSpin {
-  to { transform: rotate(360deg); }
 }
 
 .login-attempts-info {
