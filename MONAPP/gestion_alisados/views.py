@@ -20,6 +20,7 @@ from .models import GestionAlisado, TabletConsentToken, TabletKioskState
 from .forms import GestionAlisadoForm
 from clientes.models import Cliente
 from promociones.models import Promocion
+from servicios.models import Servicio
 
 
 def es_staff(user):
@@ -28,6 +29,15 @@ def es_staff(user):
 
 def _promociones_activas():
     return Promocion.objects.filter(activa=True).order_by("nombre")
+
+
+def _servicio_alisado_valido(nombre_servicio):
+    nombre = (nombre_servicio or "").strip()
+    if not nombre:
+        return ""
+    if Servicio.objects.filter(nombre__iexact=nombre, activo=True).exists():
+        return nombre
+    return ""
 
 
 def _iniciales_ultima_gestion(cliente_obj):
@@ -47,7 +57,7 @@ def _iniciales_ultima_gestion(cliente_obj):
         "medio_pago": ultima.medio_pago,
         "saldo_pendiente": ultima.saldo_pendiente,
         "procedimiento_realizado_por": ultima.procedimiento_realizado_por,
-        "tipo_alisado": ultima.tipo_alisado,
+        "tipo_alisado": _servicio_alisado_valido(ultima.tipo_alisado),
         "requiere_resellado": ultima.requiere_resellado,
         "porcentaje_alisado": ultima.porcentaje_alisado,
         "porosidad": ultima.porosidad,
@@ -101,7 +111,7 @@ def _datos_ultima_gestion(cliente_obj):
         "medio_pago": ultima.medio_pago,
         "saldo_pendiente": ultima.saldo_pendiente,
         "procedimiento_realizado_por": ultima.procedimiento_realizado_por,
-        "tipo_alisado": ultima.tipo_alisado,
+        "tipo_alisado": _servicio_alisado_valido(ultima.tipo_alisado),
         "requiere_resellado": ultima.requiere_resellado,
         "porcentaje_alisado": ultima.porcentaje_alisado,
         "porosidad": ultima.porosidad,

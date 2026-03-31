@@ -35,23 +35,38 @@ class MoneyTextInput(forms.TextInput):
         return f'-{formatted}' if negative else formatted
 
 
+class MoneyIntegerField(forms.IntegerField):
+    def to_python(self, value):
+        if value in self.empty_values:
+            return None
+        if isinstance(value, str):
+            value = re.sub(r'[^\d-]', '', value.strip())
+        return super().to_python(value)
+
+
 class GestionAlisadoForm(ValidationFormMixin, forms.ModelForm):
     firma_consentimiento_data = forms.CharField(required=False, widget=forms.HiddenInput())
-    precio_alisado = forms.IntegerField(required=True, widget=MoneyTextInput(attrs={
+    precio_alisado = MoneyIntegerField(required=True, widget=MoneyTextInput(attrs={
         'class': 'form-control gestion-money-input',
         'min': '0',
         'inputmode': 'numeric',
         'placeholder': 'Precio del alisado en COP',
         'required': 'required',
+        'oninput': 'window.gestionAlisadoMoneyInput && window.gestionAlisadoMoneyInput(this)',
+        'onblur': 'window.gestionAlisadoMoneyInput && window.gestionAlisadoMoneyInput(this)',
+        'onfocus': 'window.gestionAlisadoMoneyFocus && window.gestionAlisadoMoneyFocus(this)',
     }))
-    anticipo_cliente = forms.IntegerField(required=True, widget=MoneyTextInput(attrs={
+    anticipo_cliente = MoneyIntegerField(required=True, widget=MoneyTextInput(attrs={
         'class': 'form-control gestion-money-input',
         'min': '0',
         'inputmode': 'numeric',
         'placeholder': 'Anticipo realizado en COP',
         'required': 'required',
+        'oninput': 'window.gestionAlisadoMoneyInput && window.gestionAlisadoMoneyInput(this)',
+        'onblur': 'window.gestionAlisadoMoneyInput && window.gestionAlisadoMoneyInput(this)',
+        'onfocus': 'window.gestionAlisadoMoneyFocus && window.gestionAlisadoMoneyFocus(this)',
     }))
-    saldo_pendiente = forms.IntegerField(required=False, widget=MoneyTextInput(attrs={
+    saldo_pendiente = MoneyIntegerField(required=False, widget=MoneyTextInput(attrs={
         'class': 'form-control gestion-money-input',
         'min': '0',
         'inputmode': 'numeric',
@@ -237,6 +252,8 @@ class GestionAlisadoForm(ValidationFormMixin, forms.ModelForm):
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields['firma_consentimiento_data'].widget.attrs['form'] = 'gestionAlisadoForm'
+        self.fields['firma_consentimiento'].widget.attrs['form'] = 'gestionAlisadoForm'
         # Cargar clientes activos en el dropdown
         self.fields['cliente'].queryset = Cliente.objects.filter(estado='activo').order_by('nombre', 'apellido')
         # Función para mostrar nombre completo y documento
@@ -266,7 +283,8 @@ class GestionAlisadoForm(ValidationFormMixin, forms.ModelForm):
         servicio_choices.extend([(servicio.nombre, servicio.nombre) for servicio in servicios])
 
         tipo_actual = (self.initial.get('tipo_alisado') or self.data.get('tipo_alisado') or '').strip()
-        if tipo_actual and tipo_actual not in {value for value, _ in servicio_choices}:
+        permitir_valor_actual = self.is_bound or bool(getattr(self.instance, 'pk', None))
+        if tipo_actual and permitir_valor_actual and tipo_actual not in {value for value, _ in servicio_choices}:
             servicio_choices.append((tipo_actual, tipo_actual))
 
         self.fields['tipo_alisado'] = forms.ChoiceField(
@@ -277,7 +295,7 @@ class GestionAlisadoForm(ValidationFormMixin, forms.ModelForm):
                 'required': 'required',
             })
         )
-        if tipo_actual:
+        if tipo_actual and (permitir_valor_actual or tipo_actual in {value for value, _ in servicio_choices}):
             self.fields['tipo_alisado'].initial = tipo_actual
 
     @staticmethod
