@@ -439,26 +439,37 @@
     =============================== */
     const body = document.body;
         const sections = [
+            { id: "inicio",      class: "bg-black" },
+            { id: "nosotros",    class: "bg-black" },
+            { id: "promociones", class: "bg-black" },
             { id: "infinite",    class: "bg-white" },
             { id: "productos",   class: "bg-brown" },
             { id: "contactenos", class: "bg-black" }
         ];
 
     function onScrollChangeBackground() {
-        const mid = window.scrollY + window.innerHeight / 2;
+        let activeClass = null;
+        let maxVisibleHeight = -1;
 
         sections.forEach((section) => {
             const el = document.getElementById(section.id);
             if (!el) return;
 
-            const top = el.offsetTop;
-            const bottom = top + el.offsetHeight;
+            const rect = el.getBoundingClientRect();
+            const visibleTop = Math.max(rect.top, 0);
+            const visibleBottom = Math.min(rect.bottom, window.innerHeight);
+            const visibleHeight = Math.max(0, visibleBottom - visibleTop);
 
-            if (mid >= top && mid < bottom) {
-                body.classList.remove("bg-white", "bg-brown", "bg-black");
-                body.classList.add(section.class);
+            if (visibleHeight > maxVisibleHeight) {
+                maxVisibleHeight = visibleHeight;
+                activeClass = section.class;
             }
         });
+
+        if (activeClass) {
+            body.classList.remove("bg-white", "bg-brown", "bg-black");
+            body.classList.add(activeClass);
+        }
     }
 
     window.addEventListener("scroll", onScrollChangeBackground);

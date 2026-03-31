@@ -13,6 +13,7 @@ from usuarios.views import login_view as usuarios_login_view
 
 from clientes.models import Cliente
 from servicios.models import Servicio
+from servicios_web.models import ServicioWeb
 from promociones.models import Promocion
 from productos_web.models import ProductoWeb
 
@@ -24,7 +25,7 @@ def index(request):
         return usuarios_login_view(request)
 
 
-    servicios = Servicio.objects.filter(activo=True)
+    servicios = ServicioWeb.objects.filter(activo=True)
     promociones = Promocion.objects.filter(activa=True)
     productos_web = ProductoWeb.objects.filter(visible=True)
 

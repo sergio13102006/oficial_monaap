@@ -305,8 +305,9 @@ body {
     opacity: 0;
     transform: translateY(30px);
     transition: all 0.5s ease;
-    background: #0f0f0f;
-    box-shadow: 0 -30px 60px rgba(0,0,0,0.6);
+    background: #000000 !important;
+    box-shadow: none;
+    border-top: none;
     color: #ffffff;
 }
 
@@ -325,12 +326,12 @@ body {
 
 .footer-links a {
     text-decoration: none;
-    color: #000;
+    color: #ffffff;
     font-size: 0.9rem;
 }
 
 .footer-links a:hover {
-    color: #000000;
+    color: #d9c1ae;
 }
 /* boton login */
 
