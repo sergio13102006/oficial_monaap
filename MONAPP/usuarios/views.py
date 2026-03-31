@@ -244,6 +244,13 @@ def login_view(request):
                 "attempts": gate.user_state.failed_count if gate.user_state else 0,
             },
         )
+        if not captcha_token:
+            return _error_response(
+                "Completa la verificación de seguridad para continuar.",
+                status=400,
+                decision=gate,
+                captcha_required=True,
+            )
         if not validate_recaptcha(captcha_token, ip):
             with transaction.atomic():
                 user_state = get_security_state(AuthSecurityState.SUBJECT_USER, normalize_subject(username))
