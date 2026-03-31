@@ -40,6 +40,26 @@
     transition: transform .18s ease, background .18s ease, border-color .18s ease;
 }
 
+.nav-login-mobile {
+    display: none;
+    width: 100%;
+    justify-content: center;
+    margin-top: 0.25rem;
+    padding: 0.9rem 1rem;
+    border-radius: 16px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    border: 1px solid rgba(235, 218, 192, 0.28);
+    background: linear-gradient(135deg, #4a3428 0%, #2f1f1a 100%);
+    color: #fff7ef;
+    box-shadow: 0 10px 22px rgba(24, 16, 12, 0.18);
+}
+
+.nav-login-mobile:hover {
+    background: linear-gradient(135deg, #5a4033 0%, #35221c 100%);
+    color: #fff7ef;
+}
+
 .nav-toggle:hover {
     transform: translateY(-1px);
     background: rgba(255, 255, 255, 0.12);
@@ -192,10 +212,11 @@
         padding: 0.75rem 0.85rem;
         flex-wrap: nowrap;
         align-items: center;
+        gap: 0.45rem;
     }
 
     .logo svg {
-        height: 72px;
+        height: 58px;
     }
 
     .nav-glass {
@@ -220,6 +241,10 @@
         border-radius: 16px;
     }
 
+    .nav-login-mobile {
+        display: inline-flex;
+    }
+
     .nav-glass::before {
         background: rgba(20, 20, 20, 0.68);
     }
@@ -234,7 +259,7 @@
         order: 0;
     }
 
-    .header .btn {
+    .nav-login-desktop {
         display: none;
     }
 
@@ -319,6 +344,22 @@
     background: rgba(255,255,255,0.3);
     color: #000;
     transform: translateY(-2px);
+}
+
+.nav-login-mobile.btn-login {
+    padding: 0.9rem 1rem !important;
+    border-radius: 16px !important;
+    border: 1px solid rgba(235, 218, 192, 0.28) !important;
+    background: linear-gradient(135deg, #4a3428 0%, #2f1f1a 100%) !important;
+    color: #fff7ef !important;
+    font-weight: 700 !important;
+    text-align: center;
+    box-shadow: 0 10px 22px rgba(24, 16, 12, 0.18);
+}
+
+.nav-login-mobile.btn-login:hover {
+    background: linear-gradient(135deg, #5a4033 0%, #35221c 100%) !important;
+    color: #fff7ef !important;
 }
 .main-content {
     background: #fff;

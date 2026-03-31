@@ -3,7 +3,10 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.http import JsonResponse, HttpResponse
 from django.db.models import Q
+from django.urls import reverse
 from django.template.loader import render_to_string
+from django.utils import timezone
+from datetime import timedelta
 import csv
 from io import BytesIO
 from reportlab.lib import colors
@@ -13,7 +16,7 @@ from reportlab.lib.units import mm
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Spacer, Paragraph
 from compras.comprobante import _get_logo_path, _get_watermark_path
 
-from .models import GestionAlisado
+from .models import GestionAlisado, TabletConsentToken, TabletKioskState
 from .forms import GestionAlisadoForm
 from clientes.models import Cliente
 from promociones.models import Promocion
@@ -135,6 +138,40 @@ def _datos_ultima_gestion(cliente_obj):
     }
 
 
+def _crear_token_tablet(cliente_obj, user=None, gestion=None, minutos_validos=120):
+    TabletConsentToken.objects.filter(activo=True, usado_en__isnull=True).update(activo=False)
+    return TabletConsentToken.objects.create(
+        cliente=cliente_obj,
+        creado_por=user if getattr(user, 'is_authenticated', False) else None,
+        expira_en=timezone.now() + timedelta(minutes=minutos_validos),
+    )
+
+
+def _tablet_kiosk_state():
+    state, _ = TabletKioskState.objects.get_or_create(
+        pk=TabletKioskState.SINGLETON_ID,
+        defaults={'estado': TabletKioskState.ESTADO_ESPERA},
+    )
+    if state.estado != TabletKioskState.ESTADO_LISTO and (
+        state.token_id is not None or state.cliente_id is not None or state.gestion_id is not None
+    ):
+        state.marcar_espera()
+    return state
+
+
+def _tablet_kiosk_waiting():
+    state = _tablet_kiosk_state()
+    if state.estado != TabletKioskState.ESTADO_ESPERA or state.token_id is not None or state.cliente_id is not None or state.gestion_id is not None:
+        state.marcar_espera()
+    return state
+
+
+def _tablet_kiosk_ready(cliente_obj, token_obj, gestion=None):
+    state = _tablet_kiosk_state()
+    state.marcar_listo(cliente_obj, token_obj, gestion=gestion)
+    return state
+
+
 def _filtrar_gestiones_desde_request(request):
     gestiones = GestionAlisado.objects.select_related("cliente").all()
     buscar = request.GET.get("buscar", "")
@@ -202,6 +239,132 @@ def form_gestion_alisado_modal_content(request):
         "gestion_alisados/form_gestion_alisado_modal_content.html",
         context
     )
+
+
+@login_required
+def abrir_tablet_gestion_alisado(request, cliente_id):
+    cliente_obj = get_object_or_404(Cliente, pk=cliente_id)
+    token = _crear_token_tablet(cliente_obj, user=request.user, minutos_validos=120)
+    _tablet_kiosk_ready(cliente_obj, token)
+    payload = {
+        'success': True,
+        'message': 'Proceso enviado a la tablet.',
+        'tablet_wait_url': request.build_absolute_uri(
+            reverse('gestion_alisados:tablet_espera')
+        ),
+        'tablet_process_url': request.build_absolute_uri(
+            reverse('gestion_alisados:tablet_gestion_alisado', kwargs={'token': token.token})
+        ),
+        'cliente': {
+            'id': cliente_obj.id,
+            'nombre': f'{cliente_obj.nombre} {cliente_obj.apellido}',
+            'documento': cliente_obj.numero_documento,
+        },
+    }
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.GET.get('format') == 'json':
+        return JsonResponse(payload)
+    messages.success(request, 'Proceso enviado a la tablet. La pantalla de espera recibirá el formulario.')
+    return redirect('gestion_alisados:tablet_espera')
+
+
+def tablet_espera(request):
+    _tablet_kiosk_waiting()
+    return render(request, 'gestion_alisados/tablet_espera.html', {
+        'tablet_wait_url': request.build_absolute_uri(reverse('gestion_alisados:tablet_espera')),
+        'tablet_estado_url': request.build_absolute_uri(reverse('gestion_alisados:tablet_espera_estado')),
+    })
+
+
+def tablet_espera_estado(request):
+    kiosk_state = _tablet_kiosk_state()
+    token_obj = kiosk_state.token
+    if not kiosk_state.listo or not token_obj:
+        response = JsonResponse({'success': True, 'has_process': False})
+    else:
+        if not token_obj.esta_vigente() or kiosk_state.estado != TabletKioskState.ESTADO_LISTO:
+            _tablet_kiosk_waiting()
+            response = JsonResponse({'success': True, 'has_process': False})
+        else:
+            response = JsonResponse({
+                'success': True,
+                'has_process': True,
+                'cliente': {
+                    'nombre': f'{token_obj.cliente.nombre} {token_obj.cliente.apellido}',
+                    'documento': token_obj.cliente.numero_documento,
+                },
+                'tablet_process_url': request.build_absolute_uri(
+                    reverse('gestion_alisados:tablet_gestion_alisado', kwargs={'token': token_obj.token})
+                ),
+            })
+    response['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+    response['Pragma'] = 'no-cache'
+    return response
+
+
+def _tablet_context_from_token(request, token_obj):
+    cliente_obj = token_obj.cliente
+    form = GestionAlisadoForm(initial=_iniciales_ultima_gestion(cliente_obj) if cliente_obj else None)
+    form.fields["cliente"].widget.attrs["id"] = "selectCliente"
+    form.fields["cliente"].widget.attrs["class"] = "form-select"
+    form.fields["cliente"].widget.attrs["disabled"] = "disabled"
+    return {
+        "form": form,
+        "is_modal": False,
+        "tablet_mode": True,
+        "cliente_preseleccionado": cliente_obj,
+        "cliente_bloqueado": True,
+        "cliente_id_bloqueado": cliente_obj.id if cliente_obj else "",
+        "desde_clientes": False,
+        "promociones_activas": _promociones_activas(),
+        "tablet_token": token_obj,
+    }
+
+
+def _tablet_template(request, context):
+    return render(request, 'gestion_alisados/tablet_kiosk.html', context)
+
+
+def _tablet_invalid(request, message='El enlace de la tablet no es válido o ya expiró.'):
+    return render(request, 'gestion_alisados/tablet_invalid.html', {
+        'message': message,
+        'tablet_wait_url': request.build_absolute_uri(reverse('gestion_alisados:tablet_espera')),
+    }, status=410)
+
+
+def tablet_gestion_alisado(request, token):
+    token_obj = get_object_or_404(TabletConsentToken, token=token)
+    if not token_obj.esta_vigente():
+        kiosk_state = _tablet_kiosk_state()
+        if kiosk_state.token_id == token_obj.token:
+            _tablet_kiosk_waiting()
+        return _tablet_invalid(request)
+
+    context = _tablet_context_from_token(request, token_obj)
+
+    if request.method == 'POST':
+        form = GestionAlisadoForm(request.POST, request.FILES)
+        form.fields["cliente"].widget.attrs["disabled"] = "disabled"
+        if form.is_valid():
+            gestion = form.save()
+            token_obj.usado_en = timezone.now()
+            token_obj.activo = False
+            token_obj.gestion = gestion
+            token_obj.save(update_fields=['usado_en', 'activo', 'gestion'])
+            kiosk_state = _tablet_kiosk_state()
+            if kiosk_state.token_id == token_obj.token:
+                _tablet_kiosk_waiting()
+            return render(
+                request,
+                'gestion_alisados/tablet_success.html',
+                {
+                    'gestion': gestion,
+                    'cliente': token_obj.cliente,
+                    'tablet_wait_url': request.build_absolute_uri(reverse('gestion_alisados:tablet_espera')),
+                },
+            )
+        context['form'] = form
+
+    return _tablet_template(request, context)
 
 @login_required
 def lista_gestion_alisados(request):

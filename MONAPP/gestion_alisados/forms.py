@@ -1,4 +1,10 @@
+﻿import base64
+import binascii
+import uuid
+
 from django import forms
+from django.core.exceptions import ValidationError
+from django.core.files.base import ContentFile
 from .models import GestionAlisado
 from clientes.models import Cliente
 from personal.models import Personal
@@ -7,6 +13,8 @@ from core.form_validations import ValidationFormMixin
 
 
 class GestionAlisadoForm(ValidationFormMixin, forms.ModelForm):
+    firma_consentimiento_data = forms.CharField(required=False, widget=forms.HiddenInput())
+
     class Meta:
         model = GestionAlisado
         fields = [
@@ -198,10 +206,7 @@ class GestionAlisadoForm(ValidationFormMixin, forms.ModelForm):
                 'placeholder': 'Recomendaciones o anotaciones sobre post cuidados',
                 'required': 'required'
             }),
-            'firma_consentimiento': forms.ClearableFileInput(attrs={
-                'class': 'form-control',
-                'accept': 'image/*'
-            }),
+            'firma_consentimiento': forms.HiddenInput(),
         }
     
     def __init__(self, *args, **kwargs):
@@ -253,12 +258,38 @@ class GestionAlisadoForm(ValidationFormMixin, forms.ModelForm):
         cleaned_data = super().clean()
         precio = cleaned_data.get('precio_alisado')
         anticipo = cleaned_data.get('anticipo_cliente')
-        
+
         # Calcular saldo pendiente automáticamente
         if precio is not None and anticipo is not None:
             cleaned_data['saldo_pendiente'] = precio - anticipo
-        
+
+        firma_data = (cleaned_data.get('firma_consentimiento_data') or '').strip()
+        tiene_firma_existente = bool(getattr(self.instance, 'firma_consentimiento', None))
+        if not firma_data and not tiene_firma_existente:
+            self.add_error('firma_consentimiento_data', 'Registra la firma del cliente para continuar.')
+
         return cleaned_data
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        firma_data = (self.cleaned_data.get('firma_consentimiento_data') or '').strip()
+
+        if firma_data.startswith('data:image'):
+            try:
+                header, encoded = firma_data.split(',', 1)
+                extension = 'png'
+                if 'jpeg' in header or 'jpg' in header:
+                    extension = 'jpg'
+                image_bytes = base64.b64decode(encoded)
+                file_name = f'{uuid.uuid4().hex}.{extension}'
+                instance.firma_consentimiento.save(file_name, ContentFile(image_bytes), save=False)
+            except (ValueError, TypeError, ValidationError, binascii.Error) as exc:
+                raise ValidationError({'firma_consentimiento_data': 'No fue posible procesar la firma.'}) from exc
+
+        if commit:
+            instance.save()
+            self.save_m2m()
+        return instance
 
     def clean_tipo_alisado(self):
         tipo_alisado = (self.cleaned_data.get('tipo_alisado') or '').strip()

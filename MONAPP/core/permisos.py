@@ -51,6 +51,9 @@ PUBLIC_USER_URLS = {
     "password_reset_complete",
     "verificar_codigo",
     "nueva_password",
+    "tablet_espera",
+    "tablet_espera_estado",
+    "tablet_gestion_alisado",
 }
 
 USER_PROFILE_URLS = {

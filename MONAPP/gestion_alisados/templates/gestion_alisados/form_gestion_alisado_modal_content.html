@@ -17,17 +17,217 @@
 <link rel="stylesheet" href="{% static 'servicios/css/estilos.css' %}">
 <link rel="stylesheet" href="{% static 'gestion_alisados/css/gestion_alisados.css' %}">
 
-<!-- Indicador de progreso -->
-<div class="progress-steps gestion-step-spacing">
-    <div class="step-item active" data-step="1">
-        <div class="step-circle">1</div>
-        <div class="step-label">Información General</div>
+<div class="gestion-form-shell"
+     data-tablet-mode="{% if tablet_mode %}1{% else %}0{% endif %}"
+     data-tablet-wait-url="{% url 'gestion_alisados:tablet_espera' %}"
+     data-tablet-start-url-template="{% url 'gestion_alisados:abrir_tablet_gestion_alisado' 0 %}">
+{% if not tablet_mode %}
+    <div class="gestion-form-hero">
+        <div class="gestion-form-hero__copy">
+            <div class="gestion-form-kicker">Tratamiento de alisado</div>
+            <h4>Registro profesional de la gestión</h4>
+            <p>Completa el diagnóstico, guarda el consentimiento y conserva el historial del cliente en un flujo claro y ordenado.</p>
+        </div>
+        <div class="gestion-form-hero__badges">
+            <div class="gestion-hero-badge">
+                <i class="bi bi-person-check"></i>
+                <span>Cliente verificado</span>
+            </div>
+            <div class="gestion-hero-badge">
+                <i class="bi bi-shield-check"></i>
+                <span>Consentimiento activo</span>
+            </div>
+            <div class="gestion-hero-badge">
+                <i class="bi bi-journal-text"></i>
+                <span>Historial y cuidados</span>
+            </div>
+        </div>
     </div>
-    <div class="step-item" data-step="2">
-        <div class="step-circle">2</div>
-        <div class="step-label">Características y Cuidados</div>
+
+    <div class="pc-launcher-card" id="pcLauncherCard">
+        <div class="pc-launcher-card__head">
+            <div>
+                <div class="pc-launcher-card__title">Pantalla del PC</div>
+                <div class="pc-launcher-card__subtitle">Selecciona el cliente y envía el proceso a la tablet. Aquí no se diligencia el tratamiento.</div>
+            </div>
+            <span class="pc-launcher-card__chip"><i class="bi bi-pc-display"></i> Solo lanzamiento</span>
+        </div>
+    <div class="pc-launcher-card__body">
+            <div class="pc-launcher-card__slot" id="pcLauncherSelectSlot">
+                <div class="pc-launcher-card__field">
+                    <label for="{{ form.cliente.id_for_label }}" class="form-label mb-2">Cliente</label>
+                    {{ form.cliente }}
+                    {% if form.cliente.errors %}
+                        <div class="text-danger mt-2">{{ form.cliente.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="pc-launcher-card__note">
+                El PC solo inicia y consulta el estado. La tablet recibe el formulario de consentimiento y firma.
+            </div>
+        </div>
     </div>
-</div>
+
+    <div class="tablet-link-card" id="tabletLinkCard">
+            <div class="tablet-link-card__head">
+                <div>
+                    <div class="tablet-link-card__title">Enlace para tablet</div>
+                    <div class="tablet-link-card__subtitle">Abre esta pantalla en la tablet una sola vez. Luego el PC podrá enviar cada proceso a la espera.</div>
+                </div>
+                <span class="tablet-link-card__chip"><i class="bi bi-tablet"></i> Espera fija</span>
+            </div>
+        <div class="tablet-link-card__body">
+            <input type="text" class="form-control tablet-link-card__input" id="tabletLinkInput" readonly value="" placeholder="Enlace de espera de la tablet">
+            <div class="tablet-link-card__actions">
+                <button type="button" class="btn tablet-link-card__copy" id="tabletLinkCopy">
+                    <i class="bi bi-clipboard"></i> Copiar
+                </button>
+                <button type="button" class="btn tablet-link-card__launch" id="tabletStartProcess">
+                    <i class="bi bi-send"></i> Iniciar proceso
+                </button>
+            </div>
+            <div class="tablet-link-card__status" id="tabletProcessStatus">Selecciona un cliente para iniciar el proceso desde el PC.</div>
+        </div>
+    </div>
+{% endif %}
+
+{% if not tablet_mode %}
+<script>
+(function () {
+    const shell = document.querySelector('.gestion-form-shell');
+    const select = document.getElementById('selectCliente');
+    const status = document.getElementById('tabletProcessStatus');
+    const input = document.getElementById('tabletLinkInput');
+    const launchBtn = document.getElementById('tabletStartProcess');
+    const copyBtn = document.getElementById('tabletLinkCopy');
+    const waitUrl = shell?.dataset.tabletWaitUrl || '';
+    const startTemplate = shell?.dataset.tabletStartUrlTemplate || '';
+
+    if (!shell || !select || !launchBtn) return;
+
+    function selectedCliente() {
+        const opt = select.selectedOptions && select.selectedOptions[0];
+        if (!opt || !select.value) return null;
+        const raw = (opt.textContent || '').trim();
+        const splitAt = raw.lastIndexOf(' - ');
+        return {
+            id: select.value,
+            nombre: splitAt >= 0 ? raw.slice(0, splitAt).trim() : raw,
+            documento: splitAt >= 0 ? raw.slice(splitAt + 3).trim() : '',
+        };
+    }
+
+    function buildStartUrl(clienteId) {
+        if (!clienteId || !startTemplate) return '';
+        const relative = startTemplate.replace(/\/0\/?$/, `/${encodeURIComponent(clienteId)}/`);
+        try {
+            return new URL(relative, window.location.origin).toString();
+        } catch {
+            return relative;
+        }
+    }
+
+    function setStatus(message, tone) {
+        if (!status) return;
+        status.textContent = message;
+        status.dataset.tone = tone || 'info';
+    }
+
+    function syncLauncher() {
+        const cliente = selectedCliente();
+        const waitLink = waitUrl || '/gestion-alisados/tablet/espera/';
+        const startUrl = cliente ? buildStartUrl(cliente.id) : '';
+        if (input) input.value = waitLink;
+        if (copyBtn) copyBtn.disabled = !waitLink;
+        if (launchBtn) launchBtn.dataset.startUrl = startUrl;
+        setStatus(
+            cliente
+                ? `Tablet lista en espera para ${cliente.nombre}. Enlace: ${waitLink}`
+                : 'Selecciona un cliente para iniciar el proceso desde el PC.',
+            cliente ? 'success' : 'warning'
+        );
+    }
+
+    window.gestionAlisadoStartProcess = async function (event) {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+
+        const cliente = selectedCliente();
+        if (!cliente) {
+            setStatus('Selecciona un cliente para iniciar el proceso.', 'warning');
+            window.alert('Selecciona un cliente para iniciar el proceso.');
+            return;
+        }
+
+        const startUrl = launchBtn.dataset.startUrl || buildStartUrl(cliente.id);
+        if (!startUrl) {
+            setStatus('No se pudo construir el enlace del proceso.', 'error');
+            window.alert('No se pudo construir el enlace del proceso.');
+            return;
+        }
+
+        setStatus(`Enviando proceso para ${cliente.nombre}...`, 'info');
+        launchBtn.disabled = true;
+        try {
+            const response = await fetch(startUrl, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+            const data = await response.json();
+            if (!data || !data.success) throw new Error('Bad response');
+            setStatus(`Proceso enviado a la tablet para ${data.cliente?.nombre || cliente.nombre}.`, 'success');
+        } catch (error) {
+            console.error(error);
+            setStatus('No se pudo enviar el proceso a la tablet.', 'error');
+            window.alert('No se pudo enviar el proceso a la tablet.');
+        } finally {
+            launchBtn.disabled = false;
+        }
+    };
+
+    select.addEventListener('change', syncLauncher);
+    select.addEventListener('input', syncLauncher);
+    launchBtn.addEventListener('click', window.gestionAlisadoStartProcess);
+    syncLauncher();
+})();
+</script>
+{% endif %}
+
+{% if tablet_mode %}
+    <div class="gestion-form-hero">
+        <div class="gestion-form-hero__copy">
+            <div class="gestion-form-kicker">Modo tablet</div>
+            <h4>Consentimiento y firma del cliente</h4>
+            <p>Completa el tratamiento directamente en la tablet. El PC solo lanza el proceso y revisa el historial.</p>
+        </div>
+        <div class="gestion-form-hero__badges">
+            <div class="gestion-hero-badge">
+                <i class="bi bi-person-check"></i>
+                <span>Cliente fijo</span>
+            </div>
+            <div class="gestion-hero-badge">
+                <i class="bi bi-shield-check"></i>
+                <span>Firma activa</span>
+            </div>
+            <div class="gestion-hero-badge">
+                <i class="bi bi-journal-text"></i>
+                <span>Registro central</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Indicador de progreso -->
+    <div class="progress-steps gestion-step-spacing">
+        <div class="step-item active" data-step="1">
+            <div class="step-circle">1</div>
+            <div class="step-label">Información General</div>
+        </div>
+        <div class="step-item" data-step="2">
+            <div class="step-circle">2</div>
+            <div class="step-label">Características y Cuidados</div>
+        </div>
+    </div>
+
+    <div id="gestionStepAlert" class="alert gestion-step-alert d-none" role="alert" aria-live="polite"></div>
 
 <form method="post" enctype="multipart/form-data" id="gestionAlisadoForm" action="{{ action_url|default:request.path }}" novalidate data-es-edicion="{% if gestion %}1{% else %}0{% endif %}" data-ultima-gestion-url="{% url 'gestion_alisados:ultima_gestion_cliente' %}">
                         {% csrf_token %}
@@ -443,6 +643,8 @@
                         
                         </div><!-- Fin del Paso 2 -->
                     </form>
+</div>
+{% endif %}
 
 <!-- Modal de Consentimiento Informado -->
 <div class="modal fade" id="modalConsentimiento" tabindex="-1" aria-labelledby="modalConsentimientoLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
@@ -528,17 +730,43 @@
                         </div>
                     </div>
                     
-                    <div class="mb-3">
-                        <label for="{{ form.firma_consentimiento.id_for_label }}" class="form-label fw-bold text-danger">
-                            <i class="bi bi-pen"></i> Cargar firma del cliente *
-                        </label>
-                        {{ form.firma_consentimiento }}
-                        <div class="form-text">Suba una imagen con la firma del cliente (formatos: JPG, PNG, etc.) - <strong>Campo obligatorio</strong></div>
-                        <div id="errorFirma" class="text-danger" class="gestion-btn-hidden">
-                            <i class="bi bi-exclamation-triangle"></i> Debe cargar la firma del cliente para continuar
+                    <div class="signature-block">
+                        <div class="signature-block__head">
+                            <div>
+                                <label class="form-label fw-bold mb-1">
+                                    <i class="bi bi-pen"></i> Firma del cliente
+                                </label>
+                                <p class="signature-block__help mb-0">Firme con el dedo, lápiz o mouse dentro del recuadro.</p>
+                            </div>
+                            <div class="signature-block__actions">
+                                <button type="button" class="btn btn-outline-secondary btn-sm" id="btnLimpiarFirma">
+                                    <i class="bi bi-eraser"></i> Limpiar
+                                </button>
+                            </div>
                         </div>
-                        {% if form.firma_consentimiento.errors %}
-                            <div class="text-danger">{{ form.firma_consentimiento.errors }}</div>
+
+                        <input type="hidden" name="firma_consentimiento_data" id="id_firma_consentimiento_data">
+                        {{ form.firma_consentimiento }}
+
+                        <div class="signature-canvas-wrap">
+                            <canvas id="firmaCanvas" class="signature-canvas" aria-label="Área para firmar"></canvas>
+                            <div class="signature-canvas-placeholder" id="firmaCanvasPlaceholder">
+                                <i class="bi bi-pencil-square"></i>
+                                <span>Firme aquí</span>
+                            </div>
+                        </div>
+
+                        <div class="signature-block__footer">
+                            <div id="firmaEstado" class="signature-status">
+                                <i class="bi bi-pencil"></i>
+                                <span>Sin firma registrada</span>
+                            </div>
+                            <div id="errorFirma" class="text-danger gestion-btn-hidden">
+                                <i class="bi bi-exclamation-triangle"></i> Debe registrar la firma para continuar
+                            </div>
+                        </div>
+                        {% if form.firma_consentimiento_data.errors %}
+                            <div class="text-danger mt-2">{{ form.firma_consentimiento_data.errors }}</div>
                         {% endif %}
                     </div>
                     

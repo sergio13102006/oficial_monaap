@@ -62,7 +62,10 @@ class RolePermissionMiddleware:
         if namespace == "core" and url_name == "index":
             return None
 
-        if namespace == "usuarios" and (url_name in PUBLIC_USER_URLS or url_name == "logout"):
+        if url_name in PUBLIC_USER_URLS:
+            return None
+
+        if namespace == "usuarios" and url_name == "logout":
             return None
 
         if not getattr(request.user, "is_authenticated", False):

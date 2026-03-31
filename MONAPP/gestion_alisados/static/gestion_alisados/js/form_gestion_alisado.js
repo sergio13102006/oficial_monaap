@@ -21,6 +21,36 @@ function toast(msg, type = 'success') {
   new bootstrap.Toast(el).show();
 }
 
+function setStepAlert(message, type = 'warning') {
+  const el = root.getElementById('gestionStepAlert');
+  if (!el) {
+    toast(message, type);
+    return;
+  }
+
+  el.classList.remove('d-none', 'alert-success', 'alert-danger', 'alert-warning', 'alert-info');
+  const map = {
+    success: 'alert-success',
+    error: 'alert-danger',
+    warning: 'alert-warning',
+    info: 'alert-info',
+  };
+  el.classList.add(map[type] || 'alert-warning');
+  el.innerHTML = `<i class="bi bi-exclamation-triangle-fill me-2"></i><span>${esc(message)}</span>`;
+}
+
+function clearStepAlert() {
+  const el = root.getElementById('gestionStepAlert');
+  if (!el) return;
+  el.classList.add('d-none');
+  el.classList.remove('alert-success', 'alert-danger', 'alert-warning', 'alert-info');
+  el.innerHTML = '';
+}
+
+function notifyStepError() {
+  setStepAlert('Completa la información antes de continuar.', 'warning');
+}
+
 function esc(v) {
   return String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
@@ -29,7 +59,56 @@ function getField(form, name) { return form ? form.querySelector(`[name="${name}
 function selectText(el) { if (!el) return '—'; if (el.tagName !== 'SELECT') return (el.value || '—').trim() || '—'; const opt = el.selectedOptions && el.selectedOptions[0]; return opt && opt.value ? (opt.text || '—').trim() || '—' : '—'; }
 function splitCliente(texto) { const t = String(texto || '').trim(); const p = t.lastIndexOf(' - '); return p >= 0 ? { nombre: t.slice(0, p).trim(), documento: t.slice(p + 3).trim() } : { nombre: t, documento: '' }; }
 function show(el, on) { if (el) el.classList.toggle('show', !!on); }
-function vis(el, on) { if (el) el.style.display = on ? 'inline-block' : 'none'; }
+  function vis(el, on) { if (el) el.style.display = on ? 'inline-block' : 'none'; }
+  function setPcLauncherStatus(message, tone = 'info') {
+    if (!tabletProcessStatus) return;
+    tabletProcessStatus.textContent = message;
+    tabletProcessStatus.dataset.tone = tone;
+  }
+
+  async function handleTabletStartProcess(event) {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+
+    const c = selectedCliente();
+    if (!c) {
+      setPcLauncherStatus('Selecciona un cliente para iniciar el proceso.', 'warning');
+      toast('Selecciona un cliente para iniciar el proceso.', 'warning');
+      return;
+    }
+
+    const startUrl = tabletStartProcess?.dataset.startUrl || buildTabletStartUrl(selectCliente?.value || '');
+    if (!startUrl) {
+      setPcLauncherStatus('No se pudo construir el enlace del proceso.', 'error');
+      toast('No se pudo construir el enlace del proceso.', 'error');
+      return;
+    }
+
+    if (tabletStartProcess) tabletStartProcess.disabled = true;
+    setPcLauncherStatus(`Enviando proceso para ${c.nombre}...`, 'info');
+
+    try {
+      const res = await fetch(startUrl, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+      const data = await res.json();
+      if (!data || !data.success) throw new Error('bad response');
+      if (tabletProcessStatus) {
+        tabletProcessStatus.textContent = `Proceso enviado a la tablet para ${data.cliente?.nombre || c.nombre}. Mantén la pantalla de espera abierta.`;
+        tabletProcessStatus.dataset.tone = 'success';
+      }
+      toast('Proceso enviado a la tablet.', 'success');
+      updateTabletLink();
+    } catch (err) {
+      console.warn(err);
+      setPcLauncherStatus('No se pudo enviar el proceso a la tablet.', 'error');
+      toast('No se pudo enviar el proceso a la tablet.', 'error');
+    } finally {
+      if (tabletStartProcess) tabletStartProcess.disabled = false;
+    }
+  }
+
+  window.gestionAlisadoStartProcess = handleTabletStartProcess;
 
 function generarHTMLDocumento(datos) {
   const css = `*{box-sizing:border-box}body{font-family:Arial,sans-serif;font-size:11pt;color:#222;padding:20px}.header{display:flex;align-items:center;gap:16px;border-bottom:3px solid #634c40;padding-bottom:12px;margin-bottom:18px}.header-text h1{font-size:13pt;color:#634c40}.header-text p,.fecha-box{font-size:9pt;color:#666}.fecha-box{text-align:right;margin-bottom:10px}.seccion{margin-bottom:14px}.seccion-titulo{background:#634c40;color:#fff;padding:5px 10px;font-size:10pt;font-weight:bold;border-radius:3px;margin-bottom:8px}.fila{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:5px}.campo{flex:1;min-width:170px}.campo-label{font-size:8pt;color:#634c40;font-weight:bold;text-transform:uppercase}.campo-valor{font-size:10pt;border-bottom:1px solid #ccc;padding:2px 4px;min-height:20px}.campo-valor.largo{border:1px solid #ccc;padding:4px;min-height:36px;border-radius:3px;margin-top:2px}.procesos-grid{display:flex;flex-wrap:wrap;gap:6px}.proceso-item{border:1px solid #ccc;border-radius:3px;padding:3px 8px;font-size:9.5pt}.proceso-si{background:#f0e8e4;border-color:#634c40;color:#634c40;font-weight:bold}.proceso-no{color:#aaa}.firma-seccion{margin-top:30px;border-top:2px solid #634c40;padding-top:20px;display:flex;justify-content:space-between}.firma-box{text-align:center;flex:1;padding:0 20px}.firma-linea{border-top:1px solid #333;margin-top:50px;margin-bottom:5px}.firma-texto{font-size:9pt;color:#555}.consent-box{background:#f9f4f2;border:1px solid #d4b8ac;border-radius:4px;padding:10px 14px;margin-bottom:14px;font-size:9pt;color:#444}.consent-box strong{color:#634c40}@media print{@page{margin:15mm;size:A4}body{padding:0}}`;
@@ -45,7 +124,7 @@ function generarHTMLDocumento(datos) {
   <div class="seccion"><div class="seccion-titulo">Informacion del Procedimiento</div><div class="fila"><div class="campo"><div class="campo-label">Realizado por</div><div class="campo-valor">${esc(datos.realizadoPor)}</div></div><div class="campo"><div class="campo-label">Porcentaje de Alisado</div><div class="campo-valor">${esc(datos.porcentaje)}</div></div><div class="campo"><div class="campo-label">Requiere Resellado</div><div class="campo-valor">${esc(datos.resellado)}</div></div></div><div class="campo"><div class="campo-label">Tipo de Alisado</div><div class="campo-valor largo">${esc(datos.tipoAlisado)}</div></div></div>
   <div class="seccion"><div class="seccion-titulo">Caracteristicas del Cabello</div><div class="fila"><div class="campo"><div class="campo-label">Porosidad</div><div class="campo-valor">${esc(datos.porosidad)}</div></div><div class="campo"><div class="campo-label">Textura</div><div class="campo-valor">${esc(datos.textura)}</div></div><div class="campo"><div class="campo-label">Forma Natural</div><div class="campo-valor">${esc(datos.formaNatural)}</div></div><div class="campo"><div class="campo-label">Elasticidad</div><div class="campo-valor">${esc(datos.elasticidad)}</div></div></div><div class="fila"><div class="campo"><div class="campo-label">Longitud</div><div class="campo-valor">${esc(datos.longitud)}</div></div><div class="campo"><div class="campo-label">Densidad</div><div class="campo-valor">${esc(datos.densidad)}</div></div><div class="campo"><div class="campo-label">Piel Cabelludo</div><div class="campo-valor">${esc(datos.pielCabelludo)}</div></div><div class="campo"><div class="campo-label">Alopecia</div><div class="campo-valor">${esc(datos.alopecia)}</div></div><div class="campo"><div class="campo-label">Caida de Cabello</div><div class="campo-valor">${esc(datos.caida)}</div></div><div class="campo"><div class="campo-label">Caspa</div><div class="campo-valor">${esc(datos.caspa)}</div></div></div></div>
   <div class="seccion"><div class="seccion-titulo">Estado de Salud y Condiciones Especiales</div><div class="fila"><div class="campo"><div class="campo-label">Lactante</div><div class="campo-valor">${esc(datos.lactante)}</div></div><div class="campo"><div class="campo-label">Gestante</div><div class="campo-valor">${esc(datos.gestante)}</div></div><div class="campo"><div class="campo-label">Tiroides</div><div class="campo-valor">${esc(datos.tiroides)}${datos.tiroides === 'Si' ? ' - ' + esc(datos.medTiroides) : ''}</div></div><div class="campo"><div class="campo-label">Despunte hoy</div><div class="campo-valor">${esc(datos.despunte)}</div></div></div></div>
-  <div class="seccion"><div class="seccion-titulo">Procesos Quimicos Previos</div><div class="procesos-grid">${procesos.map(([l,v]) => `<div class="proceso-item ${v === 'Si' ? 'proceso-si' : 'proceso-no'}">${v === 'Si' ? '✓' : '○'} ${esc(l)}</div>`).join('')}</div>${datos.otrosProcesos && datos.otrosProcesos !== '—' ? `<div style="margin-top:6px"><div class="campo-label">Otro:</div><div class="campo-valor">${esc(datos.otrosProcesos)}</div></div>` : ''}</div>
+  <div class="seccion"><div class="seccion-titulo">Procesos Quimicos Previos</div><div class="procesos-grid">${procesos.map(([l,v]) => `<div class="proceso-item ${v === 'Si' ? 'proceso-si' : 'proceso-no'}">${v === 'Si' ? '?' : '?'} ${esc(l)}</div>`).join('')}</div>${datos.otrosProcesos && datos.otrosProcesos !== '—' ? `<div style="margin-top:6px"><div class="campo-label">Otro:</div><div class="campo-valor">${esc(datos.otrosProcesos)}</div></div>` : ''}</div>
   <div class="seccion"><div class="seccion-titulo">Habitos y Cuidados</div><div class="fila"><div class="campo"><div class="campo-label">Tiene secador</div><div class="campo-valor">${esc(datos.secador)}</div></div><div class="campo"><div class="campo-label">Usa casco</div><div class="campo-valor">${esc(datos.usaCasco)}</div></div><div class="campo"><div class="campo-label">Bana con agua caliente</div><div class="campo-valor">${esc(datos.aguaCaliente)}</div></div><div class="campo"><div class="campo-label">Refuerzo 15 dias</div><div class="campo-valor">${esc(datos.refuerzo15)}</div></div><div class="campo"><div class="campo-label">Realiza ejercicio</div><div class="campo-valor">${esc(datos.ejercicio)}${datos.ejercicio === 'Si' ? ' - ' + esc(datos.frecEjercicio) : ''}</div></div></div><div class="campo"><div class="campo-label">Cada cuanto recoge el cabello</div><div class="campo-valor largo">${esc(datos.frecRecoge)}</div></div><div class="campo" style="margin-top:6px"><div class="campo-label">Productos capilares</div><div class="campo-valor largo">${esc(datos.productos)}</div></div></div>
   <div class="seccion"><div class="seccion-titulo">Recomendaciones y Anotaciones</div><div class="campo"><div class="campo-valor largo">${esc(datos.recomendaciones)}</div></div></div>
   <div class="consent-box"><strong>Consentimiento Informado:</strong> El/La cliente declara haber leido y comprendido todos los terminos y condiciones del tratamiento de alisado.</div>
@@ -113,10 +192,16 @@ function initGestionForm() {
   const btnAnterior = root.getElementById('btnAnterior');
   const btnGuardar = root.getElementById('btnGuardar');
   const modalConsentimientoEl = root.getElementById('modalConsentimiento');
+  const parentModalEl = root.getElementById('modalFormGestion');
   const checkboxAceptacion = root.getElementById('checkboxAceptacion');
   const btnConfirmar = root.getElementById('btnConfirmarConsentimiento');
   const btnCerrar = root.getElementById('btnCerrarModal');
-  const inputFirma = root.getElementById('id_firma_consentimiento');
+  const signatureCanvas = root.getElementById('firmaCanvas');
+  const signatureCtx = signatureCanvas ? signatureCanvas.getContext('2d') : null;
+  const signatureDataInput = root.getElementById('id_firma_consentimiento_data');
+  const signatureClearBtn = root.getElementById('btnLimpiarFirma');
+  const signaturePlaceholder = root.getElementById('firmaCanvasPlaceholder');
+  const signatureStatus = root.getElementById('firmaEstado');
   const errorFirma = root.getElementById('errorFirma');
   const wrapperCheck = root.getElementById('wrapperCheckboxAceptacion');
   const msgCheck = root.getElementById('msgCheckboxError');
@@ -126,11 +211,157 @@ function initGestionForm() {
   const formCliente = root.getElementById('formCrearCliente');
   const btnGuardarCliente = root.getElementById('btnGuardarClienteModal');
   const urlUltima = form.dataset.ultimaGestionUrl || '';
+  const tabletShell = root.querySelector('.gestion-form-shell');
+  const tabletMode = tabletShell?.dataset.tabletMode === '1';
+  const tabletWaitUrl = tabletShell?.dataset.tabletWaitUrl || '';
+  const tabletStartUrlTemplate = tabletShell?.dataset.tabletStartUrlTemplate || '';
+  const pcLauncherSelectSlot = root.getElementById('pcLauncherSelectSlot');
+  const tabletLinkCard = root.getElementById('tabletLinkCard');
+  const tabletLinkInput = root.getElementById('tabletLinkInput');
+  const tabletLinkCopy = root.getElementById('tabletLinkCopy');
+  const tabletStartProcess = root.getElementById('tabletStartProcess');
+  const tabletProcessStatus = root.getElementById('tabletProcessStatus');
   const esEdicion = form.dataset.esEdicion === '1';
 
   let currentStep = 1;
+  let signatureDrawing = false;
+  let signatureHasInk = false;
+  let lastSignaturePoint = null;
+
+  function signatureCanvasMetrics() {
+    if (!signatureCanvas || !signatureCtx) return null;
+    const rect = signatureCanvas.getBoundingClientRect();
+    if (!rect.width || !rect.height) return null;
+    const ratio = window.devicePixelRatio || 1;
+    return {
+      rect,
+      width: Math.max(1, Math.round(rect.width * ratio)),
+      height: Math.max(1, Math.round(rect.height * ratio)),
+      ratio,
+    };
+  }
+
+  function resizeSignatureCanvas(preserve = false) {
+    const metrics = signatureCanvasMetrics();
+    if (!metrics || !signatureCtx) return;
+    const { width, height, ratio } = metrics;
+    const snapshot = preserve && signatureHasInk ? signatureCanvas.toDataURL('image/png') : null;
+    signatureCanvas.width = width;
+    signatureCanvas.height = height;
+    signatureCtx.setTransform(ratio, 0, 0, ratio, 0, 0);
+    signatureCtx.lineCap = 'round';
+    signatureCtx.lineJoin = 'round';
+    signatureCtx.strokeStyle = '#241713';
+    signatureCtx.lineWidth = 2.8;
+    signatureCtx.clearRect(0, 0, signatureCanvas.width, signatureCanvas.height);
+    if (snapshot) {
+      const img = new Image();
+      img.onload = () => {
+        signatureCtx.drawImage(img, 0, 0, signatureCanvas.width / ratio, signatureCanvas.height / ratio);
+      };
+      img.src = snapshot;
+    }
+  }
+
+  function syncSignatureData() {
+    if (!signatureCanvas || !signatureDataInput) return;
+    signatureDataInput.value = signatureHasInk ? signatureCanvas.toDataURL('image/png') : '';
+    if (signaturePlaceholder) signaturePlaceholder.style.display = signatureHasInk ? 'none' : 'flex';
+    if (signatureStatus) {
+      signatureStatus.classList.toggle('ok', signatureHasInk);
+      signatureStatus.classList.toggle('error', !signatureHasInk);
+      signatureStatus.innerHTML = signatureHasInk
+        ? '<i class="bi bi-check-circle-fill"></i><span>Firma registrada</span>'
+        : '<i class="bi bi-pencil"></i><span>Sin firma registrada</span>';
+    }
+    if (errorFirma) errorFirma.style.display = signatureHasInk ? 'none' : 'block';
+    if (btnConfirmar) {
+      const c = !!selectedCliente();
+      const a = !!checkboxAceptacion?.checked;
+      btnConfirmar.disabled = !(c && a && signatureHasInk);
+    }
+  }
+
+  function clearSignatureCanvas() {
+    if (!signatureCanvas || !signatureCtx) return;
+    resizeSignatureCanvas(false);
+    signatureCtx.clearRect(0, 0, signatureCanvas.width, signatureCanvas.height);
+    signatureHasInk = false;
+    signatureDrawing = false;
+    lastSignaturePoint = null;
+    syncSignatureData();
+  }
+
+  function pointFromEvent(event) {
+    const rect = signatureCanvas.getBoundingClientRect();
+    const ratio = window.devicePixelRatio || 1;
+    const x = (event.clientX - rect.left) * ratio;
+    const y = (event.clientY - rect.top) * ratio;
+    return { x, y };
+  }
+
+  function drawSignaturePoint(point) {
+    if (!signatureCtx) return;
+    if (!lastSignaturePoint) {
+      lastSignaturePoint = point;
+      return;
+    }
+    signatureCtx.beginPath();
+    signatureCtx.moveTo(lastSignaturePoint.x, lastSignaturePoint.y);
+    signatureCtx.lineTo(point.x, point.y);
+    signatureCtx.stroke();
+    lastSignaturePoint = point;
+    signatureHasInk = true;
+    syncSignatureData();
+  }
+
+  function bindSignaturePad() {
+    if (!signatureCanvas || !signatureCtx) return;
+    syncSignatureData();
+
+    const startDraw = (event) => {
+      event.preventDefault();
+      if (event.pointerType === 'mouse' && event.button !== 0) return;
+      signatureDrawing = true;
+      lastSignaturePoint = pointFromEvent(event);
+      try { signatureCanvas.setPointerCapture(event.pointerId); } catch {}
+    };
+
+    const moveDraw = (event) => {
+      if (!signatureDrawing) return;
+      event.preventDefault();
+      drawSignaturePoint(pointFromEvent(event));
+    };
+
+    const endDraw = () => {
+      if (!signatureDrawing) return;
+      signatureDrawing = false;
+      lastSignaturePoint = null;
+      syncSignatureData();
+    };
+
+    signatureCanvas.addEventListener('pointerdown', startDraw);
+    signatureCanvas.addEventListener('pointermove', moveDraw);
+    signatureCanvas.addEventListener('pointerup', endDraw);
+    signatureCanvas.addEventListener('pointerleave', endDraw);
+    signatureCanvas.addEventListener('pointercancel', endDraw);
+
+    signatureClearBtn?.addEventListener('click', (e) => {
+      e.preventDefault();
+      clearSignatureCanvas();
+    });
+
+    window.addEventListener('resize', () => {
+      if (signatureCanvas && signatureCanvas.offsetParent !== null) {
+        resizeSignatureCanvas(true);
+      }
+    });
+
+    syncSignatureData();
+  }
 
   function setStep(step) {
+    clearStepAlert();
     root.querySelectorAll('.form-step').forEach((el) => el.classList.remove('active'));
     const current = root.getElementById(`step${step}`);
     if (current) current.classList.add('active');
@@ -155,15 +386,61 @@ function initGestionForm() {
     };
   }
 
+  if (!tabletMode && pcLauncherSelectSlot && selectCliente && !pcLauncherSelectSlot.contains(selectCliente)) {
+    pcLauncherSelectSlot.appendChild(selectCliente);
+  }
+
   function updateInfoCliente() {
     const c = selectedCliente();
     if (!c) {
       if (infoCliente) infoCliente.textContent = 'Seleccione un cliente en el formulario';
+      updateTabletLink();
       return;
     }
     if (infoCliente) infoCliente.innerHTML = `<strong>Nombre:</strong> ${esc(c.nombre)}<br><strong>Documento:</strong> ${esc(c.documento)}`;
     const n = root.getElementById('clienteNombreImpresion'); if (n) n.value = c.nombre;
     const d = root.getElementById('clienteDocumentoImpresion'); if (d) d.value = c.documento;
+    updateTabletLink();
+  }
+
+  function buildTabletLink(clienteId) {
+    if (tabletWaitUrl) return tabletWaitUrl;
+    try {
+      return new URL('/gestion-alisados/tablet/espera/', window.location.origin).toString();
+    } catch {
+      return '/gestion-alisados/tablet/espera/';
+    }
+  }
+
+  function buildTabletStartUrl(clienteId) {
+    if (!clienteId || !tabletStartUrlTemplate) return '';
+    const relative = tabletStartUrlTemplate.replace(/\/0\/?$/, `/${encodeURIComponent(clienteId)}/`);
+    try {
+      return new URL(relative, window.location.origin).toString();
+    } catch {
+      return relative;
+    }
+  }
+
+  function updateTabletLink() {
+    if (!tabletLinkInput) return;
+    const clienteId = selectCliente?.value || '';
+    const cliente = selectedCliente();
+    const href = buildTabletLink(clienteId);
+    const startUrl = buildTabletStartUrl(clienteId);
+    tabletLinkInput.value = href;
+    if (tabletLinkCopy) tabletLinkCopy.disabled = !href;
+    if (tabletStartProcess) {
+      tabletStartProcess.dataset.startUrl = startUrl || '';
+      tabletStartProcess.classList.toggle('is-ready', !!clienteId);
+    }
+    if (tabletLinkCard) tabletLinkCard.classList.toggle('is-disabled', !href);
+    if (tabletProcessStatus) {
+      tabletProcessStatus.textContent = clienteId
+        ? `Tablet lista en espera para ${cliente?.nombre || 'el cliente seleccionado'}. Enlace: ${href || '—'}`
+        : 'Selecciona un cliente para iniciar el proceso desde el PC.';
+      tabletProcessStatus.dataset.tone = clienteId ? 'success' : 'warning';
+    }
   }
 
   function toggleSections() {
@@ -215,14 +492,17 @@ function initGestionForm() {
         ok = false; field.classList.add('is-invalid'); if (!first) first = field;
       }
     });
-    if (!ok && first) first.focus();
+    if (!ok && first) {
+      first.focus();
+      notifyStepError();
+    }
     return ok;
   }
 
   function validarConsentimiento() {
     const c = !!selectedCliente();
     const a = !!checkboxAceptacion?.checked;
-    const f = !!(inputFirma && inputFirma.files && inputFirma.files.length > 0);
+    const f = !!(signatureDataInput?.value && signatureDataInput.value.trim());
     if (errorFirma) errorFirma.style.display = (a && !f) ? 'block' : 'none';
     if (btnConfirmar) btnConfirmar.disabled = !(c && a && f);
   }
@@ -249,15 +529,31 @@ function initGestionForm() {
   function initConsentModal() {
     if (!modalConsentimientoEl || !checkboxAceptacion || !btnConfirmar) return;
     const modal = bootstrap.Modal.getOrCreateInstance(modalConsentimientoEl);
-    btnCerrar?.addEventListener('click', () => modal.hide());
+    bindSignaturePad();
+    modalConsentimientoEl.addEventListener('shown.bs.modal', () => {
+      resizeSignatureCanvas(false);
+      clearSignatureCanvas();
+    });
+    btnCerrar?.addEventListener('click', () => {
+      modal.hide();
+      if (parentModalEl && parentModalEl !== modalConsentimientoEl) {
+        const parentModal = bootstrap.Modal.getInstance(parentModalEl) || bootstrap.Modal.getOrCreateInstance(parentModalEl);
+        parentModal.hide();
+      }
+    });
     checkboxAceptacion.addEventListener('change', validarConsentimiento);
-    inputFirma?.addEventListener('change', validarConsentimiento);
+    signatureDataInput?.addEventListener('input', validarConsentimiento);
     selectCliente?.addEventListener('change', validarConsentimiento);
     btnConfirmar.addEventListener('click', () => {
       const c = selectedCliente();
-      if (!c) return toast('Seleccione un cliente', 'warning');
+      if (!c) return setStepAlert('Selecciona un cliente para continuar.', 'warning');
       if (!checkboxAceptacion.checked) return shakeCheckbox();
-      if (!(inputFirma && inputFirma.files && inputFirma.files.length > 0)) { if (errorFirma) errorFirma.style.display = 'block'; return; }
+      syncSignatureData();
+      if (!(signatureDataInput && signatureDataInput.value && signatureDataInput.value.trim())) {
+        if (errorFirma) errorFirma.style.display = 'block';
+        setStepAlert('Registra la firma del cliente para continuar.', 'warning');
+        return;
+      }
       ['consentimiento_nombre','consentimiento_cedula','consentimiento_fecha','consentimiento_aceptado'].forEach((name) => { form.querySelectorAll(`input[name="${name}"]`).forEach((n) => n.remove()); });
       [['consentimiento_nombre', c.nombre], ['consentimiento_cedula', c.documento], ['consentimiento_fecha', new Date().toLocaleDateString('es-CO', { year:'numeric', month:'long', day:'numeric', hour:'2-digit', minute:'2-digit' })], ['consentimiento_aceptado', 'true']].forEach(([name, value]) => { const i = document.createElement('input'); i.type = 'hidden'; i.name = name; i.value = value; form.appendChild(i); });
       modal.hide(); form.submit();
@@ -265,7 +561,32 @@ function initGestionForm() {
     validarConsentimiento();
   }
 
-  selectCliente?.addEventListener('change', async () => { updateInfoCliente(); toggleSections(); calculateSaldo(); updateImpresion(); await loadHistorial(); });
+  const syncPcLauncher = async () => {
+    updateInfoCliente();
+    toggleSections();
+    calculateSaldo();
+    updateImpresion();
+    updateTabletLink();
+    await loadHistorial();
+  };
+
+  selectCliente?.addEventListener('change', syncPcLauncher);
+  selectCliente?.addEventListener('input', syncPcLauncher);
+  window.setTimeout(() => {
+    if (selectCliente?.value) {
+      updateTabletLink();
+    }
+  }, 0);
+  tabletLinkCopy?.addEventListener('click', async () => {
+    const href = tabletLinkInput?.value || '';
+    if (!href) return setStepAlert('Selecciona un cliente para generar el enlace.', 'warning');
+    try {
+      await navigator.clipboard.writeText(href);
+      toast('Enlace de tablet copiado.', 'success');
+    } catch {
+      toast('No se pudo copiar el enlace. Selecciónalo manualmente.', 'warning');
+    }
+  });
   getField(form, 'precio_alisado')?.addEventListener('input', () => { calculateSaldo(); updateImpresion(); });
   getField(form, 'anticipo_cliente')?.addEventListener('input', () => { calculateSaldo(); updateImpresion(); });
   getField(form, 'es_oferta_especial')?.addEventListener('change', () => { toggleSections(); updateImpresion(); });
@@ -273,12 +594,33 @@ function initGestionForm() {
   getField(form, 'realiza_ejercicio')?.addEventListener('change', toggleSections);
   getField(form, 'porcentaje_alisado')?.addEventListener('input', function () { const v = parseInt(this.value || '0', 10); if (!Number.isNaN(v)) this.value = Math.min(Math.max(v, 0), 100); updateImpresion(); });
   form.querySelectorAll('input, select, textarea').forEach((el) => { const ev = el.tagName === 'SELECT' ? 'change' : 'input'; el.addEventListener(ev, updateImpresion); });
+  form.querySelectorAll('input, select, textarea').forEach((el) => { const ev = el.tagName === 'SELECT' ? 'change' : 'input'; el.addEventListener(ev, clearStepAlert); });
 
-  btnSiguiente?.addEventListener('click', () => { if (validateStep(currentStep) && currentStep < 2) { currentStep += 1; setStep(currentStep); } });
+  btnSiguiente?.addEventListener('click', () => {
+    if (!validateStep(currentStep)) return;
+    if (currentStep < 2) {
+      currentStep += 1;
+      setStep(currentStep);
+    }
+  });
   btnAnterior?.addEventListener('click', () => { if (currentStep > 1) { currentStep -= 1; setStep(currentStep); } });
-  btnGuardar?.addEventListener('click', (e) => { e.preventDefault(); if (!validateStep(currentStep)) return; if (!selectCliente?.value) return toast('Seleccione un cliente', 'warning'); checkboxAceptacion && (checkboxAceptacion.checked = false); validarConsentimiento(); updateInfoCliente(); modalConsentimientoEl && bootstrap.Modal.getOrCreateInstance(modalConsentimientoEl).show(); });
+  btnGuardar?.addEventListener('click', (e) => { e.preventDefault(); if (!validateStep(currentStep)) return; if (!selectCliente?.value) return setStepAlert('Selecciona un cliente para continuar.', 'warning'); checkboxAceptacion && (checkboxAceptacion.checked = false); validarConsentimiento(); updateInfoCliente(); modalConsentimientoEl && bootstrap.Modal.getOrCreateInstance(modalConsentimientoEl).show(); });
 
-  btnImprimirPDF?.addEventListener('click', (e) => { e.preventDefault(); const html = generarHTMLDocumento(datosFormulario(form)); const w = window.open('data:text/html;charset=utf-8,' + encodeURIComponent(html), '_blank', 'width=860,height=720'); if (!w) return toast('Permite las ventanas emergentes e intenta de nuevo.', 'warning'); setTimeout(() => { try { w.print(); } catch {} }, 700); });
+  btnImprimirPDF?.addEventListener('click', (e) => {
+    e.preventDefault();
+    const html = generarHTMLDocumento(datosFormulario(form));
+    const w = window.open('', '_blank', 'width=860,height=720');
+    if (!w) return toast('Permite las ventanas emergentes e intenta de nuevo.', 'warning');
+    w.document.open();
+    w.document.write(html);
+    w.document.close();
+    w.focus();
+    setTimeout(() => {
+      try {
+        w.print();
+      } catch {}
+    }, 700);
+  });
   btnImprimirWord?.addEventListener('click', (e) => { e.preventDefault(); const html = generarHTMLDocumento(datosFormulario(form)); const blob = new Blob(['\ufeff' + html], { type: 'application/msword;charset=utf-8' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `Alisado_${(selectedCliente()?.nombre || 'cliente').replace(/\s+/g, '_')}_${new Date().toISOString().slice(0,10)}.doc`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); toast('Documento Word descargado correctamente.', 'success'); });
 
   setStep(1);
@@ -286,6 +628,7 @@ function initGestionForm() {
   toggleSections();
   calculateSaldo();
   updateImpresion();
+  updateTabletLink();
   initConsentModal();
   wireClienteModal();
   if (selectCliente?.value && !esEdicion) loadHistorial();

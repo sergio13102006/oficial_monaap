@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 from clientes.models import Cliente
 import uuid
 
@@ -324,3 +325,105 @@ class GestionAlisado(models.Model):
 
     def __str__(self):
         return f"Alisado - {self.procedimiento_realizado_por} - {self.fecha_hora.strftime('%d/%m/%Y %H:%M')}"
+
+
+class TabletConsentToken(models.Model):
+    token = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    cliente = models.ForeignKey(
+        Cliente,
+        on_delete=models.CASCADE,
+        related_name='tablet_consent_tokens',
+        verbose_name='Cliente'
+    )
+    creado_por = models.ForeignKey(
+        'auth.User',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='tablet_consent_tokens_creados',
+        verbose_name='Creado por'
+    )
+    gestion = models.ForeignKey(
+        GestionAlisado,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='tablet_tokens',
+        verbose_name='Gestión relacionada'
+    )
+    creado_en = models.DateTimeField(auto_now_add=True)
+    expira_en = models.DateTimeField()
+    usado_en = models.DateTimeField(null=True, blank=True)
+    activo = models.BooleanField(default=True)
+
+    class Meta:
+        verbose_name = 'Token de tablet'
+        verbose_name_plural = 'Tokens de tablet'
+        ordering = ['-creado_en']
+
+    def esta_vigente(self):
+        return self.activo and self.usado_en is None and self.expira_en > timezone.now()
+
+    def __str__(self):
+        return f"Tablet token {self.token} - {self.cliente}"
+
+
+class TabletKioskState(models.Model):
+    SINGLETON_ID = 1
+    ESTADO_ESPERA = 'waiting'
+    ESTADO_LISTO = 'ready'
+    ESTADOS = [
+        (ESTADO_ESPERA, 'En espera'),
+        (ESTADO_LISTO, 'Proceso listo'),
+    ]
+
+    id = models.PositiveSmallIntegerField(primary_key=True, default=SINGLETON_ID, editable=False)
+    estado = models.CharField(max_length=20, choices=ESTADOS, default=ESTADO_ESPERA)
+    cliente = models.ForeignKey(
+        Cliente,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='tablet_kiosk_states',
+        verbose_name='Cliente'
+    )
+    token = models.ForeignKey(
+        TabletConsentToken,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='kiosk_states',
+        verbose_name='Token activo'
+    )
+    gestion = models.ForeignKey(
+        GestionAlisado,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='tablet_kiosk_states',
+        verbose_name='Gestión'
+    )
+    creado_en = models.DateTimeField(auto_now_add=True)
+    actualizado_en = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Estado de kiosco tablet'
+        verbose_name_plural = 'Estado de kiosco tablet'
+
+    @property
+    def listo(self):
+        return self.estado == self.ESTADO_LISTO and self.token_id is not None
+
+    def marcar_espera(self):
+        self.estado = self.ESTADO_ESPERA
+        self.cliente = None
+        self.token = None
+        self.gestion = None
+        self.save(update_fields=['estado', 'cliente', 'token', 'gestion', 'actualizado_en'])
+
+    def marcar_listo(self, cliente_obj, token_obj, gestion=None):
+        self.estado = self.ESTADO_LISTO
+        self.cliente = cliente_obj
+        self.token = token_obj
+        self.gestion = gestion
+        self.save(update_fields=['estado', 'cliente', 'token', 'gestion', 'actualizado_en'])

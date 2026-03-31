@@ -32,7 +32,7 @@
   }
 
   if (nav) {
-    nav.querySelectorAll('a[href^="#"]').forEach((link) => {
+    nav.querySelectorAll('a[href^="#"], [data-nav-close]').forEach((link) => {
       link.addEventListener('click', () => setNav(false));
     });
   }

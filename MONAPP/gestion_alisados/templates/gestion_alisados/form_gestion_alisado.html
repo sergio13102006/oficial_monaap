@@ -571,17 +571,43 @@
                         </div>
                     </div>
                     
-                    <div class="mb-3">
-                        <label for="{{ form.firma_consentimiento.id_for_label }}" class="form-label fw-bold text-danger">
-                            <i class="bi bi-pen"></i> Cargar firma del cliente *
-                        </label>
-                        {{ form.firma_consentimiento }}
-                        <div class="form-text">Suba una imagen con la firma del cliente (formatos: JPG, PNG, etc.) - <strong>Campo obligatorio</strong></div>
-                        <div id="errorFirma" class="text-danger" class="gestion-btn-hidden">
-                            <i class="bi bi-exclamation-triangle"></i> Debe cargar la firma del cliente para continuar
+                    <div class="signature-block">
+                        <div class="signature-block__head">
+                            <div>
+                                <label class="form-label fw-bold mb-1">
+                                    <i class="bi bi-pen"></i> Firma del cliente
+                                </label>
+                                <p class="signature-block__help mb-0">Firme con el dedo, lápiz o mouse dentro del recuadro.</p>
+                            </div>
+                            <div class="signature-block__actions">
+                                <button type="button" class="btn btn-outline-secondary btn-sm" id="btnLimpiarFirma">
+                                    <i class="bi bi-eraser"></i> Limpiar
+                                </button>
+                            </div>
                         </div>
-                        {% if form.firma_consentimiento.errors %}
-                            <div class="text-danger">{{ form.firma_consentimiento.errors }}</div>
+
+                        <input type="hidden" name="firma_consentimiento_data" id="id_firma_consentimiento_data">
+                        {{ form.firma_consentimiento }}
+
+                        <div class="signature-canvas-wrap">
+                            <canvas id="firmaCanvas" class="signature-canvas" aria-label="Área para firmar"></canvas>
+                            <div class="signature-canvas-placeholder" id="firmaCanvasPlaceholder">
+                                <i class="bi bi-pencil-square"></i>
+                                <span>Firme aquí</span>
+                            </div>
+                        </div>
+
+                        <div class="signature-block__footer">
+                            <div id="firmaEstado" class="signature-status">
+                                <i class="bi bi-pencil"></i>
+                                <span>Sin firma registrada</span>
+                            </div>
+                            <div id="errorFirma" class="text-danger gestion-btn-hidden">
+                                <i class="bi bi-exclamation-triangle"></i> Debe registrar la firma para continuar
+                            </div>
+                        </div>
+                        {% if form.firma_consentimiento_data.errors %}
+                            <div class="text-danger mt-2">{{ form.firma_consentimiento_data.errors }}</div>
                         {% endif %}
                     </div>
                     
