@@ -1,4 +1,5 @@
 ﻿/* -------------------- RESET -------------------- */
+/* CACHE BUST - UPDATED v2 */
 * {
     margin: 0;
     padding: 0;
@@ -7,6 +8,7 @@
 
 html {
     scroll-behavior: smooth;
+    background: #000000;
 }
 
 @font-face {
@@ -23,7 +25,7 @@ body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
         Roboto, Helvetica, Arial, sans-serif;
     color: #111;
-    background: #ffffff;
+    background: #1a1a1a;
     line-height: 1.6;
 }
 /* -------------------- GLOBAL -------------------- */
@@ -68,15 +70,17 @@ body {
     min-height: 120vh;
     background-image: url("../img/fondo-.minimalista.jpg");
     background-size: cover;
-    background-position: center;
+    background-position: center top;
     background-repeat: no-repeat;
     position: relative;
     min-height: 160vh;
     display: flex;
     flex-direction: column;
     justify-content: center;
+    margin-top: 0;
+    padding-top: 0;
     padding-bottom: 0px;
-    overflow: hidden;
+    overflow: visible;
 }
 
 .sq-page-reveal {
@@ -108,7 +112,13 @@ body {
     content: "";
     position: absolute;
     inset: 0;
-    background: rgba(15, 15, 15, 0.55);
+    background: linear-gradient(
+        to bottom,
+        rgba(15, 15, 15, 0.18) 0%,
+        rgba(15, 15, 15, 0.28) 18%,
+        rgba(15, 15, 15, 0.42) 42%,
+        rgba(15, 15, 15, 0.55) 100%
+    );
 }
 
 .sq-hero,
@@ -135,9 +145,10 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding-top: 120px;
+    padding-top: 80px;
     padding-bottom: 0px;
     position: relative;
+    margin-top: 0px;
     
 }
 
@@ -166,8 +177,9 @@ body {
     color: #ffffff;
     text-align: center;
     margin-top: 9px;
-     
-    
+    width: 100%;
+    max-width: 100%;
+    padding: 0 20px;
 }
 .sq-hero-brand-wrap {
     width: min(420px, 84vw);
@@ -182,25 +194,18 @@ body {
     filter: drop-shadow(0 20px 36px rgba(0, 0, 0, 0.30));
 }
 .sq-hero h1 {
-    background-image: linear-gradient(90deg, #ffffff 0%, #484848 15%, #111111 30%, #484848 45%, #ffffff 65%, #111111 85%,#111111 100%);
+    font-family: "Gailes", serif !important;
+    font-size: clamp(5rem, 12vw, 8.5rem);
+    font-weight: 400;
+    line-height: 1.5;
+    margin-top: 80px;
+    margin-bottom: 23px;
+    background: linear-gradient(90deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.8) 35%, rgba(128,128,128,0.5) 55%, rgba(0,0,0,0.3) 100%);
     background-size: 300% 100%;
-    background-position: center 60%;  /* ← era 30%, ahora 15% sube la imagen */
-    background-clip: text;
-    background-position: 0% 50%;
-    background-repeat: no-repeat;
     -webkit-background-clip: text;
-    color: transparent;
     -webkit-text-fill-color: transparent;
-    animation: heroTextGradient 10s ease-in-out infinite;
-    font-size: clamp(10rem, 22vw, 20rem);
-    line-height: 1.35;
-    font-weight: 500;
-    letter-spacing: -0.03em;
-    margin-top: 0;
-    margin-bottom: 15px;
-    padding-top: 0.22em;
-    padding-bottom: 0.12em;
-    overflow: visible;
+    background-clip: text;
+    animation: heroTextGradient 6s linear infinite;
 }
 
 .sq-hero-brand {
@@ -230,9 +235,8 @@ body {
     text-align: center;
 }
 @keyframes heroTextGradient {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
+    0% { background-position: -300% 50%; }
+    100% { background-position: 100% 50%; }
 }
 
 .sq-hero p {
@@ -1295,23 +1299,23 @@ body {
 
 /* ==================== FONDOS POR ESTADO ==================== */
 body {
-    background-color: #ffffff;
+    background-color: #000000;
     transition: background-color 0.9s ease;
 }
 
 /* Infinite */
 body.bg-white {
-    background-color: #ffffff;
+    background: #ffffff !important;
 }
 
-/* Testimonials */
+/* Productos */
 body.bg-brown {
-    background-color: #1f1612;
+    background: #22160d !important;
 }
 
-/* Contacto / footer */
+/* Contacto */
 body.bg-black {
-    background-color: #3a2a22;
+    background: #000000 !important;
 }
 
 .sq-testimonials,
@@ -1326,6 +1330,10 @@ body.bg-black {
 
 .sq-tracks-wrapper.sq-infinite {
     background: transparent !important;
+}
+
+.sq-services-stage::after {
+    content: none;
 }
 
 /* ==================== INFINITE SCROLL ==================== */
@@ -1537,29 +1545,19 @@ body.bg-black {
 .sq-products {
     position: relative;
     z-index: 6;
-    margin-top: 35px;
+    margin-top: 145px;
     background: transparent;
-    padding: 10px 6% 80px;
+    padding: 90px 6% 135px;
     color: #fff;
+}
+
+.sq-products::before {
+    content: none;
 }
 
 /* Difuminado inferior para transicionar a Contactenos sin corte */
 .sq-products::after {
-    content: "";
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    height: 220px;
-    pointer-events: none;
-    z-index: 0;
-    display: none;
-    background: linear-gradient(
-        to bottom,
-        rgba(0, 0, 0, 0) 0%,
-        rgba(0, 0, 0, 0.75) 55%,
-        rgba(0, 0, 0, 1) 100%
-    );
+    content: none;
 }
 
 .sq-products > * {
@@ -1695,7 +1693,7 @@ body.bg-black {
     position: relative !important;
     overflow: hidden !important;
     border-radius: 18px !important;
-    min-height: 360px !important;
+    min-height: 460px !important;
     padding: 0 !important;
     text-align: left !important;
     display: block !important;
@@ -1733,7 +1731,7 @@ body.bg-black {
     position: relative;
     z-index: 1;
     width: 100%;
-    min-height: 360px;
+    min-height: 460px;
     transform-style: preserve-3d;
     transition: transform 0.75s cubic-bezier(0.2, 0.9, 0.2, 1);
 }
@@ -1988,9 +1986,10 @@ body.bg-black {
 /* ==================== CONTACTO PREMIUM ==================== */
 
 .sq-contact {
+    margin-top: 130px;
     padding: 160px 16px;
     color: #ffffff;
-    background: linear-gradient(180deg, rgba(99, 76, 64, 0.12) 0%, rgba(58, 42, 34, 0.82) 35%, #120d0b 100%) !important;
+    background: transparent !important;
 }
 
 .sq-contact--video {
@@ -2164,18 +2163,19 @@ body.bg-black {
 }
 
 .sq-social-card-icon {
-    width: 44px;
-    height: 44px;
-    border-radius: 12px;
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
     display: grid;
     place-items: center;
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.10);
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.28);
 }
 
 .sq-social-card-icon i {
-    font-size: 1.35rem;
-    color: rgba(255, 255, 255, 0.90);
+    font-size: 1.6rem;
+    color: #ffffff;
 }
 
 .sq-social-card-body h3 {
@@ -2215,6 +2215,21 @@ body.bg-black {
 .sq-social-card.is-whatsapp { --glow: rgba(37, 211, 102, 0.25); }
 .sq-social-card.is-instagram { --glow: rgba(225, 48, 108, 0.22); }
 .sq-social-card.is-facebook { --glow: rgba(24, 119, 242, 0.22); }
+
+.sq-social-card.is-whatsapp .sq-social-card-icon {
+    background: linear-gradient(135deg, rgba(37, 211, 102, 0.95), rgba(20, 148, 69, 0.92));
+    border-color: rgba(255, 255, 255, 0.18);
+}
+
+.sq-social-card.is-instagram .sq-social-card-icon {
+    background: linear-gradient(135deg, rgba(245, 133, 41, 0.95), rgba(225, 48, 108, 0.94), rgba(131, 58, 180, 0.94));
+    border-color: rgba(255, 255, 255, 0.18);
+}
+
+.sq-social-card.is-facebook .sq-social-card-icon {
+    background: linear-gradient(135deg, rgba(24, 119, 242, 0.95), rgba(16, 87, 177, 0.92));
+    border-color: rgba(255, 255, 255, 0.18);
+}
 
 @media (max-width: 860px) {
     .sq-contact-cards {
@@ -2602,6 +2617,21 @@ body.bg-black {
 .sq-card.no-image:hover .sq-blur {
     background: rgba(0,0,0,0.18);
 }
+/* ===== Botón de Accesibilidad Sienna - solo el botón principal ===== */
+/* Selector específico para el botón principal (primer botón hijo del elemento raíz de Sienna) */
+.asw-close-btn:not(.asw-icon-text) {
+    background-image: url('../img/icono.png') !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    transition: all 0.3s ease-in-out !important;
+}
+
+.asw-close-btn:not(.asw-icon-text):hover {
+    background-image: url('../img/desplegable.png') !important;
+    transform: scale(1.1) !important;
+}
+
 .sq-brand-wrapper {
     position: relative;
     display: inline-block;
@@ -3032,3 +3062,30 @@ body.bg-black {
 .sq-fade-up:nth-child(4) { transition-delay: 0.45s; }
 .sq-fade-up:nth-child(5) { transition-delay: 0.60s; }
 .sq-fade-up:nth-child(6) { transition-delay: 0.75s; }
+
+/* ==================== BOTÓN DE ACCESIBILIDAD SIENNA ==================== */
+.sienna-toggle-button {
+    position: fixed !important;
+    bottom: 30px !important;
+    right: 30px !important;
+    width: 60px !important;
+    height: 60px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.sienna-toggle-button .sienna-toggle-button-icon {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+}
+
+.sienna-toggle-button::before {
+    content: "⚙" !important;
+    font-size: 32px !important;
+    line-height: 1 !important;
+    font-weight: bold !important;
+    color: #ffffff !important;
+    display: block !important;
+}
