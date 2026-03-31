@@ -51,6 +51,21 @@ function notifyStepError() {
   setStepAlert('Completa la información antes de continuar.', 'warning');
 }
 
+function fieldDisplayName(field) {
+  if (!field) return 'Campo';
+  if (field.name === 'firma_consentimiento_data') return 'Firma del cliente';
+  const id = field.id;
+  if (id && window.CSS && typeof window.CSS.escape === 'function') {
+    const label = document.querySelector(`label[for="${window.CSS.escape(id)}"]`);
+    if (label) return (label.textContent || 'Campo').replace(/\*/g, '').trim();
+  }
+  if (id) {
+    const fallbackLabel = document.querySelector(`label[for="${id}"]`);
+    if (fallbackLabel) return (fallbackLabel.textContent || 'Campo').replace(/\*/g, '').trim();
+  }
+  return (field.getAttribute('aria-label') || field.name || 'Campo').trim();
+}
+
 function esc(v) {
   return String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
@@ -58,6 +73,60 @@ function esc(v) {
 function getField(form, name) { return form ? form.querySelector(`[name="${name}"]`) : null; }
 function selectText(el) { if (!el) return '—'; if (el.tagName !== 'SELECT') return (el.value || '—').trim() || '—'; const opt = el.selectedOptions && el.selectedOptions[0]; return opt && opt.value ? (opt.text || '—').trim() || '—' : '—'; }
 function splitCliente(texto) { const t = String(texto || '').trim(); const p = t.lastIndexOf(' - '); return p >= 0 ? { nombre: t.slice(0, p).trim(), documento: t.slice(p + 3).trim() } : { nombre: t, documento: '' }; }
+function moneyDigits(value) { return String(value ?? '').replace(/[^\d]/g, ''); }
+function formatMoneyValue(value) {
+  const digits = moneyDigits(value);
+  if (!digits) return '';
+  const normalized = digits.replace(/^0+(?=\d)/, '');
+  return normalized.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+function parseMoneyValue(field) { return parseInt(moneyDigits(field?.value || '0') || '0', 10) || 0; }
+function formatMoneyField(field) {
+  if (!field) return;
+  const formatted = formatMoneyValue(field.value);
+  field.value = formatted;
+}
+function calculateMoneySaldoForForm(formRef) {
+  if (!formRef) return;
+  const precio = parseMoneyValue(getField(formRef, 'precio_alisado'));
+  const anticipo = parseMoneyValue(getField(formRef, 'anticipo_cliente'));
+  const saldo = getField(formRef, 'saldo_pendiente');
+  if (saldo) saldo.value = formatMoneyValue(Math.max(0, precio - anticipo));
+}
+function syncMoneyFields(formRef) {
+  if (!formRef) return;
+  [getField(formRef, 'precio_alisado'), getField(formRef, 'anticipo_cliente'), getField(formRef, 'saldo_pendiente')].forEach(formatMoneyField);
+  calculateMoneySaldoForForm(formRef);
+}
+function wireMoneyField(field) {
+  if (!field || field.dataset.moneyWired === '1') return;
+  field.dataset.moneyWired = '1';
+  const sync = () => {
+    formatMoneyField(field);
+    const formRef = field.closest('form');
+    calculateMoneySaldoForForm(formRef);
+    if (formRef && formRef._gestionUpdateImpresion) formRef._gestionUpdateImpresion();
+  };
+  ['input', 'keyup', 'change', 'paste', 'blur'].forEach((eventName) => {
+    field.addEventListener(eventName, sync);
+  });
+  if (!field.readOnly) {
+    field.addEventListener('focus', () => {
+      if (moneyDigits(field.value) === '0') field.value = '';
+    });
+  }
+}
+window.gestionAlisadoMoneyInput = function gestionAlisadoMoneyInput(field) {
+  if (!field) return;
+  const formRef = field.closest('form');
+  formatMoneyField(field);
+  calculateMoneySaldoForForm(formRef);
+  if (formRef && formRef._gestionUpdateImpresion) formRef._gestionUpdateImpresion();
+};
+window.gestionAlisadoMoneyFocus = function gestionAlisadoMoneyFocus(field) {
+  if (!field) return;
+  if (moneyDigits(field.value) === '0') field.value = '';
+};
 function show(el, on) { if (el) el.classList.toggle('show', !!on); }
   function vis(el, on) { if (el) el.style.display = on ? 'inline-block' : 'none'; }
   function setPcLauncherStatus(message, tone = 'info') {
@@ -294,9 +363,8 @@ function initGestionForm() {
 
   function pointFromEvent(event) {
     const rect = signatureCanvas.getBoundingClientRect();
-    const ratio = window.devicePixelRatio || 1;
-    const x = (event.clientX - rect.left) * ratio;
-    const y = (event.clientY - rect.top) * ratio;
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
     return { x, y };
   }
 
@@ -452,16 +520,14 @@ function initGestionForm() {
   }
 
   function calculateSaldo() {
-    const precio = parseFloat(getField(form, 'precio_alisado')?.value || '0') || 0;
-    const anticipo = parseFloat(getField(form, 'anticipo_cliente')?.value || '0') || 0;
-    const saldo = getField(form, 'saldo_pendiente');
-    if (saldo) saldo.value = String(Math.max(0, precio - anticipo));
+    calculateMoneySaldoForForm(form);
   }
 
   function updateImpresion() {
     const estado = datosFormulario(form);
     form._gestionEstado = estado;
   }
+  form._gestionUpdateImpresion = updateImpresion;
 
   async function loadHistorial() {
     if (!selectCliente || !selectCliente.value || esEdicion || !urlUltima) return;
@@ -476,6 +542,7 @@ function initGestionForm() {
         else if (field.tagName === 'SELECT') field.value = String(v ?? '');
         else field.value = v ?? '';
       });
+      syncMoneyFields(form);
       updateInfoCliente(); toggleSections(); calculateSaldo(); updateImpresion();
     } catch (e) { console.warn(e); }
   }
@@ -497,6 +564,29 @@ function initGestionForm() {
       notifyStepError();
     }
     return ok;
+  }
+
+  function validateAllRequiredFields() {
+    const missing = [];
+    const seen = new Set();
+    let first = null;
+    form.querySelectorAll('input[required], select[required], textarea[required]').forEach((field) => {
+      if (field.disabled || field.type === 'hidden') return;
+      const conditional = field.closest('.conditional-field');
+      if (conditional && !conditional.classList.contains('show')) return;
+      const value = String(field.value || '').trim();
+      const emptySelect = field.tagName === 'SELECT' && (value === '' || value === 'None');
+      if (!value || emptySelect) {
+        field.classList.add('is-invalid');
+        if (!first) first = field;
+        const label = fieldDisplayName(field);
+        if (!seen.has(label)) {
+          seen.add(label);
+          missing.push(label);
+        }
+      }
+    });
+    return { missing, first };
   }
 
   function validarConsentimiento() {
@@ -548,6 +638,22 @@ function initGestionForm() {
       const c = selectedCliente();
       if (!c) return setStepAlert('Selecciona un cliente para continuar.', 'warning');
       if (!checkboxAceptacion.checked) return shakeCheckbox();
+      const validation = validateAllRequiredFields();
+      if (validation.missing.length) {
+        if (validation.first) validation.first.focus();
+        const step1HasMissing = !!root.querySelector('#step1 .is-invalid');
+        const step2HasMissing = !!root.querySelector('#step2 .is-invalid');
+        if (step1HasMissing) {
+          currentStep = 1;
+          setStep(1);
+        } else if (step2HasMissing) {
+          currentStep = 2;
+          setStep(2);
+        }
+        setStepAlert(`Completa estos campos antes de guardar: ${validation.missing.join(', ')}.`, 'warning');
+        modal.hide();
+        return;
+      }
       syncSignatureData();
       if (!(signatureDataInput && signatureDataInput.value && signatureDataInput.value.trim())) {
         if (errorFirma) errorFirma.style.display = 'block';
@@ -587,8 +693,11 @@ function initGestionForm() {
       toast('No se pudo copiar el enlace. Selecciónalo manualmente.', 'warning');
     }
   });
-  getField(form, 'precio_alisado')?.addEventListener('input', () => { calculateSaldo(); updateImpresion(); });
-  getField(form, 'anticipo_cliente')?.addEventListener('input', () => { calculateSaldo(); updateImpresion(); });
+  wireMoneyField(getField(form, 'precio_alisado'));
+  wireMoneyField(getField(form, 'anticipo_cliente'));
+  wireMoneyField(getField(form, 'saldo_pendiente'));
+  syncMoneyFields(form);
+  calculateSaldo();
   getField(form, 'es_oferta_especial')?.addEventListener('change', () => { toggleSections(); updateImpresion(); });
   getField(form, 'sufre_tiroides')?.addEventListener('change', toggleSections);
   getField(form, 'realiza_ejercicio')?.addEventListener('change', toggleSections);
@@ -623,7 +732,9 @@ function initGestionForm() {
   });
   btnImprimirWord?.addEventListener('click', (e) => { e.preventDefault(); const html = generarHTMLDocumento(datosFormulario(form)); const blob = new Blob(['\ufeff' + html], { type: 'application/msword;charset=utf-8' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `Alisado_${(selectedCliente()?.nombre || 'cliente').replace(/\s+/g, '_')}_${new Date().toISOString().slice(0,10)}.doc`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); toast('Documento Word descargado correctamente.', 'success'); });
 
-  setStep(1);
+  const step2HasErrors = !!root.querySelector('#step2 .text-danger');
+  const step1HasErrors = !!root.querySelector('#step1 .text-danger');
+  setStep(step2HasErrors && !step1HasErrors ? 2 : 1);
   updateInfoCliente();
   toggleSections();
   calculateSaldo();

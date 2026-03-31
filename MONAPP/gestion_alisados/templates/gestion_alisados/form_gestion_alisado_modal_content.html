@@ -266,6 +266,24 @@
         </div>
     </div>
 
+    <div class="gestion-tablet-footer gestion-tablet-footer--top">
+        <div class="gestion-tablet-footer__hint">
+            <i class="bi bi-phone-flip"></i>
+            <span>Avanza por pasos y completa la firma antes de guardar.</span>
+        </div>
+        <div class="gestion-tablet-footer__actions">
+            <button type="button" class="btn btn-secondary gestion-btn-primary" id="btnAnterior">
+                <i class="bi bi-arrow-left"></i> Anterior
+            </button>
+            <button type="button" class="btn text-white gestion-btn-primary" id="btnSiguiente">
+                Siguiente <i class="bi bi-arrow-right"></i>
+            </button>
+            <button type="button" class="btn text-white gestion-btn-primary" id="btnGuardar">
+                <i class="bi bi-save"></i> Guardar
+            </button>
+        </div>
+    </div>
+
     <!-- Indicador de progreso -->
     <div class="progress-steps gestion-step-spacing">
         <div class="step-item active" data-step="1">
@@ -279,6 +297,31 @@
     </div>
 
     <div id="gestionStepAlert" class="alert gestion-step-alert d-none" role="alert" aria-live="polite"></div>
+    {% if form.errors %}
+    <div class="alert alert-danger gestion-step-alert" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        No fue posible guardar el tratamiento. Revisa los campos marcados y vuelve a intentar.
+        <ul class="mt-2 mb-0 ps-3">
+            {% for field in form %}
+                {% for error in field.errors %}
+                    <li>
+                        <strong>
+                            {% if field.name == 'firma_consentimiento_data' %}
+                                Firma del cliente
+                            {% else %}
+                                {{ field.label|default:field.name }}
+                            {% endif %}
+                        </strong>:
+                        {{ error }}
+                    </li>
+                {% endfor %}
+            {% endfor %}
+            {% for error in form.non_field_errors %}
+                <li><strong>Formulario</strong>: {{ error }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
 
 <form method="post" enctype="multipart/form-data" id="gestionAlisadoForm" action="{{ action_url|default:request.path }}" novalidate data-es-edicion="{% if gestion %}1{% else %}0{% endif %}" data-ultima-gestion-url="{% url 'gestion_alisados:ultima_gestion_cliente' %}">
                         {% csrf_token %}
@@ -796,7 +839,7 @@
                             </div>
                         </div>
 
-                        <input type="hidden" name="firma_consentimiento_data" id="id_firma_consentimiento_data">
+                        <input type="hidden" name="firma_consentimiento_data" id="id_firma_consentimiento_data" form="gestionAlisadoForm">
                         {{ form.firma_consentimiento }}
 
                         <div class="signature-canvas-wrap">

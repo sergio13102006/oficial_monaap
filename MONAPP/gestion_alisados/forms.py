@@ -1,5 +1,6 @@
 ﻿import base64
 import binascii
+import re
 import uuid
 
 from django import forms
@@ -12,8 +13,66 @@ from servicios.models import Servicio
 from core.form_validations import ValidationFormMixin
 
 
+class MoneyTextInput(forms.TextInput):
+    def format_value(self, value):
+        if value is None or value == '':
+            return ''
+
+        raw = str(value).strip()
+        digits = re.sub(r'[^\d-]', '', raw)
+        if digits in ('', '-'):
+            return ''
+
+        negative = digits.startswith('-')
+        if negative:
+            digits = digits[1:]
+
+        try:
+            formatted = f'{int(digits):,}'.replace(',', '.')
+        except (TypeError, ValueError):
+            return raw
+
+        return f'-{formatted}' if negative else formatted
+
+
+class MoneyIntegerField(forms.IntegerField):
+    def to_python(self, value):
+        if value in self.empty_values:
+            return None
+        if isinstance(value, str):
+            value = re.sub(r'[^\d-]', '', value.strip())
+        return super().to_python(value)
+
+
 class GestionAlisadoForm(ValidationFormMixin, forms.ModelForm):
     firma_consentimiento_data = forms.CharField(required=False, widget=forms.HiddenInput())
+    precio_alisado = MoneyIntegerField(required=True, widget=MoneyTextInput(attrs={
+        'class': 'form-control gestion-money-input',
+        'min': '0',
+        'inputmode': 'numeric',
+        'placeholder': 'Precio del alisado en COP',
+        'required': 'required',
+        'oninput': 'window.gestionAlisadoMoneyInput && window.gestionAlisadoMoneyInput(this)',
+        'onblur': 'window.gestionAlisadoMoneyInput && window.gestionAlisadoMoneyInput(this)',
+        'onfocus': 'window.gestionAlisadoMoneyFocus && window.gestionAlisadoMoneyFocus(this)',
+    }))
+    anticipo_cliente = MoneyIntegerField(required=True, widget=MoneyTextInput(attrs={
+        'class': 'form-control gestion-money-input',
+        'min': '0',
+        'inputmode': 'numeric',
+        'placeholder': 'Anticipo realizado en COP',
+        'required': 'required',
+        'oninput': 'window.gestionAlisadoMoneyInput && window.gestionAlisadoMoneyInput(this)',
+        'onblur': 'window.gestionAlisadoMoneyInput && window.gestionAlisadoMoneyInput(this)',
+        'onfocus': 'window.gestionAlisadoMoneyFocus && window.gestionAlisadoMoneyFocus(this)',
+    }))
+    saldo_pendiente = MoneyIntegerField(required=False, widget=MoneyTextInput(attrs={
+        'class': 'form-control gestion-money-input',
+        'min': '0',
+        'inputmode': 'numeric',
+        'placeholder': 'Saldo pendiente en COP',
+        'readonly': 'readonly',
+    }))
 
     class Meta:
         model = GestionAlisado
@@ -38,12 +97,6 @@ class GestionAlisadoForm(ValidationFormMixin, forms.ModelForm):
                 'required': 'required',
                 'id': 'selectCliente'
             }),
-            'precio_alisado': forms.NumberInput(attrs={
-                'class': 'form-control',
-                'min': '0',
-                'placeholder': 'Precio del alisado en COP',
-                'required': 'required'
-            }),
             'es_oferta_especial': forms.Select(attrs={
                 'class': 'form-select',
                 'required': 'required'
@@ -53,21 +106,9 @@ class GestionAlisadoForm(ValidationFormMixin, forms.ModelForm):
                 'rows': 2,
                 'placeholder': 'Describe la promoción'
             }),
-            'anticipo_cliente': forms.NumberInput(attrs={
-                'class': 'form-control',
-                'min': '0',
-                'placeholder': 'Anticipo realizado en COP',
-                'required': 'required'
-            }),
             'medio_pago': forms.Select(attrs={
                 'class': 'form-select',
                 'required': 'required'
-            }),
-            'saldo_pendiente': forms.NumberInput(attrs={
-                'class': 'form-control',
-                'min': '0',
-                'placeholder': 'Saldo pendiente en COP',
-                'readonly': 'readonly'
             }),
             'procedimiento_realizado_por': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -211,6 +252,8 @@ class GestionAlisadoForm(ValidationFormMixin, forms.ModelForm):
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields['firma_consentimiento_data'].widget.attrs['form'] = 'gestionAlisadoForm'
+        self.fields['firma_consentimiento'].widget.attrs['form'] = 'gestionAlisadoForm'
         # Cargar clientes activos en el dropdown
         self.fields['cliente'].queryset = Cliente.objects.filter(estado='activo').order_by('nombre', 'apellido')
         # Función para mostrar nombre completo y documento
@@ -240,7 +283,8 @@ class GestionAlisadoForm(ValidationFormMixin, forms.ModelForm):
         servicio_choices.extend([(servicio.nombre, servicio.nombre) for servicio in servicios])
 
         tipo_actual = (self.initial.get('tipo_alisado') or self.data.get('tipo_alisado') or '').strip()
-        if tipo_actual and tipo_actual not in {value for value, _ in servicio_choices}:
+        permitir_valor_actual = self.is_bound or bool(getattr(self.instance, 'pk', None))
+        if tipo_actual and permitir_valor_actual and tipo_actual not in {value for value, _ in servicio_choices}:
             servicio_choices.append((tipo_actual, tipo_actual))
 
         self.fields['tipo_alisado'] = forms.ChoiceField(
@@ -251,17 +295,35 @@ class GestionAlisadoForm(ValidationFormMixin, forms.ModelForm):
                 'required': 'required',
             })
         )
-        if tipo_actual:
+        if tipo_actual and (permitir_valor_actual or tipo_actual in {value for value, _ in servicio_choices}):
             self.fields['tipo_alisado'].initial = tipo_actual
+
+    @staticmethod
+    def _money_to_int(value):
+        if value in (None, ''):
+            return None
+        raw = str(value).strip()
+        digits = re.sub(r'[^\d-]', '', raw)
+        if digits in ('', '-'):
+            return None
+        return int(digits)
 
     def clean(self):
         cleaned_data = super().clean()
-        precio = cleaned_data.get('precio_alisado')
-        anticipo = cleaned_data.get('anticipo_cliente')
+        precio = self._money_to_int(cleaned_data.get('precio_alisado'))
+        anticipo = self._money_to_int(cleaned_data.get('anticipo_cliente'))
+        saldo = self._money_to_int(cleaned_data.get('saldo_pendiente'))
 
-        # Calcular saldo pendiente automáticamente
+        if precio is not None:
+            cleaned_data['precio_alisado'] = precio
+        if anticipo is not None:
+            cleaned_data['anticipo_cliente'] = anticipo
+
+        # Calcular saldo pendiente autom?ticamente
         if precio is not None and anticipo is not None:
-            cleaned_data['saldo_pendiente'] = precio - anticipo
+            cleaned_data['saldo_pendiente'] = max(0, precio - anticipo)
+        elif saldo is not None:
+            cleaned_data['saldo_pendiente'] = saldo
 
         firma_data = (cleaned_data.get('firma_consentimiento_data') or '').strip()
         tiene_firma_existente = bool(getattr(self.instance, 'firma_consentimiento', None))
