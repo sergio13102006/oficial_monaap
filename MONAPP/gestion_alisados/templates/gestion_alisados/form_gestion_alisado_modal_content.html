@@ -86,7 +86,7 @@
                     <i class="bi bi-send"></i> Iniciar proceso
                 </button>
             </div>
-            <div class="tablet-link-card__status" id="tabletProcessStatus">Selecciona un cliente para iniciar el proceso desde el PC.</div>
+            <div class="tablet-link-card__status" id="tabletProcessStatus">Selecciona un cliente para dejar lista la tablet y enviar el proceso cuando quieras.</div>
         </div>
     </div>
 {% endif %}
@@ -102,8 +102,21 @@
     const copyBtn = document.getElementById('tabletLinkCopy');
     const waitUrl = shell?.dataset.tabletWaitUrl || '';
     const startTemplate = shell?.dataset.tabletStartUrlTemplate || '';
+    const toastEl = document.getElementById('notificacionToast');
+    const toastIcon = document.getElementById('toastIcon');
+    const toastTitle = document.getElementById('toastTitle');
+    const toastMessage = document.getElementById('toastMessage');
 
     if (!shell || !select || !launchBtn) return;
+
+    function esc(value) {
+        return String(value ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
 
     function selectedCliente() {
         const opt = select.selectedOptions && select.selectedOptions[0];
@@ -127,9 +140,43 @@
         }
     }
 
+    function showToast(message, tone = 'info') {
+        if (!toastEl || !window.bootstrap) return;
+        const cfg = {
+            success: { title: 'Proceso listo', icon: 'bi-check-circle-fill', color: '#2f6d4d' },
+            warning: { title: 'Revisa un detalle', icon: 'bi-exclamation-triangle-fill', color: '#8b6731' },
+            error: { title: 'Algo no salió bien', icon: 'bi-x-circle-fill', color: '#8c3a35' },
+            info: { title: 'Información', icon: 'bi-info-circle-fill', color: '#37536b' },
+        }[tone] || {
+            title: 'Información',
+            icon: 'bi-info-circle-fill',
+            color: '#37536b',
+        };
+
+        if (toastTitle) toastTitle.textContent = cfg.title;
+        if (toastMessage) toastMessage.textContent = message;
+        if (toastIcon) toastIcon.className = `${cfg.icon} me-2`;
+
+        const header = toastEl.querySelector('.toast-header');
+        if (header) header.style.backgroundColor = cfg.color;
+
+        window.bootstrap.Toast.getOrCreateInstance(toastEl).show();
+    }
+
     function setStatus(message, tone) {
         if (!status) return;
-        status.textContent = message;
+        const icon = {
+            success: 'bi-check-circle-fill',
+            warning: 'bi-exclamation-triangle-fill',
+            error: 'bi-x-circle-fill',
+            info: 'bi-info-circle-fill',
+        }[tone] || 'bi-info-circle-fill';
+        status.innerHTML = `
+            <span class="tablet-link-card__status-icon" aria-hidden="true">
+                <i class="bi ${icon}"></i>
+            </span>
+            <span class="tablet-link-card__status-text">${esc(message)}</span>
+        `;
         status.dataset.tone = tone || 'info';
     }
 
@@ -142,8 +189,8 @@
         if (launchBtn) launchBtn.dataset.startUrl = startUrl;
         setStatus(
             cliente
-                ? `Tablet lista en espera para ${cliente.nombre}. Enlace: ${waitLink}`
-                : 'Selecciona un cliente para iniciar el proceso desde el PC.',
+                ? `La tablet está lista para ${cliente.nombre}. Mantén abierta la pantalla de espera.`
+                : 'Selecciona un cliente para preparar el envío hacia la tablet.',
             cliente ? 'success' : 'warning'
         );
     }
@@ -156,29 +203,33 @@
 
         const cliente = selectedCliente();
         if (!cliente) {
-            setStatus('Selecciona un cliente para iniciar el proceso.', 'warning');
-            window.alert('Selecciona un cliente para iniciar el proceso.');
+            const message = 'Selecciona un cliente para iniciar el proceso en la tablet.';
+            setStatus(message, 'warning');
+            showToast(message, 'warning');
             return;
         }
 
         const startUrl = launchBtn.dataset.startUrl || buildStartUrl(cliente.id);
         if (!startUrl) {
-            setStatus('No se pudo construir el enlace del proceso.', 'error');
-            window.alert('No se pudo construir el enlace del proceso.');
+            const message = 'No fue posible preparar el enlace del proceso.';
+            setStatus(message, 'error');
+            showToast(message, 'error');
             return;
         }
 
-        setStatus(`Enviando proceso para ${cliente.nombre}...`, 'info');
+        setStatus(`Enviando el proceso de ${cliente.nombre} a la tablet...`, 'info');
         launchBtn.disabled = true;
         try {
             const response = await fetch(startUrl, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
             const data = await response.json();
             if (!data || !data.success) throw new Error('Bad response');
             setStatus(`Proceso enviado a la tablet para ${data.cliente?.nombre || cliente.nombre}.`, 'success');
+            showToast('Proceso enviado correctamente a la tablet.', 'success');
         } catch (error) {
             console.error(error);
-            setStatus('No se pudo enviar el proceso a la tablet.', 'error');
-            window.alert('No se pudo enviar el proceso a la tablet.');
+            const message = 'No fue posible enviar el proceso a la tablet.';
+            setStatus(message, 'error');
+            showToast(message, 'error');
         } finally {
             launchBtn.disabled = false;
         }

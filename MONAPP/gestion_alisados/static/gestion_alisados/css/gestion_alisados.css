@@ -582,39 +582,79 @@
 }
 
 .tablet-link-card__status {
-    font-size: .9rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: .92rem;
     color: #6f5649;
-    line-height: 1.35;
+    line-height: 1.45;
     min-height: 1.35em;
-    padding: .2rem .4rem;
-    border-radius: 10px;
+    padding: .72rem .85rem;
+    border-radius: 14px;
     background: rgba(255, 255, 255, .45);
     border: 1px solid rgba(99, 76, 64, .08);
-    transition: background .18s ease, border-color .18s ease, color .18s ease;
+    transition: background .18s ease, border-color .18s ease, color .18s ease, transform .18s ease;
+}
+
+.tablet-link-card__status-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.8rem;
+    height: 1.8rem;
+    flex: 0 0 1.8rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .86);
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, .06);
+}
+
+.tablet-link-card__status-icon i {
+    font-size: .95rem;
+    line-height: 1;
+}
+
+.tablet-link-card__status-text {
+    flex: 1 1 auto;
 }
 
 .tablet-link-card__status[data-tone="success"] {
     color: #166534;
-    background: #f1fbf4;
+    background: linear-gradient(135deg, #f4fbf6, #e4f5e9);
     border-color: rgba(22, 101, 52, .12);
 }
 
 .tablet-link-card__status[data-tone="warning"] {
     color: #6b4f2b;
-    background: #fff7ea;
+    background: linear-gradient(135deg, #fff9ee, #f9eddc);
     border-color: rgba(205, 154, 78, .16);
 }
 
 .tablet-link-card__status[data-tone="error"] {
     color: #8b2e2a;
-    background: #fff4f3;
+    background: linear-gradient(135deg, #fff6f5, #fbe8e5);
     border-color: rgba(148, 60, 55, .16);
 }
 
 .tablet-link-card__status[data-tone="info"] {
     color: #37536b;
-    background: #f1f7fb;
+    background: linear-gradient(135deg, #f4f8fc, #e7f0f8);
     border-color: rgba(55, 83, 107, .14);
+}
+
+.tablet-link-card__status[data-tone="success"] .tablet-link-card__status-icon {
+    color: #166534;
+}
+
+.tablet-link-card__status[data-tone="warning"] .tablet-link-card__status-icon {
+    color: #8b6731;
+}
+
+.tablet-link-card__status[data-tone="error"] .tablet-link-card__status-icon {
+    color: #8c3a35;
+}
+
+.tablet-link-card__status[data-tone="info"] .tablet-link-card__status-icon {
+    color: #37536b;
 }
 
 .gestion-hero-badge {
