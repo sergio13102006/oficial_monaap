@@ -1,5 +1,6 @@
 ﻿import base64
 import binascii
+import re
 import uuid
 
 from django import forms
@@ -12,8 +13,51 @@ from servicios.models import Servicio
 from core.form_validations import ValidationFormMixin
 
 
+class MoneyTextInput(forms.TextInput):
+    def format_value(self, value):
+        if value is None or value == '':
+            return ''
+
+        raw = str(value).strip()
+        digits = re.sub(r'[^\d-]', '', raw)
+        if digits in ('', '-'):
+            return ''
+
+        negative = digits.startswith('-')
+        if negative:
+            digits = digits[1:]
+
+        try:
+            formatted = f'{int(digits):,}'.replace(',', '.')
+        except (TypeError, ValueError):
+            return raw
+
+        return f'-{formatted}' if negative else formatted
+
+
 class GestionAlisadoForm(ValidationFormMixin, forms.ModelForm):
     firma_consentimiento_data = forms.CharField(required=False, widget=forms.HiddenInput())
+    precio_alisado = forms.IntegerField(required=True, widget=MoneyTextInput(attrs={
+        'class': 'form-control gestion-money-input',
+        'min': '0',
+        'inputmode': 'numeric',
+        'placeholder': 'Precio del alisado en COP',
+        'required': 'required',
+    }))
+    anticipo_cliente = forms.IntegerField(required=True, widget=MoneyTextInput(attrs={
+        'class': 'form-control gestion-money-input',
+        'min': '0',
+        'inputmode': 'numeric',
+        'placeholder': 'Anticipo realizado en COP',
+        'required': 'required',
+    }))
+    saldo_pendiente = forms.IntegerField(required=False, widget=MoneyTextInput(attrs={
+        'class': 'form-control gestion-money-input',
+        'min': '0',
+        'inputmode': 'numeric',
+        'placeholder': 'Saldo pendiente en COP',
+        'readonly': 'readonly',
+    }))
 
     class Meta:
         model = GestionAlisado
@@ -38,12 +82,6 @@ class GestionAlisadoForm(ValidationFormMixin, forms.ModelForm):
                 'required': 'required',
                 'id': 'selectCliente'
             }),
-            'precio_alisado': forms.NumberInput(attrs={
-                'class': 'form-control',
-                'min': '0',
-                'placeholder': 'Precio del alisado en COP',
-                'required': 'required'
-            }),
             'es_oferta_especial': forms.Select(attrs={
                 'class': 'form-select',
                 'required': 'required'
@@ -53,21 +91,9 @@ class GestionAlisadoForm(ValidationFormMixin, forms.ModelForm):
                 'rows': 2,
                 'placeholder': 'Describe la promoción'
             }),
-            'anticipo_cliente': forms.NumberInput(attrs={
-                'class': 'form-control',
-                'min': '0',
-                'placeholder': 'Anticipo realizado en COP',
-                'required': 'required'
-            }),
             'medio_pago': forms.Select(attrs={
                 'class': 'form-select',
                 'required': 'required'
-            }),
-            'saldo_pendiente': forms.NumberInput(attrs={
-                'class': 'form-control',
-                'min': '0',
-                'placeholder': 'Saldo pendiente en COP',
-                'readonly': 'readonly'
             }),
             'procedimiento_realizado_por': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -254,14 +280,32 @@ class GestionAlisadoForm(ValidationFormMixin, forms.ModelForm):
         if tipo_actual:
             self.fields['tipo_alisado'].initial = tipo_actual
 
+    @staticmethod
+    def _money_to_int(value):
+        if value in (None, ''):
+            return None
+        raw = str(value).strip()
+        digits = re.sub(r'[^\d-]', '', raw)
+        if digits in ('', '-'):
+            return None
+        return int(digits)
+
     def clean(self):
         cleaned_data = super().clean()
-        precio = cleaned_data.get('precio_alisado')
-        anticipo = cleaned_data.get('anticipo_cliente')
+        precio = self._money_to_int(cleaned_data.get('precio_alisado'))
+        anticipo = self._money_to_int(cleaned_data.get('anticipo_cliente'))
+        saldo = self._money_to_int(cleaned_data.get('saldo_pendiente'))
 
-        # Calcular saldo pendiente automáticamente
+        if precio is not None:
+            cleaned_data['precio_alisado'] = precio
+        if anticipo is not None:
+            cleaned_data['anticipo_cliente'] = anticipo
+
+        # Calcular saldo pendiente autom?ticamente
         if precio is not None and anticipo is not None:
-            cleaned_data['saldo_pendiente'] = precio - anticipo
+            cleaned_data['saldo_pendiente'] = max(0, precio - anticipo)
+        elif saldo is not None:
+            cleaned_data['saldo_pendiente'] = saldo
 
         firma_data = (cleaned_data.get('firma_consentimiento_data') or '').strip()
         tiene_firma_existente = bool(getattr(self.instance, 'firma_consentimiento', None))

@@ -294,9 +294,8 @@ function initGestionForm() {
 
   function pointFromEvent(event) {
     const rect = signatureCanvas.getBoundingClientRect();
-    const ratio = window.devicePixelRatio || 1;
-    const x = (event.clientX - rect.left) * ratio;
-    const y = (event.clientY - rect.top) * ratio;
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
     return { x, y };
   }
 
