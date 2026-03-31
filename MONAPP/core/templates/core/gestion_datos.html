@@ -1,0 +1,221 @@
+﻿{% extends 'core/panel_admin_base.html' %}
+{% load static %}
+
+{% block title %}Gestión de Datos{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item active" aria-current="page">Gestión de Datos</li>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .modal-header {
+        border-bottom: 3px solid #0d6efd;
+    }
+    
+    .modal-footer {
+        border-top: 1px solid #dee2e6;
+        background-color: #f8f9fa;
+    }
+    
+    .form-label {
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+    }
+    
+    .table th {
+        font-weight: 600;
+        color: #495057;
+    }
+    
+    .card-header h5 {
+        margin: 0;
+        font-weight: 600;
+    }
+    
+    .btn-primary {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+    }
+    
+    .btn-primary:hover {
+        background-color: #0b5ed7;
+        border-color: #0a58ca;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="display-5 fw-bold">
+                <i class="bi bi-database"></i> Gestión de Datos
+            </h1>
+            <p class="text-muted">Administra y gestiona los datos del sistema.</p>
+        </div>
+    </div>
+
+    <!-- Botón para abrir el modal -->
+    <div class="row mb-3">
+        <div class="col-12">
+            {% if permisos.gestion_alisados.crear %}
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#gestionDatosModal">
+                <i class="bi bi-plus-circle"></i> Nuevo Registro
+            </button>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Tabla o contenido principal -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="bi bi-table"></i> Registros</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nombre</th>
+                                    <th>Descripción</th>
+                                    <th>Fecha</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Los datos se cargarán aquí -->
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted">
+                                        No hay registros disponibles
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para el formulario -->
+    <div class="modal fade" id="gestionDatosModal" tabindex="-1" aria-labelledby="gestionDatosModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="gestionDatosModalLabel">
+                        <i class="bi bi-file-earmark-plus"></i> Formulario de Gestión de Datos
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="formGestionDatos" method="POST">
+                    {% csrf_token %}
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="nombre" class="form-label">Nombre <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="nombre" name="nombre" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="categoria" class="form-label">Categoría <span class="text-danger">*</span></label>
+                                <select class="form-select" id="categoria" name="categoria" required>
+                                    <option value="">Seleccionar...</option>
+                                    <option value="categoria1">Categoría 1</option>
+                                    <option value="categoria2">Categoría 2</option>
+                                    <option value="categoria3">Categoría 3</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-12 mb-3">
+                                <label for="descripcion" class="form-label">Descripción</label>
+                                <textarea class="form-control" id="descripcion" name="descripcion" rows="3"></textarea>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="fecha" class="form-label">Fecha <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="fecha" name="fecha" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="estado" class="form-label">Estado</label>
+                                <select class="form-select" id="estado" name="estado">
+                                    <option value="activo" selected>Activo</option>
+                                    <option value="inactivo">Inactivo</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle"></i> Cancelar
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save"></i> Guardar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('formGestionDatos');
+    const modal = document.getElementById('gestionDatosModal');
+    const bsModal = new bootstrap.Modal(modal);
+    
+    // Manejar el envío del formulario
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Recoger los datos del formulario
+        const formData = new FormData(form);
+        
+        // Aquí puedes enviar los datos al servidor con fetch
+        fetch('{% url "core:gestion_datos" %}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Mostrar mensaje de éxito
+                alert('Datos guardados correctamente');
+                
+                // Cerrar el modal
+                bsModal.hide();
+                
+                // Limpiar el formulario
+                form.reset();
+                
+                // Recargar la página o actualizar la tabla
+                window.location.reload();
+            } else {
+                alert('Error: ' + (data.message || 'No se pudieron guardar los datos'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Ocurrió un error al procesar la solicitud');
+        });
+    });
+    
+    // Limpiar el formulario cuando se cierra el modal
+    modal.addEventListener('hidden.bs.modal', function () {
+        form.reset();
+    });
+});
+</script>
+{% endblock %}

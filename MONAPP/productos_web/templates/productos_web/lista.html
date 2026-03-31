@@ -1,0 +1,1009 @@
+{% extends 'core/panel_admin_base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Catálogo Web{% endblock %}
+
+{% block breadcrumb_items %}
+
+{% endblock %}
+
+{% block page_title %}
+<i class="bi bi-globe2"></i> Catálogo Web de Productos
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ============ TABLA ============ */
+    .table-container-custom {
+        width: 100% !important;
+        background: #fff;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, .05);
+    }
+
+    .table-responsive {
+        width: 100% !important;
+        margin: 0;
+        padding: 0;
+    }
+
+    .styled-table {
+        width: 100% !important;
+        min-width: 100% !important;
+        margin-bottom: 0;
+        border-collapse: collapse;
+    }
+
+    .pw-table {
+        width: 100%;
+    }
+
+    .pw-table thead th {
+        background: linear-gradient(135deg, #3a2a24, #2a1d18);
+        color: #fff;
+        padding: 14px 18px;
+        font-size: .85rem;
+        text-transform: uppercase;
+        letter-spacing: .5px;
+        border: none;
+    }
+
+    .pw-table thead th:first-child {
+        border-radius: 12px 0 0 0;
+    }
+
+    .pw-table thead th:last-child {
+        border-radius: 0 12px 0 0;
+    }
+
+    .pw-table tbody tr {
+        transition: background .2s;
+    }
+
+    .pw-table tbody tr:hover {
+        background: rgba(141, 96, 74, .07);
+    }
+
+    .pw-table tbody td {
+        padding: 12px 18px;
+        vertical-align: middle;
+        border-bottom: 1px solid rgba(0, 0, 0, .06);
+        font-size: .92rem;
+    }
+
+    /* Imagen miniatura */
+    .pw-thumb {
+        width: 56px;
+        height: 56px;
+        border-radius: 10px;
+        object-fit: cover;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, .12);
+    }
+
+    .pw-thumb-placeholder {
+        width: 56px;
+        height: 56px;
+        border-radius: 10px;
+        background: #ede7e3;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #b8a49a;
+        font-size: 1.4rem;
+    }
+
+    /* Toggle switch */
+    .pw-switch {
+        position: relative;
+        width: 46px;
+        height: 24px;
+    }
+
+    .pw-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .pw-switch .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: #ccc;
+        border-radius: 24px;
+        transition: .3s;
+    }
+
+    .pw-switch .slider::before {
+        content: "";
+        position: absolute;
+        height: 18px;
+        width: 18px;
+        left: 3px;
+        bottom: 3px;
+        background: #fff;
+        border-radius: 50%;
+        transition: .3s;
+    }
+
+    .pw-switch input:checked+.slider {
+        background: #6b3a2a;
+    }
+
+    .pw-switch input:checked+.slider::before {
+        transform: translateX(22px);
+    }
+
+    /* Botón flotante */
+    .pw-fab {
+        position: fixed;
+        bottom: 32px;
+        right: 32px;
+        border-radius: 50px;
+        background: #1a1a1a;
+        color: #fff;
+        border: none;
+        font-size: .9rem;
+        font-weight: 600;
+        padding: .65rem 1.4rem;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, .3);
+        display: flex;
+        align-items: center;
+        gap: .4rem;
+        z-index: 1050;
+        transition: transform .2s, box-shadow .2s, background .2s;
+    }
+
+    .pw-fab:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 28px rgba(0, 0, 0, .4);
+        background: #3a2a24;
+        color: #fff;
+    }
+
+    /* Acciones de fila */
+    .pw-actions a,
+    .pw-actions button {
+        padding: 8px 12px;
+        border-radius: 50px;
+        font-size: .92rem;
+        transition: all .2s;
+        background: none;
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .pw-actions .btn-edit {
+        color: #382822;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .pw-actions .btn-del {
+        color: #382822;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    /* Vista vacía */
+    .pw-empty {
+        text-align: center;
+        padding: 60px 20px;
+    }
+
+    .pw-empty i {
+        font-size: 3.5rem;
+        color: #c9b8ae;
+    }
+
+    /* ============ MODAL ============ */
+    .modal-header.pw-header {
+        background: linear-gradient(135deg, #3a2a24, #5c3d2e);
+        color: #fff;
+        border: none;
+        border-radius: 12px 12px 0 0;
+    }
+
+    .modal-header.pw-header .btn-close {
+        filter: brightness(0) invert(1);
+    }
+
+    .modal-content {
+        border-radius: 12px;
+        border: none;
+        box-shadow: 0 12px 40px rgba(0, 0, 0, .2);
+    }
+
+    /* Dropzone de imagen */
+    .pw-dropzone {
+        background: linear-gradient(145deg, #fafafa, #f0f0f0);
+        border: 2px solid #e0e0e0;
+        border-radius: 16px;
+        padding: 40px 30px;
+        text-align: center;
+        cursor: pointer;
+        transition: all .3s ease;
+        position: relative;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, .05);
+    }
+
+    .pw-dropzone:hover,
+    .pw-dropzone.dragover {
+        border-color: #382822;
+        background: linear-gradient(145deg, #fff, #f8f5f2);
+        box-shadow: 0 6px 20px rgba(141, 96, 74, .15);
+        transform: translateY(-2px);
+    }
+
+    .pw-dropzone i {
+        font-size: 3.5rem;
+        color: #382822;
+        margin-bottom: 8px;
+        display: block;
+        animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+
+        0%,
+        100% {
+            transform: translateY(0px);
+        }
+
+        50% {
+            transform: translateY(-10px);
+        }
+    }
+
+    .pw-dropzone input[type="file"] {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        cursor: pointer;
+        z-index: 10;
+    }
+
+    .pw-dropzone .upload-text {
+        font-size: 1.05rem;
+        color: #5c3d2e;
+        font-weight: 500;
+        margin-bottom: 5px;
+    }
+
+    .pw-dropzone .upload-hint {
+        font-size: 0.85rem;
+        color: #999;
+    }
+
+    .pw-preview-img {
+        max-height: 200px;
+        border-radius: 12px;
+        margin-top: 20px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, .2);
+        border: 3px solid #fff;
+    }
+
+    /* Badges */
+    .pw-badge-visible {
+        background: rgba(107, 176, 122, .15);
+        color: #3d7a4e;
+        font-weight: 600;
+        border-radius: 20px;
+        padding: 4px 12px;
+        font-size: .78rem;
+    }
+
+    .pw-badge-hidden {
+        background: rgba(180, 90, 90, .12);
+        color: #a04040;
+        font-weight: 600;
+        border-radius: 20px;
+        padding: 4px 12px;
+        font-size: .78rem;
+    }
+
+    /* Búsqueda */
+    .pw-search {
+        max-width: 300px;
+    }
+
+    .pw-search .form-control {
+        border-radius: 20px;
+        border: 1px solid #d4c4ba;
+        padding-left: 38px;
+    }
+
+    .pw-search .bi-search {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #9a8579;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .pw-fab {
+            bottom: 20px;
+            right: 20px;
+        }
+
+        .pw-thumb,
+        .pw-thumb-placeholder {
+            width: 42px;
+            height: 42px;
+        }
+    }
+
+    /* Validación de precio */
+    .pw-price-error {
+        color: #a0715a;
+        font-size: .82rem;
+        margin-top: 4px;
+        display: none;
+    }
+
+    .pw-price-error.visible {
+        display: block;
+    }
+
+    .form-control.is-invalid-price {
+        border-color: #a0715a !important;
+        box-shadow: 0 0 0 0.2rem rgba(160, 113, 90, .2) !important;
+    }
+
+    .form-control.is-valid-price {
+        border-color: #6ba06a !important;
+        box-shadow: 0 0 0 0.2rem rgba(107, 160, 106, .15) !important;
+    }
+
+    /* Validación nombre */
+    .pw-name-error {
+        color: #a0715a;
+        font-size: .82rem;
+        margin-top: 4px;
+        display: none;
+    }
+
+    .pw-name-error.visible {
+        display: block;
+    }
+
+    .form-control.is-invalid-name {
+        border-color: #a0715a !important;
+        box-shadow: 0 0 0 0.2rem rgba(160, 113, 90, .2) !important;
+    }
+
+    .form-control.is-valid-name {
+        border-color: #6ba06a !important;
+        box-shadow: 0 0 0 0.2rem rgba(107, 160, 106, .15) !important;
+    }
+
+    /* Contador descripción */
+    .pw-char-count {
+        font-size: .78rem;
+        color: #9a8579;
+        text-align: right;
+        margin-top: 3px;
+        display: block;
+    }
+
+    .pw-char-count.near-limit {
+        color: #a0715a;
+    }
+
+    .pw-char-count.at-limit {
+        color: #dc3545;
+        font-weight: 600;
+    }
+
+    /* Precio COP preview */
+    .pw-cop-preview {
+        display: inline-block;
+        margin-top: 5px;
+        font-size: .88rem;
+        font-weight: 700;
+        color: #3d7a4e;
+        background: rgba(107, 176, 122, .1);
+        border-radius: 8px;
+        padding: 3px 10px;
+        display: none;
+    }
+
+    .pw-cop-preview.visible {
+        display: inline-block;
+    }
+
+    .pw-cop-preview.is-error {
+        color: #a04040;
+        background: rgba(180, 90, 90, .1);
+    }
+
+    /* ── Barra de filtros estilo Proveedores ── */
+    .module-filters-card .btn-filter {
+        background: #fff;
+        border: 1px solid #3b2f2f;
+        color: #3b2f2f;
+        border-radius: 999px;
+        padding: 5px 12px;
+        font-size: 12px;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        transition: all .22s ease;
+        white-space: nowrap;
+        cursor: pointer;
+    }
+    .module-filters-card .btn-filter:hover {
+        background: #3b2f2f;
+        color: #fff;
+        transform: translateY(-1px);
+    }
+    .module-filters-card .btn-filter:focus,
+    .module-filters-card .btn-filter:active { box-shadow: none !important; outline: none; }
+    .pw-filter-option {
+        cursor: pointer;
+        border-radius: 10px;
+        padding: .5rem .75rem;
+        font-size: 12px;
+        color: #3b2f2f;
+        font-weight: 500;
+        transition: background .18s;
+    }
+    .pw-filter-option:hover { background: #f5ebe8; }
+    .pw-filter-option.active { background: #3b2f2f; color: #fff; font-weight: 700; }
+    .pw-filter-option.text-danger { color: #dc3545 !important; }
+    .pw-filter-option.text-danger:hover { background: #fff0f0; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+
+            <small class="text-muted">Gestión de productos del catálogo web</small>
+        </div>
+        <button class="btn btn-dark btn-sm" data-bs-toggle="modal" data-bs-target="#modalAgregar">
+            <i class="bi bi-plus-lg me-1"></i> Nuevo producto
+        </button>
+    </div>
+
+    <!-- ───── BARRA DE FILTROS (ESTILO PROVEEDORES) ───── -->
+    <div class="module-filters-card">
+        <div class="module-filters-form">
+
+            <!-- Búsqueda -->
+            <div class="module-filter-field module-filter-field--wide">
+                <label class="module-filter-label">Buscar</label>
+                <form method="get" action="{% url 'productos_web:lista' %}" id="pw-filter-form">
+                    <input type="hidden" name="visible" id="pw-hidden-visible" value="{{ visible_filter|default:'' }}">
+                    {% include 'core/componentes/busqueda_global.html' with placeholder='Buscar producto...' search_value=q name='q' modo='inline' %}
+                </form>
+            </div>
+
+            <!-- Filtro Visibilidad -->
+            <div class="module-filter-field module-filter-field--medium">
+                <label class="module-filter-label">Visibilidad</label>
+                <div class="pw-custom-filter-wrap" style="position:relative;">
+                    <button type="button" class="btn btn-filter" id="pw-visible-toggle"
+                            onclick="var m=document.getElementById('pw-visible-menu'); m.style.display=(m.style.display==='block'?'none':'block');">
+                        <i class="bi bi-eye"></i>
+                        {% if visible_filter == 'si' %}Visible{% elif visible_filter == 'no' %}Oculto{% else %}Todos{% endif %}
+                        <i class="bi bi-chevron-down" style="font-size:10px;"></i>
+                    </button>
+                    <div id="pw-visible-menu" class="pw-filter-menu-panel"
+                         style="display:none; position:absolute; top:calc(100% + 6px); left:0; min-width:160px; background:#fff; border-radius:14px; border:1px solid rgba(59,47,47,.12); padding:.5rem; z-index:2000; box-shadow:0 8px 24px rgba(59,47,47,.15);">
+                        <div class="pw-filter-option {% if not visible_filter %}active{% endif %}" onclick="pwSetFiltro('visible','','Todos',this)">Todos</div>
+                        <div class="pw-filter-option {% if visible_filter == 'si' %}active{% endif %}" onclick="pwSetFiltro('visible','si','Visible',this)">Visible</div>
+                        <div class="pw-filter-option {% if visible_filter == 'no' %}active{% endif %}" onclick="pwSetFiltro('visible','no','Oculto',this)">Oculto</div>
+                    </div>
+                </div>
+            </div>
+
+
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('click', function(e) {
+        document.querySelectorAll('.pw-custom-filter-wrap').forEach(function(wrap) {
+            if (!wrap.contains(e.target)) {
+                wrap.querySelectorAll('.pw-filter-menu-panel').forEach(function(m) { m.style.display='none'; });
+            }
+        });
+    });
+    function pwSetFiltro(field, value, label, clickedEl) {
+        var hiddenEl = document.getElementById('pw-hidden-' + field);
+        var btn = document.getElementById('pw-' + field + '-toggle');
+        var menu = clickedEl ? clickedEl.closest('.pw-filter-menu-panel') : null;
+        if (hiddenEl) hiddenEl.value = value;
+        if (btn) {
+            var icons = btn.querySelectorAll('i');
+            btn.innerHTML = icons[0].outerHTML + ' ' + label + ' ' + icons[icons.length-1].outerHTML;
+        }
+        if (menu) {
+            menu.querySelectorAll('.pw-filter-option').forEach(function(el){el.classList.remove('active');});
+            if (clickedEl) clickedEl.classList.add('active');
+            menu.style.display = 'none';
+        }
+        var frm = document.getElementById('pw-filter-form');
+        if (frm) frm.submit();
+    }
+    </script>
+    <!-- ───── TABLA ───── -->
+    <div class="card border-0 shadow-sm" style="border-radius: 12px; overflow: hidden;">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" id="pw-tabla">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Foto</th>
+                            <th>Nombre</th>
+                            <th>Precio</th>
+                            <th>Descripción</th>
+                            <th>Estado</th>
+                            <th class="text-end">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in productos %}
+                        <tr data-nombre="{{ p.nombre|lower }}">
+                            <td>
+                                {% if p.imagen %}
+                                <img src="{{ p.imagen.url }}" class="pw-thumb" alt="{{ p.nombre }}">
+                                {% else %}
+                                <div class="pw-thumb-placeholder">
+                                    <i class="bi bi-image"></i>
+                                </div>
+                                {% endif %}
+                            </td>
+                            <td class="fw-semibold">{{ p.nombre }}</td>
+                            <td>${{ p.precio|intcomma }}</td>
+                            <td>
+                                <small class="text-muted">{{ p.descripcion|truncatewords:8|default:"—" }}</small>
+                            </td>
+                            <td>
+                                {% if p.visible %}
+                                <span class="badge bg-success-subtle text-success">Visible</span>
+                                {% else %}
+                                <span class="badge bg-secondary-subtle text-secondary">Oculto</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end pw-actions">
+                                <label class="pw-switch me-2" title="Alternar visibilidad"
+                                    style="display:inline-block;vertical-align:middle;">
+                                    <input type="checkbox" {% if p.visible %}checked{% endif %}
+                                        data-toggle-url="{% url 'productos_web:toggle_visible' p.pk %}"
+                                        data-nombre="{{ p.nombre }}">
+                                    <span class="slider"></span>
+                                </label>
+                                <button type="button" class="btn btn-outline-info btn-sm me-1 btn-detalle-pw"
+                                    data-bs-toggle="modal" data-bs-target="#modalDetallePW"
+                                    data-nombre="{{ p.nombre|escapejs }}" data-precio="{{ p.precio }}"
+                                    data-descripcion="{{ p.descripcion|escapejs }}"
+                                    data-visible="{{ p.visible|yesno:'Sí,No' }}"
+                                    data-imagen-url="{% if p.imagen %}{{ p.imagen.url }}{% endif %}"
+                                    data-creado="{{ p.fecha_creacion|date:'d/m/Y H:i' }}"
+                                    data-modificado="{{ p.fecha_modificacion|date:'d/m/Y H:i' }}" title="Ver detalles">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                                <a href="{% url 'productos_web:editar' p.pk %}" class="btn btn-outline-secondary btn-sm"
+                                    title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <button type="button" class="btn btn-outline-danger btn-sm ms-1 btn-eliminar-pw"
+                                    data-nombre="{{ p.nombre }}" data-url="{% url 'productos_web:eliminar' p.pk %}"
+                                    title="Eliminar">
+                                    <i class="bi bi-trash3"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-muted">
+                                No hay productos registrados en el catálogo web
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- ═══════════════ MODAL AGREGAR ═══════════════ -->
+<div class="modal fade" id="modalAgregar" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header pw-header">
+                <h5 class="modal-title"><i class="bi bi-plus-circle me-2"></i>Agregar Producto Web</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'productos_web:crear' %}" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Nombre</label>
+                            {{ form.nombre }}
+                            <div class="pw-name-error" id="err_nombre_agregar"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Precio Público <small class="text-muted">(pesos
+                                    colombianos)</small></label>
+                            {{ form.precio }}
+                            <span class="pw-cop-preview" id="cop_preview_agregar"></span>
+                            <div class="pw-price-error" id="err_precio_agregar"></div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Descripción</label>
+                            {{ form.descripcion }}
+                            <small class="pw-char-count" id="char_desc_agregar"></small>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold mb-3">Imagen del Producto</label>
+                            <div class="pw-dropzone" id="dropzoneAgregar">
+                                <i class="bi bi-cloud-arrow-up"></i>
+                                <div class="upload-text">Arrastra tu imagen aquí</div>
+                                <div class="upload-hint">o haz clic para seleccionar desde tu equipo</div>
+                                {{ form.imagen }}
+                                <img id="previewAgregar" class="pw-preview-img d-none" alt="preview">
+                            </div>
+                            <div class="pw-img-error" id="err_img_agregar"></div>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check form-switch">
+                                {{ form.visible }}
+                                <label class="form-check-label" for="id_visible">Visible en la Web</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn text-white" style="background:#3a2a24;">
+                        <i class="bi bi-check-lg me-1"></i>Guardar Producto
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ MODAL VER DETALLES PRODUCTO WEB ═══ -->
+<div class="modal fade" id="modalDetallePW" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header" style="background:linear-gradient(135deg,#3a2a24,#2a1d18);color:#fff;">
+                <h5 class="modal-title"><i class="bi bi-eye me-2"></i>Detalle del Producto</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-4">
+                    <div class="col-md-4 text-center">
+                        <img id="pwDetImg" src="" class="img-fluid rounded shadow-sm"
+                            style="max-height:200px;object-fit:cover;display:none;" alt="Imagen">
+                        <div id="pwDetImgPh" class="d-flex align-items-center justify-content-center rounded"
+                            style="height:180px;background:#f0e8e3;font-size:3rem;color:#b8a49a;">
+                            <i class="bi bi-box-seam"></i>
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        <h4 id="pwDetNombre" class="fw-bold mb-3"></h4>
+                        <table class="table table-sm table-borderless">
+                            <tbody>
+                                <tr>
+                                    <th style="width:110px;color:#6d5050;">Precio</th>
+                                    <td id="pwDetPrecio"></td>
+                                </tr>
+                                <tr>
+                                    <th style="color:#6d5050;">Estado</th>
+                                    <td id="pwDetVisible"></td>
+                                </tr>
+                                <tr>
+                                    <th style="color:#6d5050;">Creado</th>
+                                    <td id="pwDetCreado"></td>
+                                </tr>
+                                <tr>
+                                    <th style="color:#6d5050;">Modificado</th>
+                                    <td id="pwDetModificado"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <hr class="my-2">
+                        <p class="small text-muted mb-0"><strong>Descripción:</strong></p>
+                        <p id="pwDetDesc" class="mt-1" style="white-space:pre-wrap;"></p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Formulario oculto para eliminación vía Swal -->
+<form id="formEliminarPW" method="post" style="display:none;">
+    {% csrf_token %}
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    /* ─── Mensajes Django como Swal toast ─── */
+    const PW_MESSAGES = [
+        {% for message in messages %}
+    { tags: "{{ message.tags }}", text: "{{ message|escapejs }}" },
+    {% endfor %}
+];
+
+    const PW_TAGS_MAP = {
+        'success': { icon: 'success', background: '#f0fdf4', color: '#166534' },
+        'error': { icon: 'error', background: '#fef2f2', color: '#991b1b' },
+        'warning': { icon: 'warning', background: '#fffbeb', color: '#92400e' },
+        'info': { icon: 'info', background: '#eff6ff', color: '#1e40af' },
+    };
+
+    if (PW_MESSAGES.length) {
+        PW_MESSAGES.forEach(m => {
+            const tag = Object.keys(PW_TAGS_MAP).find(k => m.tags.includes(k)) || 'info';
+            const opts = PW_TAGS_MAP[tag];
+            Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3500,
+                timerProgressBar: true,
+                background: opts.background,
+                color: opts.color,
+            }).fire({ icon: opts.icon, title: m.text });
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+
+        const CSRF = () => document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        /* ── Toggle visibilidad con confirmación Swal ── */
+        document.querySelectorAll('.pw-switch input[type="checkbox"]').forEach(toggle => {
+            toggle.addEventListener('change', function () {
+                const url = this.dataset.toggleUrl;
+                const nombre = this.dataset.nombre;
+                const visNow = this.checked;
+                const el = this;
+
+                Swal.fire({
+                    title: visNow ? '¿Hacer visible?' : '¿Ocultar producto?',
+                    text: `"${nombre}" ${visNow ? 'aparecerá en el catálogo web.' : 'se ocultará del catálogo web.'}`,
+                    icon: visNow ? 'question' : 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3a2a24',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: visNow ? 'Sí, mostrar' : 'Sí, ocultar',
+                    cancelButtonText: 'Cancelar',
+                }).then(result => {
+                    if (!result.isConfirmed) {
+                        el.checked = !visNow;
+                        return;
+                    }
+                    fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': CSRF(),
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                    })
+                        .then(r => r.json())
+                        .then(data => {
+                            if (!data.ok) {
+                                el.checked = !visNow;
+                                Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo actualizar la visibilidad.', timer: 2500, showConfirmButton: false });
+                                return;
+                            }
+                            Swal.mixin({
+                                toast: true, position: 'top-end',
+                                showConfirmButton: false, timer: 2000, timerProgressBar: true,
+                                background: '#f0fdf4', color: '#166534',
+                            }).fire({ icon: 'success', title: visNow ? 'Producto visible' : 'Producto oculto' });
+                        })
+                        .catch(() => {
+                            el.checked = !visNow;
+                            Swal.fire({ icon: 'error', title: 'Error de red', timer: 2500, showConfirmButton: false });
+                        });
+                });
+            });
+        });
+
+        /* ── Eliminar producto con confirmación Swal ── */
+        document.querySelectorAll('.btn-eliminar-pw').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const nombre = this.dataset.nombre;
+                const url = this.dataset.url;
+
+                Swal.fire({
+                    title: '¿Eliminar producto?',
+                    html: `¿Seguro que deseas eliminar <strong>${nombre}</strong> del catálogo web? Esta acción no se puede deshacer.`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc3545',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: '<i class="bi bi-trash3"></i> Eliminar',
+                    cancelButtonText: 'Cancelar',
+                    reverseButtons: true,
+                }).then(result => {
+                    if (result.isConfirmed) {
+                        const form = document.getElementById('formEliminarPW');
+                        form.action = url;
+                        form.submit();
+                    }
+                });
+            });
+        });
+
+        /* ── Formato COP (es-CO, pesos enteros) ── */
+        const fmtCOP = val =>
+            new Intl.NumberFormat('es-CO', {
+                style: 'currency', currency: 'COP',
+                minimumFractionDigits: 0, maximumFractionDigits: 0,
+            }).format(Math.round(val));
+
+        /* ── Helper genérico set/clear error ── */
+        function pwSetError(input, errEl, msg, validClass, invalidClass) {
+            if (msg) {
+                input.classList.add(invalidClass);
+                input.classList.remove(validClass);
+                errEl.textContent = msg;
+                errEl.classList.add('visible');
+            } else {
+                input.classList.remove(invalidClass);
+                input.classList.add(validClass);
+                errEl.textContent = '';
+                errEl.classList.remove('visible');
+            }
+            return !msg;
+        }
+
+        /* ── Validar nombre ── */
+        function pwValidarNombre(input, errEl) {
+            const v = input.value.trim();
+            const REG = /^[a-zA-ZáéíóúÁÉÍÓÚàèìòùÀÈÌÒÙñÑüÜ0-9\s\-\.,\(\)&\+\/\#\*\!\?:\'"]+$/;
+            let msg = '';
+            if (!v) msg = 'El nombre es obligatorio.';
+            else if (v.length < 2) msg = 'Mínimo 2 caracteres.';
+            else if (v.length > 200) msg = 'Máximo 200 caracteres.';
+            else if (!REG.test(v)) msg = 'Caracteres no permitidos.';
+            return pwSetError(input, errEl, msg, 'is-valid-name', 'is-invalid-name');
+        }
+
+        /* ── Validar precio COP ── */
+        function pwValidarPrecio(input, errEl, previewEl) {
+            const raw = input.value.trim();
+            const val = parseFloat(raw);
+            const decs = raw.includes('.') ? raw.split('.')[1].length : 0;
+            let msg = '';
+
+            if (!raw) msg = 'El precio es obligatorio.';
+            else if (isNaN(val)) msg = 'Ingresa un número válido.';
+            else if (val < 100) msg = 'El precio mínimo es $100 COP.';
+            else if (val > 99999999) msg = 'El precio máximo es $99.999.999 COP.';
+            else if (decs > 0) msg = 'El precio debe ser un valor entero.';
+
+            const ok = pwSetError(input, errEl, msg, 'is-valid-price', 'is-invalid-price');
+
+            if (previewEl) {
+                if (!msg && raw) {
+                    previewEl.textContent = fmtCOP(val);
+                    previewEl.classList.add('visible');
+                } else {
+                    previewEl.textContent = '';
+                    previewEl.classList.remove('visible');
+                }
+            }
+            return ok;
+        }
+
+        /* ── Contador descripción ── */
+        function pwActualizarContador(textarea, contEl, max) {
+            const len = textarea.value.length;
+            if (len > max) textarea.value = textarea.value.substring(0, max);
+            contEl.textContent = `${Math.min(len, max)}/${max} caracteres`;
+            contEl.className = 'pw-char-count' + (len >= max ? ' at-limit' : len >= max * 0.85 ? ' near-limit' : '');
+        }
+
+        /* ── Validar imagen ── */
+        function pwValidarImagen(input, errEl, previewEl) {
+            const TIPOS = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+            const MAX_MB = 5;
+            errEl.textContent = '';
+            errEl.classList.remove('visible');
+            if (!input.files || !input.files[0]) return true;
+            const f = input.files[0];
+            if (!TIPOS.includes(f.type)) {
+                errEl.textContent = 'Formato no permitido.';
+                errEl.classList.add('visible');
+                input.value = '';
+                return false;
+            }
+            if (f.size / (1024 * 1024) > MAX_MB) {
+                errEl.textContent = `Máximo ${MAX_MB} MB.`;
+                errEl.classList.add('visible');
+                input.value = '';
+                return false;
+            }
+            if (previewEl) {
+                const reader = new FileReader();
+                reader.onload = e => { previewEl.src = e.target.result; previewEl.classList.remove('d-none'); };
+                reader.readAsDataURL(f);
+            }
+            return true;
+        }
+
+        /* ── Referencias DOM Agregar ── */
+        const ag = {
+            nombre: document.querySelector('#modalAgregar [name="nombre"]'),
+            errNombre: document.getElementById('err_nombre_agregar'),
+            desc: document.querySelector('#modalAgregar [name="descripcion"]'),
+            ctrDesc: document.getElementById('char_desc_agregar'),
+            precio: document.querySelector('#modalAgregar [name="precio"]'),
+            errPrecio: document.getElementById('err_precio_agregar'),
+            copPrev: document.getElementById('cop_preview_agregar'),
+            img: document.querySelector('#dropzoneAgregar input[type="file"]'),
+            errImg: document.getElementById('err_img_agregar'),
+            prevImg: document.getElementById('previewAgregar'),
+        };
+
+        if (ag.nombre) {
+            ag.nombre.addEventListener('input', () => pwValidarNombre(ag.nombre, ag.errNombre));
+        }
+        if (ag.desc && ag.ctrDesc) {
+            ag.desc.addEventListener('input', () => pwActualizarContador(ag.desc, ag.ctrDesc, 500));
+        }
+        if (ag.precio) {
+            ag.precio.addEventListener('input', () => pwValidarPrecio(ag.precio, ag.errPrecio, ag.copPrev));
+        }
+        if (ag.img) {
+            ag.img.addEventListener('change', () => pwValidarImagen(ag.img, ag.errImg, ag.prevImg));
+        }
+
+        /* ── Drag & drop highlight ── */
+        document.querySelectorAll('.pw-dropzone').forEach(zone => {
+            zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+            zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+            zone.addEventListener('drop', () => zone.classList.remove('dragover'));
+        });
+
+        /* ── Modal Ver Detalles ── */
+        document.querySelectorAll('.btn-detalle-pw').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.getElementById('pwDetNombre').textContent = btn.dataset.nombre;
+                document.getElementById('pwDetPrecio').textContent = '$' + parseFloat(btn.dataset.precio).toLocaleString('es-CO');
+                document.getElementById('pwDetCreado').textContent = btn.dataset.creado;
+                document.getElementById('pwDetModificado').textContent = btn.dataset.modificado;
+                document.getElementById('pwDetDesc').textContent = btn.dataset.descripcion || '—';
+                document.getElementById('pwDetVisible').innerHTML =
+                    btn.dataset.visible === 'Sí'
+                        ? '<span class="badge bg-success-subtle text-success">Visible</span>'
+                        : '<span class="badge bg-secondary-subtle text-secondary">Oculto</span>';
+                const img = document.getElementById('pwDetImg');
+                const ph = document.getElementById('pwDetImgPh');
+                if (btn.dataset.imagenUrl) { img.src = btn.dataset.imagenUrl; img.style.display = ''; ph.style.display = 'none'; }
+                else { img.style.display = 'none'; ph.style.display = ''; }
+            });
+        });
+    });
+</script>
+{% endblock %}

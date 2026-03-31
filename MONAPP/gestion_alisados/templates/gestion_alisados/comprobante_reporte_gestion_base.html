@@ -1,0 +1,89 @@
+{% load humanize %}
+
+<div class="invoice-sheet invoice-sheet-premium">
+  <div
+    class="invoice-watermark invoice-watermark-premium"
+    data-watermark-src="{{ watermark_src }}"
+  ></div>
+
+  <div class="invoice-content premium-content">
+    <div class="invoice-brand-header">
+      <img src="{{ logo_src }}" alt="Monakeratina" class="invoice-brand-logo-premium">
+      <h1 class="invoice-title-premium">Comprobante de gestion de datos</h1>
+    </div>
+
+    <div class="invoice-info-table-wrap">
+      <table class="invoice-info-table">
+        <tbody>
+          <tr>
+            <td class="cell-small">
+              <span>Numero</span>
+              <strong>{{ total_registros|stringformat:"04d" }}</strong>
+            </td>
+            <td>
+              <span>De</span>
+              <strong>Monakeratina</strong>
+              <p>Sistema de gestion de datos</p>
+            </td>
+            <td>
+              <span>Para</span>
+              <strong>Reporte administrativo</strong>
+              <p>Consolidado de tratamientos registrados</p>
+            </td>
+          </tr>
+          <tr>
+            <td class="cell-small">
+              <span>Estado</span>
+              <strong>{{ estado_texto }}</strong>
+            </td>
+            <td class="cell-small">
+              <span>Modulo</span>
+              <strong>Gestion de datos</strong>
+            </td>
+            <td>
+              <span>Filtros</span>
+              <strong class="invoice-filters-text">{{ filtros_texto }}</strong>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="invoice-table-box-premium">
+      <table class="invoice-table-premium">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Cliente</th>
+            <th>Profesional</th>
+            <th>Tipo de alisado</th>
+            <th class="text-end">Precio</th>
+            <th class="text-end">Saldo</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for g in gestiones %}
+          <tr>
+            <td>{{ g.fecha_hora|date:"d/m/Y" }}</td>
+            <td>{{ g.cliente.nombre }} {{ g.cliente.apellido }}</td>
+            <td>{{ g.procedimiento_realizado_por|default:"-" }}</td>
+            <td>{{ g.tipo_alisado|default:"-" }}</td>
+            <td class="text-end">${{ g.precio_alisado|floatformat:0|intcomma }}</td>
+            <td class="text-end">${{ g.saldo_pendiente|floatformat:0|intcomma }}</td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="6" class="text-center text-muted">
+              No hay registros para los filtros aplicados.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="invoice-footer-premium">
+      <span>Generado por MonaApp / Monakeratina</span>
+    </div>
+  </div>
+</div>

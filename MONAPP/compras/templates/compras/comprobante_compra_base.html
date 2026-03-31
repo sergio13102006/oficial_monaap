@@ -1,0 +1,107 @@
+{%load static humanize%}
+
+<div class="invoice-sheet invoice-sheet-premium">
+  <div
+    class="invoice-watermark invoice-watermark-premium"
+    data-watermark-src="{{ watermark_src }}"
+  ></div>
+
+  <div class="invoice-content premium-content">
+    <div class="invoice-brand-header">
+      <img
+        src="{{ logo_src }}"
+        alt="Monakeratina"
+        class="invoice-brand-logo-premium"
+      >
+      <h1 class="invoice-title-premium">Comprobante de compra</h1>
+    </div>
+
+    <div class="invoice-info-table-wrap">
+      <table class="invoice-info-table">
+        <tbody>
+          <tr>
+            <td class="cell-small">
+              <span>Número</span>
+              <strong>{{ compra.id|stringformat:"04d" }}</strong>
+            </td>
+
+            <td>
+              <strong>Monakeratina</strong>
+            </td>
+
+            <td>
+              <strong>{{ compra.proveedor.nombre_proveedor }}</strong>
+              <p>Proveedor asociado a la compra</p>
+            </td>
+          </tr>
+
+          <tr>
+            <td class="cell-small">
+              <span>Fecha</span>
+              <strong>{{ compra.fecha|date:"d/m/Y" }}</strong>
+            </td>
+
+            <td class="cell-small">
+              <span>Usuario</span>
+              <strong>
+                {% if compra.usuario %}
+                  {{ compra.usuario.username }}
+                {% else %}
+                  —
+                {% endif %}
+              </strong>
+            </td>
+
+            <td class="cell-small">
+              <span>Estado</span>
+              <strong>{% if compra.anulada %}Anulada{% else %}Activa{% endif %}</strong>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="invoice-table-box-premium">
+      <table class="invoice-table-premium">
+        <thead>
+          <tr>
+            <th>Descripción</th>
+            <th class="text-center">Cantidad</th>
+            <th class="text-end">Precio unidad</th>
+            <th class="text-end">Importe</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for detalle in compra.detalles.all %}
+          <tr>
+            <td>{{ detalle.producto.nombre }}</td>
+            <td class="text-center">{{ detalle.cantidad|intcomma }}</td>
+            <td class="text-end">${{ detalle.precio_unitario|floatformat:0|intcomma }}</td>
+            <td class="text-end">${{ detalle.subtotal|floatformat:0|intcomma }}</td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="4" class="text-center text-muted">
+              No hay productos en esta compra.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="invoice-total-wrap-premium">
+      <table class="invoice-total-table-premium">
+        <tr>
+          <th>Total</th>
+          <td>${{ compra.precio_total|floatformat:0|intcomma }}</td>
+        </tr>
+      </table>
+    </div>
+
+
+  </div>
+      <div class="invoice-footer-premium">
+      <span>Generado por MonaApp / Monakeratina</span>
+    </div>
+</div>

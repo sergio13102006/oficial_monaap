@@ -1,0 +1,81 @@
+{# usuarios/templates/usuarios/_lista_partial.html #}
+{% load sort_tags %}
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="styled-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>
+                            <a href="{% sort_url 'username' %}">Usuario
+                                {% if current_sort == 'username' %}<i class="bi bi-caret-{% if current_dir == 'asc' %}up{% else %}down{% endif %}-fill ms-1" aria-hidden="true"></i>{% endif %}
+                            </a>
+                        </th>
+                        <th>
+                            <a href="{% sort_url 'nombre' %}">Nombre
+                                {% if current_sort == 'nombre' %}<i class="bi bi-caret-{% if current_dir == 'asc' %}up{% else %}down{% endif %}-fill ms-1" aria-hidden="true"></i>{% endif %}
+                            </a>
+                        </th>
+                        <th>
+                            <a href="{% sort_url 'email' %}">Email
+                                {% if current_sort == 'email' %}<i class="bi bi-caret-{% if current_dir == 'asc' %}up{% else %}down{% endif %}-fill ms-1" aria-hidden="true"></i>{% endif %}
+                            </a>
+                        </th>
+                        <th>
+                            <a href="{% sort_url 'estado' %}">Estado
+                                {% if current_sort == 'estado' %}<i class="bi bi-caret-{% if current_dir == 'asc' %}up{% else %}down{% endif %}-fill ms-1" aria-hidden="true"></i>{% endif %}
+                            </a>
+                        </th>
+                        <th class="text-end">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for usuario in usuarios %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td><strong>{{ usuario.username }}</strong></td>
+                        <td>{{ usuario.get_full_name|default:"—" }}</td>
+                        <td>{{ usuario.email|default:"—" }}</td>
+                        <td>
+                            {% if permisos.usuarios.editar %}
+                                <label class="table-switch-wrapper" title="Cambiar estado">
+                                    <input type="checkbox"
+                                           class="toggle-activo-usuario-checkbox"
+                                           data-usuario-id="{{ usuario.id }}"
+                                           data-usuario-nombre="{{ usuario.username }}"
+                                           {% if usuario.is_active %}checked{% endif %}>
+                                    <span class="table-switch-slider"></span>
+                                </label>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <div class="table-action-group ms-auto">
+                                <button type="button" class="btn btn-link p-0 btn-detalle-usuario" data-usuario-action="open-detail" data-usuario-id="{{ usuario.id }}" title="Ver detalles">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                                {% if permisos.usuarios.editar %}
+                                <button type="button" class="btn btn-link p-0 btn-editar-usuario" data-usuario-action="open-edit" data-usuario-id="{{ usuario.id }}" title="Editar">
+                                    <i class="bi bi-pencil-square"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center table-empty-state">
+                            No hay usuarios registrados
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if usuarios %}
+        <div style="padding:16px 20px;background-color:#f5f5f5;border-top:1px solid #eee;font-size:0.9rem;color:#666;">
+            <strong>Total:</strong> <span>{{ usuarios|length }} usuario{{ usuarios|pluralize }}</span>
+        </div>
+        {% endif %}
+    </div>
+</div>

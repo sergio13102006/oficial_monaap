@@ -1,0 +1,23 @@
+{% extends "core/panel_admin_base.html" %}
+{% load static %}
+
+{% block title %}
+Nueva venta
+{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item"><a href="{% url 'ventas:lista' %}">Ventas</a></li>
+<li class="breadcrumb-item active" aria-current="page">Nueva venta</li>
+{% endblock %}
+
+{% block content %}
+
+{% include "ventas/partials/crear_venta_form.html" %}
+
+<link rel="stylesheet" href="{% static 'ventas/css/ventas.css' %}">
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'ventas/js/ventas.js' %}"></script>
+{% endblock %}

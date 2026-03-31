@@ -1,0 +1,405 @@
+﻿{% extends 'core/panel_admin_base.html' %}
+{% load static %}
+
+{% block title %}Panel principal - MONAPP{% endblock %}
+
+{% block extra_css %}
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,600;1,400;1,500&family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400;1,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'core/css/core_dashboard.css' %}?v=1">
+{% endblock %}
+
+{% block breadcrumb %}{% endblock %}
+{% block page_icon %}{% endblock %}
+{% block page_title %}{% endblock %}
+{% block page_subtitle %}{% endblock %}
+
+{% block content %}
+<div class="db">
+  <div class="db-body">
+    <div class="hero-outer">
+      <img
+        class="hero-mascot"
+        src="{% static 'core/IMG/mona_doll.png' %}"
+        alt="Mona Keratina"
+      >
+      <div class="hero-card">
+
+        <div class="hero-card-bg"></div>
+        <div class="hero-card-circle1"></div>
+        <div class="hero-card-circle2"></div>
+        <div class="hero-card-circle3"></div>
+
+        <div class="hero-info">
+          <p class="hero-eyebrow">Panel de administracion</p>
+          <h1 class="hero-name">{{ user.first_name|default:user.username }}</h1>
+          <p class="hero-role">
+            {% if user.is_superuser %}Superadministradora
+            {% else %}{% for g in user.groups.all %}{{ g.name }}{% endfor %}{% endif %}
+          </p>
+        </div>
+
+        
+        <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-60%);text-align:center;z-index:4;pointer-events:none;">
+          <div style="font-size:9px;letter-spacing:3px;text-transform:uppercase;color:rgba(245,240,232,.40);font-weight:400;margin-bottom:6px;">Hoy</div>
+          <div id="hero-fecha" style="font-family:'Playfair Display',serif;font-size:clamp(1rem,1.8vw,1.35rem);font-style:italic;color:rgba(245,240,232,.80);letter-spacing:.5px;line-height:1.4;"></div>
+          <div id="hero-hora" style="font-family:'Inter',sans-serif;font-size:.7rem;color:rgba(201,169,110,.65);letter-spacing:2.5px;margin-top:5px;"></div>
+        </div>
+        <script>
+        (function(){
+          const dias  = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+          const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+          function actualizar(){
+            const n = new Date();
+            document.getElementById('hero-fecha').textContent = dias[n.getDay()]+', '+n.getDate()+' de '+meses[n.getMonth()]+' '+n.getFullYear();
+            document.getElementById('hero-hora').textContent  = String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0')+':'+String(n.getSeconds()).padStart(2,'0');
+          }
+          actualizar(); setInterval(actualizar,1000);
+        })();
+        </script>
+
+        <!-- Burbujas decorativas inferiores -->
+        <div class="hero-bubbles">
+          <svg viewBox="0 0 1200 90" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;">
+            <ellipse cx="60"   cy="95" rx="120" ry="70" fill="rgba(255,255,255,0.06)"/>
+            <ellipse cx="220"  cy="100" rx="160" ry="85" fill="rgba(255,255,255,0.05)"/>
+            <ellipse cx="430"  cy="105" rx="200" ry="95" fill="rgba(201,169,110,0.10)"/>
+            <ellipse cx="680"  cy="100" rx="180" ry="88" fill="rgba(255,255,255,0.05)"/>
+            <ellipse cx="900"  cy="108" rx="220" ry="98" fill="rgba(201,169,110,0.08)"/>
+            <ellipse cx="1120" cy="95"  rx="150" ry="75" fill="rgba(255,255,255,0.06)"/>
+            <ellipse cx="1250" cy="102" rx="120" ry="68" fill="rgba(201,169,110,0.07)"/>
+          </svg>
+        </div>
+
+        <div class="kpi-row-inner">
+          <a class="kpi-mini kpi--brown" href="{% url 'productos:lista_productos' %}" aria-label="Ir a Productos">
+            <div class="kpi-mini-icon"><i class="bi bi-box-seam"></i></div>
+            <span class="kpi-mini-lbl">Productos</span>
+            <span class="kpi-mini-val">{{ total_productos|default:"0" }}</span>
+          </a>
+          <a class="kpi-mini kpi--gold" href="{% url 'clientes:lista' %}" aria-label="Ir a Clientes">
+            <div class="kpi-mini-icon"><i class="bi bi-person-heart"></i></div>
+            <span class="kpi-mini-lbl">Clientes</span>
+            <span class="kpi-mini-val">{{ total_clientes|default:"0" }}</span>
+          </a>
+          <a class="kpi-mini kpi--sage" href="{% url 'ventas:lista' %}" aria-label="Ir a Ventas">
+            <div class="kpi-mini-icon"><i class="bi bi-cart-check"></i></div>
+            <span class="kpi-mini-lbl">Ventas</span>
+            <span class="kpi-mini-val">{{ total_ventas|default:"0" }}</span>
+          </a>
+          <a class="kpi-mini kpi--blue" href="{% url 'usuarios:lista_usuarios' %}" aria-label="Ir a Usuarios">
+            <div class="kpi-mini-icon"><i class="bi bi-people"></i></div>
+            <span class="kpi-mini-lbl">Usuarios</span>
+            <span class="kpi-mini-val">{{ total_usuarios|default:"0" }}</span>
+          </a>
+        </div>
+
+      </div>
+    </div>
+    
+
+    
+    <div class="row row-2b" style="margin-bottom:18px;">
+
+      <!-- Stock Crítico -->
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title"><i class="bi bi-exclamation-octagon-fill"></i>Stock Crítico</span>
+          {% if productos_criticos %}<span class="chip chip-red">{{ productos_criticos|length }}</span>{% endif %}
+        </div>
+        <div class="card-body">
+          {% if productos_criticos %}
+            {% for item in productos_criticos %}
+            <div class="li">
+              <div class="av {% if item.cantidad == 0 %}av-red{% else %}av-rose{% endif %}">
+                <i class="bi {% if item.cantidad == 0 %}bi-x{% else %}bi-exclamation{% endif %}"></i>
+              </div>
+              <div class="li-info">
+                <div class="li-name">{{ item.nombre }}</div>
+                <div class="sbar">
+                  <div class="sbar-track">
+                    <div class="sbar-fill {% if item.cantidad == 0 %}sf-red{% else %}sf-warn{% endif %}"
+                         style="width:{% if item.cantidad == 0 %}100{% else %}{{ item.porcentaje }}{% endif %}%"></div>
+                  </div>
+                </div>
+              </div>
+              <span class="pill {% if item.cantidad == 0 %}p-red{% else %}p-warn{% endif %}">
+                {{ item.cantidad }} uds
+              </span>
+            </div>
+            {% endfor %}
+          {% else %}
+            <div class="empty"><i class="bi bi-check-circle"></i><p>Stock al día</p></div>
+          {% endif %}
+        </div>
+      </div>
+
+      
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title"><i class="bi bi-balloon-heart-fill"></i>Cumpleaños Hoy</span>
+          {% if cumpleanios_hoy %}<span class="chip chip-gold">{{ cumpleanios_hoy|length }}</span>{% endif %}
+        </div>
+        <div class="card-body">
+          {% if cumpleanios_hoy %}
+            {% for p in cumpleanios_hoy %}
+            <div class="li">
+              <div class="av av-gold">{{ p.nombre|slice:":2"|upper }}</div>
+              <div class="li-info">
+                <div class="li-name">{{ p.nombre }}</div>
+                <div class="li-sub">{{ p.cargo|default:"Cliente" }}</div>
+              </div>
+              <span class="pill p-gold">🎂 {{ p.edad }} años</span>
+            </div>
+            {% endfor %}
+          {% else %}
+            <div class="empty"><i class="bi bi-balloon"></i><p>Sin cumpleaños hoy</p></div>
+          {% endif %}
+        </div>
+      </div>
+
+    </div>
+
+    <!-- GRÁFICA VENTAS VS COMPRAS -->
+    <div class="row" style="margin-bottom:18px;">
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title"><i class="bi bi-bar-chart-fill"></i>Ventas vs Compras</span>
+          <span class="chip chip-sage">Resumen total</span>
+        </div>
+        <div class="card-body" style="padding: 24px 32px;">
+          <div style="display:flex; align-items:center; gap:48px; flex-wrap:wrap; justify-content:center;">
+
+            <!-- Gauge SVG -->
+            <div style="position:relative; width:220px; height:220px; flex-shrink:0;">
+              <svg viewBox="0 0 220 220" width="220" height="220" style="transform:rotate(0deg);">
+                <!-- Fondo -->
+                <circle cx="110" cy="110" r="80" fill="none" stroke="rgba(58,34,24,.06)" stroke-width="28" stroke-dasharray="502" stroke-dashoffset="0" stroke-linecap="butt" style="transform:rotate(-90deg);transform-origin:110px 110px;"/>
+
+                <!-- Outline blanco (separación entre secciones) -->
+                <circle id="arc-ventas-outline" cx="110" cy="110" r="80" fill="none" stroke="#ffffff" stroke-width="34" stroke-dasharray="0 502" stroke-dashoffset="0" stroke-linecap="butt" style="transform:rotate(-90deg);transform-origin:110px 110px; transition: stroke-dasharray 1.1s cubic-bezier(.4,0,.2,1), stroke-dashoffset 1.1s cubic-bezier(.4,0,.2,1);"/>
+                <circle id="arc-compras-outline" cx="110" cy="110" r="80" fill="none" stroke="#ffffff" stroke-width="34" stroke-dasharray="0 502" stroke-dashoffset="0" stroke-linecap="butt" style="transform:rotate(-90deg);transform-origin:110px 110px; transition: stroke-dasharray 1.1s cubic-bezier(.4,0,.2,1), stroke-dashoffset 1.1s cubic-bezier(.4,0,.2,1);"/>
+
+                <!-- Secciones (verde ventas / rojo compras) -->
+                <circle id="arc-ventas" cx="110" cy="110" r="80" fill="none" stroke="var(--g)" stroke-width="28" stroke-dasharray="0 502" stroke-dashoffset="0" stroke-linecap="butt" style="transform:rotate(-90deg);transform-origin:110px 110px; transition: stroke-dasharray 1.2s cubic-bezier(.4,0,.2,1), stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1);"/>
+                <circle id="arc-compras" cx="110" cy="110" r="80" fill="none" stroke="var(--r)" stroke-width="28" stroke-dasharray="0 502" stroke-dashoffset="0" stroke-linecap="butt" style="transform:rotate(-90deg);transform-origin:110px 110px; transition: stroke-dasharray 1.2s cubic-bezier(.4,0,.2,1), stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1);"/>
+                <!-- Círculo central -->
+                <circle cx="110" cy="110" r="55" fill="white" />
+                <text x="110" y="104" text-anchor="middle" font-family="'Cormorant Garamond',serif" font-size="13" fill="#9a8070" letter-spacing="1">TOTAL</text>
+                <text id="gauge-total" x="110" y="126" text-anchor="middle" font-family="'Cormorant Garamond',serif" font-size="17" font-weight="600" fill="#1a0e08">—</text>
+              </svg>
+            </div>
+
+            <!-- Stats -->
+            <div style="flex:1; min-width:200px; display:flex; flex-direction:column; gap:24px;">
+
+              <!-- Ventas -->
+              <div style="display:flex; align-items:center; gap:20px;">
+                <div style="width:14px;height:14px;border-radius:50%;background:var(--g);flex-shrink:0;"></div>
+                <div style="flex:1;">
+                  <div style="font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:#9a8070;font-weight:500;margin-bottom:3px;">Total Ventas</div>
+                  <div id="stat-ventas" style="font-family:'Plus Jakarta Sans',sans-serif;font-size:1.9rem;font-weight:800;color:#1a0e08;line-height:1;">$0</div>
+                </div>
+                <div style="text-align:right;">
+                  <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#9a8070;margin-bottom:3px;">Registros</div>
+                  <div id="stat-ventas-count" style="font-family:'Plus Jakarta Sans',sans-serif;font-size:1.2rem;font-weight:800;color:var(--g);letter-spacing:.5px;">0</div>
+                </div>
+              </div>
+
+              <div style="height:1px;background:rgba(58,34,24,.06);"></div>
+
+              <!-- Compras -->
+              <div style="display:flex; align-items:center; gap:20px;">
+                <div style="width:14px;height:14px;border-radius:50%;background:var(--r);flex-shrink:0;"></div>
+                <div style="flex:1;">
+                  <div style="font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:#9a8070;font-weight:500;margin-bottom:3px;">Total Compras</div>
+                  <div id="stat-compras" style="font-family:'Plus Jakarta Sans',sans-serif;font-size:1.9rem;font-weight:800;color:#1a0e08;line-height:1;">$0</div>
+                </div>
+                <div style="text-align:right;">
+                  <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#9a8070;margin-bottom:3px;">Registros</div>
+                  <div id="stat-compras-count" style="font-family:'Plus Jakarta Sans',sans-serif;font-size:1.2rem;font-weight:800;color:var(--r);letter-spacing:.5px;">0</div>
+                </div>
+              </div>
+
+              <div style="height:1px;background:rgba(58,34,24,.06);"></div>
+
+              <!-- Balance -->
+              <div style="display:flex;align-items:center;justify-content:space-between;">
+                <div style="font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:#9a8070;font-weight:500;">Balance</div>
+                <div id="stat-balance" style="font-family:'Plus Jakarta Sans',sans-serif;font-size:1.35rem;font-weight:800;letter-spacing:.4px;">$0</div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+    (function() {
+      const totalVentas  = parseFloat("{{ total_monto_ventas|default:'0' }}") || 0;
+      const totalCompras = parseFloat("{{ total_monto_compras|default:'0' }}") || 0;
+      const countVentas  = parseInt("{{ total_ventas|default:'0' }}") || 0;
+      const countCompras = parseInt("{{ total_compras_count|default:'0' }}") || 0;
+
+      const fmt = v => '$' + Math.round(v).toLocaleString('es-CO');
+
+      document.getElementById('stat-ventas').textContent       = fmt(totalVentas);
+      document.getElementById('stat-compras').textContent      = fmt(totalCompras);
+      document.getElementById('stat-ventas-count').textContent = countVentas;
+      document.getElementById('stat-compras-count').textContent= countCompras;
+
+      const balance = totalVentas - totalCompras;
+      const balEl = document.getElementById('stat-balance');
+      balEl.textContent = fmt(Math.abs(balance));
+      balEl.style.color = balance >= 0 ? '#096931' : '#b41c0b';
+
+      const grand = totalVentas + totalCompras;
+      document.getElementById('gauge-total').textContent = fmt(grand);
+
+      // Arcos
+      setTimeout(() => {
+        const c = 502;
+        const gap = 14;
+        const pctV = grand > 0 ? totalVentas / grand : 0;
+        const pctC = grand > 0 ? totalCompras / grand : 0;
+
+        const lenV = Math.max(0, (c * pctV) - gap);
+        const lenC = Math.max(0, (c * pctC) - gap);
+
+        const setSeg = (id, len, offset) => {
+          const el = document.getElementById(id);
+          if (!el) return;
+          el.style.strokeDasharray = `${len} ${Math.max(0, c - len)}`;
+          el.style.strokeDashoffset = offset;
+        };
+
+        // Ventas primero, luego compras con un pequeño espacio blanco entre ambas.
+        setSeg('arc-ventas-outline', lenV, 0);
+        setSeg('arc-compras-outline', lenC, -(lenV + gap));
+        setSeg('arc-ventas', lenV, 0);
+        setSeg('arc-compras', lenC, -(lenV + gap));
+      }, 150);
+
+      // Click en el diagrama (verde/rojo) -> mostrar información
+      function detalleHTML(tipo) {
+        const isVentas = tipo === "ventas";
+        const total = isVentas ? totalVentas : totalCompras;
+        const count = isVentas ? countVentas : countCompras;
+        const pct = grand > 0 ? (total / grand) : 0;
+        const titulo = isVentas ? "Ventas" : "Compras";
+        const color = isVentas ? "var(--g)" : "var(--r)";
+
+        return `
+          <div style="text-align:left;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+              <span style="width:12px;height:12px;border-radius:50%;background:${color};display:inline-block;"></span>
+              <div style="font-weight:800;letter-spacing:.02em;">${titulo}</div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr auto;gap:6px 14px;align-items:center;">
+              <div style="color:#6b5a50;">Total</div><div style="font-weight:800;">${fmt(total)}</div>
+              <div style="color:#6b5a50;">Registros</div><div style="font-weight:800;">${count}</div>
+              <div style="color:#6b5a50;">Participación</div><div style="font-weight:800;">${Math.round(pct * 100)}%</div>
+            </div>
+          </div>
+        `;
+      }
+
+      // Tooltip en hover (sin click)
+      let gaugeTooltip = null;
+      let hideTooltipTimer = null;
+
+      function _getGaugeTooltip() {
+        if (gaugeTooltip) return gaugeTooltip;
+
+        gaugeTooltip = document.createElement("div");
+        gaugeTooltip.id = "gauge-hover-tooltip";
+        gaugeTooltip.style.position = "fixed";
+        gaugeTooltip.style.zIndex = "9999";
+        gaugeTooltip.style.minWidth = "220px";
+        gaugeTooltip.style.maxWidth = "280px";
+        gaugeTooltip.style.background = "rgba(20,20,20,.94)";
+        gaugeTooltip.style.color = "#fff";
+        gaugeTooltip.style.border = "1px solid rgba(255,255,255,.14)";
+        gaugeTooltip.style.borderRadius = "14px";
+        gaugeTooltip.style.boxShadow = "0 14px 36px rgba(0,0,0,.35)";
+        gaugeTooltip.style.padding = "12px 12px";
+        gaugeTooltip.style.pointerEvents = "none";
+        gaugeTooltip.style.opacity = "0";
+        gaugeTooltip.style.transform = "translateY(6px)";
+        gaugeTooltip.style.transition = "opacity .12s ease, transform .12s ease";
+        document.body.appendChild(gaugeTooltip);
+
+        const hide = () => {
+          if (!gaugeTooltip) return;
+          gaugeTooltip.style.opacity = "0";
+          gaugeTooltip.style.transform = "translateY(6px)";
+        };
+        window.addEventListener("scroll", hide, { passive: true });
+        window.addEventListener("resize", hide);
+
+        return gaugeTooltip;
+      }
+
+      function _posicionarTooltip(ev) {
+        const pop = _getGaugeTooltip();
+        const x = (ev && ev.clientX) ? ev.clientX : (window.innerWidth / 2);
+        const y = (ev && ev.clientY) ? ev.clientY : (window.innerHeight / 2);
+        const pad = 14;
+
+        pop.style.left = "-9999px";
+        pop.style.top = "-9999px";
+
+        const rect = pop.getBoundingClientRect();
+        const left = Math.min(Math.max(pad, x + 14), window.innerWidth - rect.width - pad);
+        const top = Math.min(Math.max(pad, y + 14), window.innerHeight - rect.height - pad);
+        pop.style.left = left + "px";
+        pop.style.top = top + "px";
+      }
+
+      function mostrarTooltip(tipo, ev) {
+        const pop = _getGaugeTooltip();
+        if (hideTooltipTimer) {
+          clearTimeout(hideTooltipTimer);
+          hideTooltipTimer = null;
+        }
+        pop.innerHTML = detalleHTML(tipo);
+        _posicionarTooltip(ev);
+        pop.style.opacity = "1";
+        pop.style.transform = "translateY(0)";
+      }
+
+      function moverTooltip(ev) {
+        if (!gaugeTooltip || gaugeTooltip.style.opacity !== "1") return;
+        _posicionarTooltip(ev);
+      }
+
+      function ocultarTooltip() {
+        if (!gaugeTooltip) return;
+        if (hideTooltipTimer) clearTimeout(hideTooltipTimer);
+        hideTooltipTimer = setTimeout(() => {
+          if (!gaugeTooltip) return;
+          gaugeTooltip.style.opacity = "0";
+          gaugeTooltip.style.transform = "translateY(6px)";
+        }, 70);
+      }
+
+      [
+        ["arc-ventas", "ventas"],
+        ["arc-ventas-outline", "ventas"],
+        ["arc-compras", "compras"],
+        ["arc-compras-outline", "compras"],
+      ].forEach(([id, tipo]) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.style.cursor = "default";
+        el.addEventListener("mouseenter", function (ev) { mostrarTooltip(tipo, ev); });
+        el.addEventListener("mousemove", function (ev) { moverTooltip(ev); });
+        el.addEventListener("mouseleave", function () { ocultarTooltip(); });
+      });
+    })();
+    </script>
+
+  </div>
+</div>
+{% endblock %}
+

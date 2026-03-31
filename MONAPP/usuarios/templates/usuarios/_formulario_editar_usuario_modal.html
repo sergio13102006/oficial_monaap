@@ -1,0 +1,143 @@
+{% load static %}
+
+<form method="post" id="form-editar-usuario" enctype="multipart/form-data" novalidate>
+    {% csrf_token %}
+    
+    <!-- Campo oculto con el ID del usuario para validaciones -->
+    <input type="hidden" id="user_id_editar" value="{{ usuario.id }}">
+    
+    {% if form_usuario.non_field_errors %}
+        <div class="alert alert-danger">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <strong>Errores:</strong>
+            <ul style="margin: 8px 0 0 0; padding-left: 20px;">
+                {% for error in form_usuario.non_field_errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+
+    {% if form_perfil.non_field_errors %}
+        <div class="alert alert-danger">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <strong>Errores:</strong>
+            <ul style="margin: 8px 0 0 0; padding-left: 20px;">
+                {% for error in form_perfil.non_field_errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+
+    <div class="row g-3">
+        <!-- Sección de Datos de Usuario -->
+        <div class="col-12">
+            <h5 class="mb-3" style="color: #4b2f2a; border-bottom: 2px solid #d4a574; padding-bottom: 8px;">
+                <i class="bi bi-person-fill"></i> Datos de Usuario
+            </h5>
+        </div>
+
+        <!-- Nombre -->
+        <div class="col-md-6">
+            <label class="form-label">{{ form_usuario.first_name.label }} <span class="text-danger">*</span></label>
+            {{ form_usuario.first_name }}
+            <div class="invalid-feedback"></div>
+        </div>
+
+        <!-- Apellido -->
+        <div class="col-md-6">
+            <label class="form-label">{{ form_usuario.last_name.label }} <span class="text-danger">*</span></label>
+            {{ form_usuario.last_name }}
+            <div class="invalid-feedback"></div>
+        </div>
+
+        <!-- Email -->
+        <div class="col-md-6">
+            <label class="form-label">{{ form_usuario.email.label }} <span class="text-danger">*</span></label>
+            {{ form_usuario.email }}
+            <div class="invalid-feedback"></div>
+        </div>
+
+        <!-- Activo -->
+        <div class="col-md-6">
+            <label class="form-label">{{ form_usuario.is_active.label }}</label>
+            <div class="form-check form-switch">
+                {{ form_usuario.is_active }}
+                <label class="form-check-label" for="{{ form_usuario.is_active.id_for_label }}">
+                    Usuario activo
+                </label>
+            </div>
+        </div>
+
+        <!-- Rol -->
+        <div class="col-md-6">
+            <label class="form-label">{{ form_usuario.rol.label }} <span class="text-danger">*</span></label>
+            {{ form_usuario.rol }}
+            <div class="invalid-feedback"></div>
+        </div>
+
+        <!-- Sección de Perfil -->
+        <div class="col-12 mt-4">
+            <h5 class="mb-3" style="color: #4b2f2a; border-bottom: 2px solid #d4a574; padding-bottom: 8px;">
+                <i class="bi bi-card-text"></i> Información de Perfil
+            </h5>
+        </div>
+
+        <!-- Tipo de Documento -->
+        <div class="col-md-6">
+            <label class="form-label">{{ form_perfil.tipo_documento.label }} <span class="text-danger">*</span></label>
+            {{ form_perfil.tipo_documento }}
+            <div class="invalid-feedback"></div>
+        </div>
+
+        <!-- Documento -->
+        <div class="col-md-6">
+            <label class="form-label">{{ form_perfil.documento.label }} <span class="text-danger">*</span></label>
+            {{ form_perfil.documento }}
+            <div class="invalid-feedback"></div>
+        </div>
+
+        <!-- Teléfono -->
+        <div class="col-md-6">
+            <label class="form-label">{{ form_perfil.telefono.label }}</label>
+            {{ form_perfil.telefono }}
+            <div class="invalid-feedback"></div>
+        </div>
+
+        <!-- Foto de Perfil -->
+        <div class="col-12">
+            <label class="form-label">{{ form_perfil.foto_perfil.label }}</label>
+            <div class="d-flex align-items-center gap-3">
+                <div id="preview-foto-editar-container" style="width: 100px; height: 100px; border: 2px dashed #ccc; border-radius: 8px; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #f8f9fa;">
+                    {% if form_perfil.instance.foto_perfil %}
+                        <img id="preview-foto-editar" src="{{ form_perfil.instance.foto_perfil.url }}" style="width: 100%; height: 100%; object-fit: cover;">
+                    {% else %}
+                        <i class="bi bi-person-circle" style="font-size: 3rem; color: #adb5bd;"></i>
+                        <img id="preview-foto-editar" style="display: none; width: 100%; height: 100%; object-fit: cover;">
+                    {% endif %}
+                </div>
+                <div class="flex-grow-1">
+                    {{ form_perfil.foto_perfil }}
+                    <small class="text-muted d-block mt-1">
+                        Formatos aceptados: JPG, PNG, GIF. Tamaño máximo: 5MB
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botones -->
+    <div class="mt-4 text-end">
+        <button type="button" class="btn btn-secondary me-2" data-usuario-action="close-edit">
+            <i class="bi bi-x-circle"></i> Cancelar
+        </button>
+        <button type="submit" 
+                class="btn" 
+                style="background-color: #4b2f2a; color: #ffffff; border: none;"
+                onmouseover="this.style.backgroundColor='#3a2117'"
+                onmouseout="this.style.backgroundColor='#4b2f2a'">
+            <i class="bi bi-save"></i> Actualizar
+        </button>
+    </div>
+</form>

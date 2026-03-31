@@ -1,0 +1,8 @@
+{% load static %}
+
+<div class="invoice-preview-stage">
+  {% static 'compras/img/logo_monakeratina.png' as preview_logo %}
+  {% static 'compras/img/logo_monakeratina_watermark.png' as preview_watermark %}
+
+  {% include "compras/comprobante_compra_base.html" with logo_src=preview_logo watermark_src=preview_watermark %}
+</div>

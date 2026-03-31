@@ -1,0 +1,141 @@
+﻿{% extends 'core/panel_admin_base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Gestion de datos{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item"><a href="{% url 'servicios:lista_servicios' %}">Servicios</a></li>
+<li class="breadcrumb-item active" aria-current="page">Gestion de datos</li>
+{% endblock %}
+
+{% block page_icon %}<i class="bi bi-file-earmark-text page-icon"></i>{% endblock %}
+{% block page_title %}Gestion de datos{% endblock %}
+{% block page_subtitle %}Control de registros, filtros y seguimiento de alisados{% endblock %}
+{% block page_actions %}
+<button type="button" class="btn-pill-dark js-open-gestion-form-modal" data-form-title="Nueva gestión de datos" data-form-url="{% url 'gestion_alisados:crear_gestion_alisado' %}?modal=1" data-bs-toggle="modal" data-bs-target="#modalFormGestion">
+    <i class="bi bi-plus-circle"></i> Nueva Gestion
+</button>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'servicios/css/estilos.css' %}">
+<link rel="stylesheet" href="{% static 'gestion_alisados/css/gestion_alisados.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="module-filters-card">
+        <form method="get"
+              id="filtrosForm"
+              class="js-ajax-search-form module-filters-form gestion-filtros"
+              data-ajax-url="{% url 'gestion_alisados:lista_gestion_alisados' %}"
+              data-ajax-target="#gestion-tabla-wrap"
+              data-ajax-debounce="300">
+
+            <input type="hidden" name="sort" value="{{ current_sort }}">
+            <input type="hidden" name="dir" value="{{ current_dir }}">
+
+            <div class="module-filter-field module-filter-field--wide">
+                <label class="module-filter-label">Buscar</label>
+                {% include 'core/componentes/busqueda_global.html' with placeholder='Buscar por cliente o profesional...' search_value=buscar name='buscar' modo='inline' %}
+            </div>
+
+            <div class="module-filter-field module-filter-field--small">
+                <label class="module-filter-label">Tipo de cabello</label>
+                <select name="forma_natural" class="form-select">
+                    <option value="">Todos</option>
+                    <option value="liso" {% if forma_natural == 'liso' %}selected{% endif %}>Liso</option>
+                    <option value="ondulado" {% if forma_natural == 'ondulado' %}selected{% endif %}>Ondulado</option>
+                    <option value="rizado" {% if forma_natural == 'rizado' %}selected{% endif %}>Rizado</option>
+                    <option value="afro" {% if forma_natural == 'afro' %}selected{% endif %}>Afro</option>
+                </select>
+            </div>
+
+            <div class="module-filter-field module-filter-field--small">
+                <label class="module-filter-label">Porosidad</label>
+                <select name="porosidad" class="form-select">
+                    <option value="">Todas</option>
+                    <option value="alta" {% if porosidad == 'alta' %}selected{% endif %}>Alta</option>
+                    <option value="media" {% if porosidad == 'media' %}selected{% endif %}>Media</option>
+                    <option value="baja" {% if porosidad == 'baja' %}selected{% endif %}>Baja</option>
+                </select>
+            </div>
+
+            <div class="module-filter-field module-filter-field--small">
+                <label class="module-filter-label">Textura</label>
+                <select name="textura" class="form-select">
+                    <option value="">Todas</option>
+                    <option value="gruesa" {% if textura == 'gruesa' %}selected{% endif %}>Gruesa</option>
+                    <option value="normal" {% if textura == 'normal' %}selected{% endif %}>Normal</option>
+                    <option value="delgada" {% if textura == 'delgada' %}selected{% endif %}>Delgada</option>
+                </select>
+            </div>
+
+            <div class="module-filter-field module-filter-field--small">
+                <label class="module-filter-label">Estado de pago</label>
+                <select name="estado_pago" class="form-select">
+                    <option value="">Todos</option>
+                    <option value="pagado" {% if estado_pago == 'pagado' %}selected{% endif %}>Pagado</option>
+                    <option value="pendiente" {% if estado_pago == 'pendiente' %}selected{% endif %}>Pendiente</option>
+                </select>
+            </div>
+
+            <div class="module-filter-actions">
+                <a href="{% url 'gestion_alisados:lista_gestion_alisados' %}" class="module-filter-btn module-filter-btn--secondary">
+                    <i class="bi bi-x-circle"></i> Limpiar
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <div id="gestion-tabla-wrap">
+        {% include 'gestion_alisados/lista_gestion_alisados_global.html' %}
+    </div>
+</div>
+<div class="modal fade" id="modalFormGestion" tabindex="-1" aria-labelledby="modalFormGestionLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-xl-custom">
+        <div class="modal-content gestion-modal-content">
+            <div class="modal-header gestion-modal-header">
+                <h5 class="modal-title" id="modalFormGestionLabel">
+                    <i class="bi bi-file-earmark-plus"></i> Gestion de datos
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body gestion-modal-body gestion-modal-scroll" id="modalFormContent">
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <p class="mt-3">Cargando formulario...</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalGestionInfo" tabindex="-1" aria-labelledby="modalGestionInfoLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content gestion-modal-content">
+            <div class="modal-header gestion-modal-header">
+                <h5 class="modal-title" id="modalGestionInfoLabel">Detalle</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body gestion-modal-body" id="modalGestionInfoContent">
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p class="mt-2 mb-0">Cargando...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'gestion_alisados/js/form_gestion_alisado.js' %}?v={% now 'U' %}"></script>
+<script src="{% static 'gestion_alisados/js/gestion_alisados.js' %}?v={% now 'U' %}"></script>
+{% endblock %}
+

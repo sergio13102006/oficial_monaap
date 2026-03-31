@@ -1,0 +1,74 @@
+{% extends 'core/panel_admin_base.html' %}
+{% load static %}
+
+{% block title %}Eliminar – {{ servicio_web.nombre }}{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item"><a href="{% url 'servicios_web:lista_servicios_web' %}">Servicios Web</a></li>
+<li class="breadcrumb-item active" aria-current="page">Eliminar</li>
+{% endblock %}
+
+{% block page_title %}
+    <i class="bi bi-trash3"></i> Eliminar Servicio Web
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card border-0 shadow-sm mx-auto" style="max-width:500px; border-radius:14px;">
+        <div class="card-body text-center py-5">
+
+            {% if servicio_web.imagen %}
+                <img src="{{ servicio_web.imagen.url }}" alt="{{ servicio_web.nombre }}"
+                     style="width:100px; height:100px; object-fit:cover; border-radius:12px;" class="mb-3">
+            {% else %}
+                <i class="bi bi-globe text-muted d-block mb-3" style="font-size:3rem;"></i>
+            {% endif %}
+
+            <h5 class="fw-bold">{{ servicio_web.nombre }}</h5>
+            <p class="text-muted mb-4">
+                ¿Estás seguro de que deseas eliminar este servicio web?<br>
+                Esta acción no se puede deshacer.
+            </p>
+
+            <form method="post" id="formEliminarServicioWeb">
+                {% csrf_token %}
+                <div class="d-flex justify-content-center gap-3">
+                    <a href="{% url 'servicios_web:lista_servicios_web' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i> Cancelar
+                    </a>
+                    <button type="button" id="btnEliminarServicioWeb" class="btn btn-danger">
+                        <i class="bi bi-trash3 me-1"></i> Eliminar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const btn = document.getElementById('btnEliminarServicioWeb');
+    if (!btn) return;
+
+    btn.addEventListener('click', function () {
+        Swal.fire({
+            title: '¿Eliminar servicio?',
+            html: '¿Seguro que deseas eliminar <strong>{{ servicio_web.nombre|escapejs }}</strong>?<br><small class="text-muted">Esta acción no se puede deshacer.</small>',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: '<i class="bi bi-trash3"></i> Sí, eliminar',
+            cancelButtonText: 'Cancelar',
+            reverseButtons: true,
+        }).then(result => {
+            if (result.isConfirmed) {
+                document.getElementById('formEliminarServicioWeb').submit();
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

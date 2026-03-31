@@ -1,0 +1,19 @@
+{% extends 'core/panel_admin_base.html' %}
+{% load static %}
+{% include 'servicios_web/_servicio_web_form.html' with form=form servicio_web=servicio_web is_modal=True %}
+
+{% block title %}{{ titulo|default:'Editar Servicio Web' }}{% endblock %}
+
+{% block page_icon %}
+<i class="bi bi-pencil-square page-icon"></i>
+{% endblock %}
+
+{% block page_title %}{{ titulo|default:'Editar Servicio Web' }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10 col-lg-8">
+        {% include 'servicios_web/_servicio_web_form.html' %}
+    </div>
+</div>
+{% endblock %}

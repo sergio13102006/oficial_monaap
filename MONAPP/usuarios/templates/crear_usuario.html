@@ -1,0 +1,127 @@
+{% extends 'core/panel_admin_base.html' %}
+{% load static %}
+
+{% block title %}{{ titulo }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'usuarios/css/usuarios.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="display-6 fw-bold"><i class="fas fa-plus"></i> {{ titulo }}</h1>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'usuarios:lista_usuarios' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Volver
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-body">
+            <form method="post" novalidate id="formCrearUsuario">
+                {% csrf_token %}
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+                {% endif %}
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Documento <span class="text-danger">*</span></label>
+                        <div class="usr-input-wrapper">
+                            {{ form.documento }}
+                            <i class="bi bi-check-lg usr-validation-icon" id="icon_documento"></i>
+                        </div>
+                        {% if form.documento.errors %}<div class="text-danger small mt-1">{{ form.documento.errors.0 }}</div>{% endif %}
+                        <div class="usr-field-error" id="err_documento"></div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Email <span class="text-danger">*</span></label>
+                        <div class="usr-input-wrapper">
+                            {{ form.email }}
+                            <i class="bi bi-check-lg usr-validation-icon" id="icon_email"></i>
+                        </div>
+                        {% if form.email.errors %}<div class="text-danger small mt-1">{{ form.email.errors.0 }}</div>{% endif %}
+                        <div class="usr-field-error" id="err_email"></div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Nombre <span class="text-danger">*</span></label>
+                        <div class="usr-input-wrapper">
+                            {{ form.first_name }}
+                            <i class="bi bi-check-lg usr-validation-icon" id="icon_first_name"></i>
+                        </div>
+                        {% if form.first_name.errors %}<div class="text-danger small mt-1">{{ form.first_name.errors.0 }}</div>{% endif %}
+                        <div class="usr-field-error" id="err_first_name"></div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Apellido <span class="text-danger">*</span></label>
+                        <div class="usr-input-wrapper">
+                            {{ form.last_name }}
+                            <i class="bi bi-check-lg usr-validation-icon" id="icon_last_name"></i>
+                        </div>
+                        {% if form.last_name.errors %}<div class="text-danger small mt-1">{{ form.last_name.errors.0 }}</div>{% endif %}
+                        <div class="usr-field-error" id="err_last_name"></div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Contraseña <span class="text-danger">*</span></label>
+                        <div class="usr-input-wrapper">
+                            {{ form.password1 }}
+                            <i class="bi bi-check-lg usr-validation-icon" id="icon_password1"></i>
+                        </div>
+                        {% if form.password1.errors %}<div class="text-danger small mt-1">{{ form.password1.errors.0 }}</div>{% endif %}
+                        <div class="usr-field-error" id="err_password1"></div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Contraseña (confirmación) <span class="text-danger">*</span></label>
+                        <div class="usr-input-wrapper">
+                            {{ form.password2 }}
+                            <i class="bi bi-check-lg usr-validation-icon" id="icon_password2"></i>
+                        </div>
+                        {% if form.password2.errors %}<div class="text-danger small mt-1">{{ form.password2.errors.0 }}</div>{% endif %}
+                        <div class="usr-field-error" id="err_password2"></div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Rol del usuario <span class="text-danger">*</span></label>
+                        <div class="usr-input-wrapper">
+                            {{ form.rol }}
+                            <i class="bi bi-check-lg usr-validation-icon" id="icon_rol"></i>
+                        </div>
+                        {% if form.rol.errors %}<div class="text-danger small mt-1">{{ form.rol.errors.0 }}</div>{% endif %}
+                        <div class="usr-field-error" id="err_rol"></div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Teléfono <small class="text-muted fw-normal">(opcional)</small></label>
+                        <div class="usr-input-wrapper">
+                            {{ form.telefono }}
+                            <i class="bi bi-check-lg usr-validation-icon" id="icon_telefono"></i>
+                        </div>
+                        {% if form.telefono.errors %}<div class="text-danger small mt-1">{{ form.telefono.errors.0 }}</div>{% endif %}
+                        <div class="usr-field-error" id="err_telefono"></div>
+                    </div>
+                </div>
+
+                <div class="mt-4 text-end">
+                    <a href="{% url 'usuarios:lista_usuarios' %}" class="btn btn-outline-secondary me-2">Cancelar</a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> {{ accion|default:'Crear' }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'usuarios/js/usuarios.js' %}"></script>
+{% endblock %}

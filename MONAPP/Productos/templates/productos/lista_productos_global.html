@@ -1,0 +1,154 @@
+{% load humanize %}
+{% load sort_tags %}
+
+<div class="table-card anim-from-bottom productos-table-card">
+<div class="table-responsive">
+  <table class="styled-table">
+    <thead>
+      <tr>
+        <th class="col-codigo">
+          <a href="{% sort_url 'codigo' %}">CÓDIGO
+            {% if current_sort == 'codigo' %}<i class="bi bi-caret-{% if current_dir == 'asc' %}up{% else %}down{% endif %}-fill ms-1" aria-hidden="true"></i>{% endif %}
+          </a>
+        </th>
+
+        <th class="col-producto">
+          <a href="{% sort_url 'nombre' %}">PRODUCTO
+            {% if current_sort == 'nombre' %}<i class="bi bi-caret-{% if current_dir == 'asc' %}up{% else %}down{% endif %}-fill ms-1" aria-hidden="true"></i>{% endif %}
+          </a>
+        </th>
+
+        <th class="col-linea">
+          <a href="{% sort_url 'linea' %}">LÍNEA
+            {% if current_sort == 'linea' %}<i class="bi bi-caret-{% if current_dir == 'asc' %}up{% else %}down{% endif %}-fill ms-1" aria-hidden="true"></i>{% endif %}
+          </a>
+        </th>
+
+        <th class="col-imagen">Imagen</th>
+
+        <th class="text-center">ESTADO</th>
+
+        <th class="col-acciones text-center">ACCIONES</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      {% for producto in productos %}
+      <tr>
+        <td class="col-codigo">{{ producto.codigo }}</td>
+
+        <td class="col-producto">
+          <div class="fw-semibold">{{ producto.nombre }}</div>
+
+          {% if producto.stock_actual <= 1 %}
+            <div class="stock-chip stock-critico">
+              {{ producto.stock_actual }} unidades — crítico
+            </div>
+          {% elif producto.stock_actual <= 15 %}
+            <div class="stock-chip stock-bajo">
+              {{ producto.stock_actual }} unidades — bajo
+            </div>
+          {% else %}
+            <div class="stock-chip stock-ok">
+              {{ producto.stock_actual }} unidades disponibles
+            </div>
+          {% endif %}
+        </td>
+
+        <td class="col-linea">
+          {% if producto.linea %}
+            {{ producto.linea }}
+          {% else %}
+            <span class="text-muted">—</span>
+          {% endif %}
+        </td>
+
+        <td class="text-center">
+          {% if producto.imagen %}
+            <img
+              src="{{ producto.imagen.url }}"
+              class="img-thumb"
+              data-src="{{ producto.imagen.url }}"
+              alt="Imagen {{ producto.nombre }}"
+            >
+          {% else %}
+            <div class="img-placeholder">—</div>
+          {% endif %}
+        </td>
+
+        <td class="text-center">
+          <label class="table-switch-wrapper" title="{% if producto.activo %}Inactivar{% else %}Activar{% endif %}" data-bs-placement="bottom">
+            <input type="checkbox"
+                   class="toggle-activo-checkbox js-toggle-producto-estado"
+                  data-url="{% url 'productos:toggle_activo_producto' producto.codigo %}"
+                  data-activo="{% if producto.activo %}1{% else %}0{% endif %}"
+                  data-nombre="{{ producto.nombre|escapejs }}"
+                   {% if producto.activo %}checked{% endif %}
+                   aria-label="{% if producto.activo %}Inactivar{% else %}Activar{% endif %} producto {{ producto.nombre }}">
+            <span class="table-switch-slider"></span>
+          </label>
+        </td>
+
+        <td class="col-acciones text-center">
+          <div class="acciones-wrap table-action-group justify-content-center">
+            <button type="button"
+                    class="btn btn-sm btn-link btn-action-round"
+                    data-bs-toggle="modal"
+                    data-bs-target="#modalDetalleProducto"
+                    data-codigo="{{ producto.codigo }}"
+                    data-nombre="{{ producto.nombre }}"
+                    data-marca="{{ producto.marca }}"
+                    data-precio="{{ producto.precio|intcomma }}"
+                    data-linea="{{ producto.linea }}"
+                    data-presentacion="{{ producto.presentacion }}"
+                    data-unidad="{{ producto.unidad_medida }}"
+                    data-activo="{% if producto.activo %}1{% else %}0{% endif %}"
+                    data-descripcion="{{ producto.descripcion|default:'' }}"
+                    data-imagen="{% if producto.imagen %}{{ producto.imagen.url }}{% endif %}"
+                    title="Ver detalles"
+                    aria-label="Ver detalles del producto {{ producto.nombre }}"
+                    data-bs-placement="bottom">
+              <i class="bi bi-eye" aria-hidden="true"></i>
+            </button>
+
+            <a href="{% url 'productos:editar_producto' producto.codigo %}"
+               class="btn btn-link btn-action-round"
+               data-modal-url="{% url 'productos:editar_producto' producto.codigo %}"
+               data-modal-title="Editar producto"
+               title="Editar"
+               aria-label="Editar producto {{ producto.nombre }}"
+               data-bs-placement="bottom">
+              <i class="bi bi-pencil-square" aria-hidden="true"></i>
+            </a>
+
+            {% if permisos.roles.es_admin %}
+            <button type="button"
+                    class="btn btn-link btn-action-round"
+                    data-url="{% url 'productos:eliminar_producto' producto.codigo %}"
+                    data-toggle-url="{% url 'productos:toggle_activo_producto' producto.codigo %}"
+                    data-nombre="{{ producto.nombre|escapejs }}"
+                    data-activo="{% if producto.activo %}1{% else %}0{% endif %}"
+                    title="{% if producto.activo %}Eliminar{% else %}Reactivar{% endif %}"
+                    aria-label="{% if producto.activo %}Eliminar{% else %}Reactivar{% endif %} producto {{ producto.nombre }}"
+                    data-bs-placement="bottom">
+              {% if producto.activo %}
+                <i class="bi bi-trash3" aria-hidden="true"></i>
+              {% else %}
+                <i class="bi bi-arrow-clockwise" aria-hidden="true"></i>
+              {% endif %}
+            </button>
+            {% endif %}
+          </div>
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="6" class="text-center table-empty-state">
+          No hay productos registrados.
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+</div>

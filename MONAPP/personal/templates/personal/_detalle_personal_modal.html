@@ -1,0 +1,112 @@
+{% load static %}
+
+<div class="row g-4 align-items-start">
+    <div class="col-lg-2 col-md-3">
+        <div class="proveedor-visual-card personal-visual-card">
+            <div class="proveedor-visual-icon-wrap">
+                <div class="proveedor-visual-icon-bg">
+                    <i class="bi bi-person-badge proveedor-visual-icon personal-visual-icon"></i>
+                </div>
+            </div>
+
+            <div class="proveedor-visual-mini">
+                <span class="proveedor-mini-label">Personal</span>
+                <span class="proveedor-mini-badge" id="p-iniciales">
+                    {{ personal.nombres|default:"P"|first|upper }}{{ personal.apellidos|default:""|first|upper }}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-10 col-md-9">
+        <div class="proveedor-detail-main personal-detail-main">
+            <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
+                <div>
+                    <h2 class="proveedor-detail-title mb-1" id="p-nombre">
+                        {{ personal.nombres }} {{ personal.apellidos }}
+                    </h2>
+                    <div class="proveedor-detail-subtitle">
+                        Información general del personal
+                    </div>
+                </div>
+
+                <div>
+                    <span class="badge proveedor-estado-badge {% if personal.activo %}activo{% else %}inactivo{% endif %}" id="p-estado-badge">
+                        {% if personal.activo %}Activo{% else %}Inactivo{% endif %}
+                    </span>
+                </div>
+            </div>
+
+            <div class="row g-3 proveedor-info-grid">
+                <div class="col-md-6">
+                    <div class="proveedor-info-item">
+                        <span class="proveedor-info-label">Documento</span>
+                        <span class="proveedor-info-value" id="p-documento">{{ personal.numero_documento }}</span>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="proveedor-info-item">
+                        <span class="proveedor-info-label">Estado</span>
+                        <span class="proveedor-info-value" id="p-estado">
+                            {% if personal.activo %}Activo{% else %}Inactivo{% endif %}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="proveedor-info-item">
+                        <span class="proveedor-info-label">Teléfono</span>
+                        <span class="proveedor-info-value" id="p-telefono">
+                            {% if personal.telefono %}
+                                <a href="tel:{{ personal.telefono }}" style="color: #4b2f2a; text-decoration: none;">
+                                    <i class="fas fa-phone"></i> {{ personal.telefono }}
+                                </a>
+                            {% else %}
+                                —
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="proveedor-info-item">
+                        <span class="proveedor-info-label">Correo</span>
+                        <span class="proveedor-info-value" id="p-correo">
+                            {% if personal.correo %}
+                                <a href="mailto:{{ personal.correo }}" style="color: #4b2f2a; text-decoration: none; word-break: break-word;">
+                                    <i class="fas fa-envelope"></i> {{ personal.correo }}
+                                </a>
+                            {% else %}
+                                —
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="proveedor-info-item">
+                        <span class="proveedor-info-label">Rol</span>
+                        <span class="proveedor-info-value" id="p-rol">{{ personal.get_rol_display }}</span>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="proveedor-info-item">
+                        <span class="proveedor-info-label">Tipo de documento</span>
+                        <span class="proveedor-info-value" id="p-tipo-documento">
+                            {{ personal.tipo_documento|default:"—" }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="proveedor-detail-section mt-4">
+                <h6 class="proveedor-section-title">Resumen</h6>
+                <p class="proveedor-section-text mb-0">
+                    Este personal se encuentra registrado en el sistema MONAAPP con su información de contacto y rol operativo disponible para gestión administrativa.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>

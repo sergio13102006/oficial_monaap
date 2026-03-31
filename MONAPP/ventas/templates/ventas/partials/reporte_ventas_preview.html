@@ -1,0 +1,278 @@
+﻿{% load static humanize ventas_extras %}
+{% now "d/m/Y H:i" as generado_en %}
+
+<div class="invoice-preview-stage">
+  {% static 'compras/img/logo_monakeratina.png' as preview_logo %}
+  {% static 'compras/img/logo_monakeratina_watermark.png' as preview_watermark %}
+
+  <div class="invoice-sheet invoice-sheet-premium">
+    <div class="invoice-watermark invoice-watermark-premium" style="background-image: url('{{ preview_watermark }}');"></div>
+
+    <div class="invoice-content premium-content">
+      <div class="invoice-brand-header">
+        <img src="{{ preview_logo }}" alt="Monakeratina" class="invoice-brand-logo-premium">
+        <h1 class="invoice-title-premium">Reporte de ventas</h1>
+      </div>
+
+      <div class="invoice-info-table-wrap">
+        <table class="invoice-info-table">
+          <tbody>
+            <tr>
+              <td class="cell-small">
+                <span>Rango</span>
+                <strong>{{ fecha_inicio }} - {{ fecha_fin }}</strong>
+              </td>
+              <td>
+                <strong>Monakeratina</strong>
+                <p>Reporte interno de ventas</p>
+              </td>
+              <td>
+                <strong>{{ ventas|length|intcomma }} registros</strong>
+                <p>{% if comparativo %}Incluye comparativo{% else %}Sin comparativo{% endif %}</p>
+              </td>
+            </tr>
+            <tr>
+              <td class="cell-small">
+                <span>Generado</span>
+                <strong>{{ generado_en }}</strong>
+              </td>
+              <td class="cell-small">
+                <span>Usuario</span>
+                <strong>{% if request.user %}{{ request.user.username }}{% else %}—{% endif %}</strong>
+              </td>
+              <td class="cell-small">
+                <span>Total principal</span>
+                <strong>${{ total_principal|floatformat:0|intcomma }}</strong>
+              </td>
+            </tr>
+            {% if comparativo %}
+            <tr>
+              <td class="cell-small">
+                <span>Rango comparativo</span>
+                <strong>{{ fecha_inicio_comp }} - {{ fecha_fin_comp }}</strong>
+              </td>
+              <td class="cell-small">
+                <span>Total comparativo</span>
+                <strong>${{ total_comparativo|floatformat:0|intcomma }}</strong>
+              </td>
+              <td class="cell-small">
+                <span>Columnas</span>
+                <strong>{{ columnas|length }}</strong>
+              </td>
+            </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="invoice-table-box-premium">
+        <table class="invoice-table-premium">
+          <thead>
+            <tr>
+              {% for c in columnas %}
+                <th class="{% if c == 'total' %}text-end{% elif c == 'estado' %}text-center{% endif %}">
+                  {{ columnas_map|get_item:c }}
+                </th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for venta in ventas %}
+            <tr>
+              {% for c in columnas %}
+                {% if c == "codigo_venta" %}<td><strong>{{ venta.codigo_venta }}</strong></td>
+                {% elif c == "cliente" %}<td>{{ venta.cliente }}</td>
+                {% elif c == "productos_servicios" %}
+                  <td>
+                    {% for d in venta.detalles.all %}
+                      <div>
+                        {% if d.producto %}{{ d.producto.nombre }}{% endif %}
+                        {% if d.servicio %}{{ d.servicio.nombre }}{% endif %}
+                        <span class="text-muted">x{{ d.cantidad }}</span>
+                      </div>
+                    {% empty %}
+                      <span class="text-muted">Sin detalles</span>
+                    {% endfor %}
+                  </td>
+                {% elif c == "fecha" %}<td>{{ venta.fecha|date:"d/m/Y H:i" }}</td>
+                {% elif c == "total" %}<td class="text-end">${{ venta.total|floatformat:0|intcomma }}</td>
+                {% elif c == "estado" %}<td class="text-center">{{ venta.estado|title }}</td>
+                {% else %}<td>—</td>
+                {% endif %}
+              {% endfor %}
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="{{ columnas|length }}" class="text-center text-muted">
+                No hay ventas en este rango.
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {% if comparativo and incluir_grafica %}
+      <div class="invoice-table-box-premium" style="margin-top: 18px;">
+        <table class="invoice-table-premium">
+          <thead>
+            <tr>
+              <th colspan="6">Comparativo por día</th>
+            </tr>
+            <tr>
+              <th class="text-center">#</th>
+              <th>Fecha principal</th>
+              <th class="text-end">Total principal</th>
+              <th>Fecha comparativa</th>
+              <th class="text-end">Total comparativo</th>
+              <th class="text-center">Variación</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if grafica_principal_labels or grafica_comp_labels %}
+              {% for p_label in grafica_principal_labels %}
+                {% with idx=forloop.counter0 p_val=grafica_principal_data|index:forloop.counter0 c_label=grafica_comp_labels|index:forloop.counter0 c_val=grafica_comp_data|index:forloop.counter0 %}
+                <tr>
+                  <td class="text-center"><span class="text-muted">{{ forloop.counter }}</span></td>
+                  <td><strong>{{ p_label }}</strong></td>
+                  <td class="text-end"><strong>${{ p_val|floatformat:0|intcomma }}</strong></td>
+                  <td>
+                    {% if c_label %}{{ c_label }}{% else %}<span class="text-muted">—</span>{% endif %}
+                  </td>
+                  <td class="text-end">
+                    {% if c_val is not None %}<strong>${{ c_val|floatformat:0|intcomma }}</strong>{% else %}<span class="text-muted">—</span>{% endif %}
+                  </td>
+                  <td class="text-center">
+                    {% if c_val is not None %}
+                      {% with diff=p_val|subtract:c_val %}
+                        {% if diff > 0 %}
+                          <strong style="color:#1e7a2f;">▲ +${{ diff|floatformat:0|intcomma }}</strong>
+                        {% elif diff < 0 %}
+                          <strong style="color:#9b2f2f;">▼ -${{ diff|abs_value|floatformat:0|intcomma }}</strong>
+                        {% else %}
+                          <span class="text-muted">= igual</span>
+                        {% endif %}
+                      {% endwith %}
+                    {% else %}
+                      <span class="text-muted">—</span>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% endwith %}
+              {% endfor %}
+
+              {# Filas extra del comparativo si tiene más días que el principal #}
+              {% for c_label in grafica_comp_labels %}
+                {% with idx=forloop.counter0 %}
+                {% if idx >= grafica_principal_labels|length %}
+                  {% with c_val=grafica_comp_data|index:idx %}
+                  <tr>
+                    <td class="text-center"><span class="text-muted">{{ idx|add:1 }}</span></td>
+                    <td><span class="text-muted">—</span></td>
+                    <td class="text-end"><span class="text-muted">—</span></td>
+                    <td>{{ c_label }}</td>
+                    <td class="text-end"><strong>${{ c_val|floatformat:0|intcomma }}</strong></td>
+                    <td class="text-center"><span class="text-muted">—</span></td>
+                  </tr>
+                  {% endwith %}
+                {% endif %}
+                {% endwith %}
+              {% endfor %}
+            {% else %}
+              <tr>
+                <td colspan="6" class="text-center text-muted">Sin datos para graficar en estos rangos.</td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+      {% endif %}
+
+      {% if comparativo %}
+      <div class="invoice-table-box-premium" style="margin-top: 18px;">
+        <table class="invoice-table-premium">
+          <thead>
+            <tr>
+              <th colspan="{{ columnas|length }}">Detalle comparativo</th>
+            </tr>
+            <tr>
+              {% for c in columnas %}
+                <th class="{% if c == 'total' %}text-end{% elif c == 'estado' %}text-center{% endif %}">
+                  {{ columnas_map|get_item:c }}
+                </th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for venta in ventas_comp %}
+            <tr>
+              {% for c in columnas %}
+                {% if c == "codigo_venta" %}<td><strong>{{ venta.codigo_venta }}</strong></td>
+                {% elif c == "cliente" %}<td>{{ venta.cliente }}</td>
+                {% elif c == "productos_servicios" %}
+                  <td>
+                    {% for d in venta.detalles.all %}
+                      <div>
+                        {% if d.producto %}{{ d.producto.nombre }}{% endif %}
+                        {% if d.servicio %}{{ d.servicio.nombre }}{% endif %}
+                        <span class="text-muted">x{{ d.cantidad }}</span>
+                      </div>
+                    {% empty %}
+                      <span class="text-muted">Sin detalles</span>
+                    {% endfor %}
+                  </td>
+                {% elif c == "fecha" %}<td>{{ venta.fecha|date:"d/m/Y H:i" }}</td>
+                {% elif c == "total" %}<td class="text-end">${{ venta.total|floatformat:0|intcomma }}</td>
+                {% elif c == "estado" %}<td class="text-center">{{ venta.estado|title }}</td>
+                {% else %}<td>—</td>
+                {% endif %}
+              {% endfor %}
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="{{ columnas|length }}" class="text-center text-muted">
+                No hay ventas en el rango comparativo.
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% endif %}
+
+      <div class="invoice-total-wrap-premium">
+        <table class="invoice-total-table-premium">
+          <tr>
+            <th>Total principal</th>
+            <td>${{ total_principal|floatformat:0|intcomma }}</td>
+          </tr>
+          {% if comparativo %}
+          <tr>
+            <th>Total comparativo</th>
+            <td>${{ total_comparativo|floatformat:0|intcomma }}</td>
+          </tr>
+          {% endif %}
+        </table>
+      </div>
+
+      {% if incluir_grafica %}
+      <div class="invoice-table-box-premium" style="margin-top: 18px;">
+        <div style="padding: 14px 14px 6px;">
+          <div style="font-weight: 800; letter-spacing: .02em; color: #3c2418; margin-bottom: 10px;">
+            Gráfica de ventas
+          </div>
+          <div style="position: relative; height: 280px;">
+            <canvas id="graficaPreviewPrincipal" style="width:100%;height:100%;"></canvas>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="invoice-footer-premium">
+      <span>Generado por MonaApp / Monakeratina</span>
+    </div>
+  </div>
+</div>
+
+

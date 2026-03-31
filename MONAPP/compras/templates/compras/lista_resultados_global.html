@@ -1,0 +1,172 @@
+{% load sort_tags %}
+
+{% if tipo_actual == "compras" %}
+
+  {% if compras %}
+    <div class="table-responsive">
+      <table class="styled-table">
+        <thead>
+          <tr>
+            <th><a href="{% sort_url 'id' %}">ID{% if current_sort == 'id' %} <i class="bi bi-caret-{% if current_dir == 'asc' %}up{% else %}down{% endif %}-fill" aria-hidden="true"></i>{% endif %}</a></th>
+            <th><a href="{% sort_url 'proveedor' %}">Proveedor{% if current_sort == 'proveedor' %} <i class="bi bi-caret-{% if current_dir == 'asc' %}up{% else %}down{% endif %}-fill" aria-hidden="true"></i>{% endif %}</a></th>
+            <th><a href="{% sort_url 'fecha' %}">Fecha{% if current_sort == 'fecha' %} <i class="bi bi-caret-{% if current_dir == 'asc' %}up{% else %}down{% endif %}-fill" aria-hidden="true"></i>{% endif %}</a></th>
+            <th><a href="{% sort_url 'usuario' %}">Usuario{% if current_sort == 'usuario' %} <i class="bi bi-caret-{% if current_dir == 'asc' %}up{% else %}down{% endif %}-fill" aria-hidden="true"></i>{% endif %}</a></th>
+            <th><a href="{% sort_url 'anulada' %}">Estado{% if current_sort == 'anulada' %} <i class="bi bi-caret-{% if current_dir == 'asc' %}up{% else %}down{% endif %}-fill" aria-hidden="true"></i>{% endif %}</a></th>
+            <th class="text-center">Acciones</th>
+          </tr>
+        </thead>
+
+        <tbody>
+        {% for c in compras %}
+          <tr id="fila-compra-{{ c.id }}">
+            <td>{{ c.id }}</td>
+            <td>{{ c.proveedor }}</td>
+            <td>{{ c.fecha }}</td>
+            <td>{% if c.usuario %}{{ c.usuario.username }}{% else %}-{% endif %}</td>
+            <td>
+              {% if c.anulada %}
+                <span class="compras-state-pill is-off" aria-label="Compra anulada" title="Anulada">
+                  <span class="compras-state-pill__knob"></span>
+                </span>
+              {% else %}
+                <button type="button"
+                        class="compras-state-pill is-on js-anular-compra"
+                        data-id="{{ c.id }}"
+                        data-proveedor="{{ c.proveedor }}"
+                        data-url="{% url 'compras:anular_compra' c.id %}"
+                        aria-label="Anular compra"
+                        title="Haz clic para anular la compra">
+                  <span class="compras-state-pill__knob"></span>
+                </button>
+              {% endif %}
+            </td>
+
+            <td class="text-center">
+              <div class="acciones-group table-action-group justify-content-center">
+                <button type="button"
+                        class="btn btn-link js-ver-detalle"
+                        data-url="{% url 'compras:detalle_compra' c.id %}"
+                        title="Ver detalles"
+                        data-bs-placement="bottom">
+                  <i class="bi bi-eye"></i>
+                </button>
+
+                {% if not c.anulada %}
+                  {% if c.devoluciones_activas_count > 0 %}
+                    <span class="btn btn-link btn-action-round disabled compras-action-disabled"
+                          title="No se puede editar: la compra tiene devoluciones activas">
+                      <i class="bi bi-pencil-square"></i>
+                    </span>
+                  {% else %}
+                    <button type="button"
+                            class="btn btn-link btn-action-round"
+                            data-modal-url="{% url 'compras:editar_compra' c.id %}"
+                            data-modal-title="Editar compra"
+                            title="Editar compra"
+                            data-bs-placement="bottom">
+                      <i class="bi bi-pencil-square"></i>
+                    </button>
+                  {% endif %}
+
+                  <button
+                      type="button"
+                      class="btn btn-outline-danger btn-sm js-anular-compra"
+                      data-id="{{ c.id }}"
+                      data-proveedor="{{ c.proveedor }}"
+                      data-url="{% url 'compras:anular_compra' c.id %}"
+                      title="Anular compra">
+                    <i class="bi bi-trash3"></i>
+                  </button>
+
+                  <button
+                      type="button"
+                      class="btn btn-outline-dark btn-sm js-open-comprobante btn-crud-wide"
+                      data-bs-toggle="modal"
+                      data-bs-target="#modalComprobante"
+                      data-compra-id="{{ c.pk }}"
+                      data-preview-url="{% url 'compras:comprobante_vista_previa' c.pk %}"
+                      data-excel-url="{% url 'compras:comprobante_compra_excel' c.pk %}"
+                      title="Ver comprobante">
+                    <i class="bi bi-receipt-cutoff"></i>
+                  </button>
+                {% else %}
+                  <span class="badge bg-secondary">Sin acciones</span>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="alert alert-light mt-3 text-center">No hay compras registradas</div>
+  {% endif %}
+
+{% else %}
+
+  {% if devoluciones %}
+    <div class="table-responsive">
+      <table class="styled-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Compra</th>
+            <th>Proveedor</th>
+            <th>Fecha</th>
+            <th>Usuario</th>
+            <th>Estado</th>
+            <th class="text-center">Acciones</th>
+          </tr>
+        </thead>
+
+        <tbody>
+        {% for d in devoluciones %}
+          <tr id="fila-devolucion-{{ d.id }}">
+            <td>{{ d.id }}</td>
+            <td>#{{ d.compra.id }}</td>
+            <td>{{ d.proveedor }}</td>
+            <td>{{ d.fecha }}</td>
+            <td>{% if d.usuario %}{{ d.usuario.username }}{% else %}-{% endif %}</td>
+            <td>
+              {% if d.anulada %}
+                <span class="compras-state-pill is-off" aria-label="Devolución anulada" title="Anulada">
+                  <span class="compras-state-pill__knob"></span>
+                </span>
+              {% else %}
+                <button type="button"
+                        class="compras-state-pill is-on js-anular-devolucion"
+                        data-id="{{ d.id }}"
+                        data-url="{% url 'compras:anular_devolucion_compra' d.id %}"
+                        aria-label="Anular devolución"
+                        title="Haz clic para anular la devolución">
+                  <span class="compras-state-pill__knob"></span>
+                </button>
+              {% endif %}
+            </td>
+            <td class="text-center">
+              <div class="acciones-group table-action-group justify-content-center">
+                <button
+                    type="button"
+                    class="btn btn-outline-dark btn-sm js-open-comprobante"
+                    data-bs-toggle="modal"
+                    data-bs-target="#modalComprobante"
+                    data-devolucion-id="{{ d.pk }}"
+                    data-preview-url="{% url 'compras:comprobante_devolucion_compra_preview' d.pk %}"
+                    data-modal-title="Comprobante de devolucion"
+                    data-download-name="comprobante_devolucion_compra"
+                    title="Ver comprobante">
+                  <i class="bi bi-receipt-cutoff"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="alert alert-light mt-3 text-center">No hay devoluciones registradas</div>
+  {% endif %}
+
+{% endif %}

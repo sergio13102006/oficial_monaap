@@ -1,0 +1,61 @@
+{% extends "core/panel_admin_base.html" %}
+
+{% block title %}Detalle de venta{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item"><a href="{% url 'ventas:lista' %}">Ventas</a></li>
+<li class="breadcrumb-item active" aria-current="page">Detalle</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+
+    <div class="mb-4">
+        <h3>Detalle de venta {{ venta.codigo_venta }}</h3>
+        <small class="text-muted">
+            Cliente: {{ venta.cliente }} |
+            Fecha: {{ venta.fecha|date:"d/m/Y H:i" }}
+        </small>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+
+            <div class="table-responsive" aria-label="Detalle de venta">
+                <table class="table table-bordered table-sm">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Producto / Servicio</th>
+                            <th class="text-end">Precio</th>
+                            <th class="text-center">Cantidad</th>
+                            <th class="text-end">Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for d in detalles %}
+                        <tr>
+                            <td>{{ d.producto.nombre }}</td>
+                            <td class="text-end">${{ d.precio_unitario }}</td>
+                            <td class="text-center">{{ d.cantidad }}</td>
+                            <td class="text-end">${{ d.subtotal }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="text-end fw-bold mt-3">
+                Total: ${{ total }}
+            </div>
+
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <a href="{% url 'ventas:lista' %}" class="btn btn-outline-secondary">
+            ⬅ Volver a ventas
+        </a>
+    </div>
+
+</div>
+{% endblock %}

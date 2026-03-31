@@ -1,0 +1,264 @@
+﻿{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monakeratina</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+
+    <!-- CSS BASE MONAKERATINA -->
+    <link rel="stylesheet" href="{% static 'core/css/master.css' %}">
+    <link rel="stylesheet" href="{% static 'usuarios/css/login.css' %}">
+
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+
+<!-- HEADER -->
+<header class="header">
+    <div class="logo">
+        {% include "core/partials/logo_monakeratina.svg" %}
+    </div>
+    <button type="button" class="nav-toggle" data-nav-toggle aria-label="Abrir menú" aria-expanded="false">
+        <i class="bi bi-list"></i>
+    </button>
+    <nav class="nav nav-glass">
+        <a href="#inicio" class="nav-item">Inicio</a>
+        <a href="#nosotros" class="nav-item">Nosotros</a>
+        <a href="#promociones" class="nav-item">Promociones</a>
+        <a href="#infinite" class="nav-item">Servicios</a>
+        <a href="#productos" class="nav-item">Productos</a>
+        <a href="#contactenos" class="nav-item">Contactenos</a>
+        <button type="button" class="btn-login nav-login-mobile" data-bs-toggle="modal" data-bs-target="#loginModal" data-nav-close>
+            Iniciar sesión
+        </button>
+    </nav>
+    <div class="nav-backdrop" data-nav-backdrop aria-hidden="true"></div>
+    <button type="button" class="btn btn-outline-light nav-login-desktop" data-bs-toggle="modal" data-bs-target="#loginModal">
+        Iniciar sesión
+    </button>
+</header>
+
+<!-- ==================== MODAL LOGIN ==================== -->
+<div class="modal fade" id="loginModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content login-modal-content">
+            <canvas id="bgBubblesCanvas"></canvas>
+            <div class="login-particles" id="particles"></div>
+
+            <div class="card-header text-center">
+                <div class="coffee-bubbles" aria-hidden="true">
+                    <span class="bubble"></span>
+                    <span class="bubble"></span>
+                    <span class="bubble"></span>
+                    <span class="bubble"></span>
+                    <span class="bubble"></span>
+                    <span class="bubble"></span>
+                    <span class="bubble"></span>
+                    <span class="bubble"></span>
+                    <span class="bubble"></span>
+                    <span class="bubble"></span>
+                    <span class="bubble"></span>
+                    <span class="bubble"></span>
+                    <span class="bubble"></span>
+                    <span class="bubble"></span>
+                    <span class="bubble"></span>
+                </div>
+                <img src="{% static 'core/IMG/logo_monakeratina.jpg' %}" width="120" alt="Monakeratina">
+            </div>
+
+            <div class="modal-body p-0">
+                <div class="card-body">
+                    <h2 class="login-title">Iniciar sesión</h2>
+
+                    {% if messages %}
+                    <div class="messages-container">
+                        {% for message in messages %}
+                        <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags|default:'info' }}{% endif %} alert-dismissible fade show login-alert" role="alert" data-autoclose="8000">
+                            <div class="d-flex align-items-start gap-2">
+                                <div class="alert-icon">
+                                    {% if message.tags == 'success' %}
+                                    <i class="bi bi-check-circle-fill text-success"></i>
+                                    {% elif message.tags == 'error' %}
+                                    <i class="bi bi-x-circle-fill text-danger"></i>
+                                    {% elif message.tags == 'warning' %}
+                                    <i class="bi bi-exclamation-triangle-fill text-warning"></i>
+                                    {% else %}
+                                    <i class="bi bi-info-circle-fill text-primary"></i>
+                                    {% endif %}
+                                </div>
+                                <div class="flex-grow-1">{{ message }}</div>
+                                <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert"></button>
+                            </div>
+                            <div class="alert-progress-bar"></div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <form method="post" action="{% url 'usuarios:login' %}" id="loginModalForm" data-login-ajax="1">
+                        {% csrf_token %}
+                        {% if request.GET.next %}
+                        <input type="hidden" name="next" value="{{ request.GET.next }}">
+                        {% endif %}
+                        <input type="hidden" name="ajax_login" value="1">
+                        <div id="loginAttemptsInfo" class="small login-attempts-info mb-3" style="display:none;font-weight:600;"></div>
+                        <div class="login-form-wrapper">
+                            <div class="field-group">
+                                <label class="field-label">Número de documento</label>
+                                <input type="text" name="username" class="field-input" placeholder="Número de documento" required autofocus>
+                            </div>
+                            <div class="field-group">
+                                <label class="field-label">Contraseña</label>
+                                <div class="password-wrapper">
+                                    <input type="password" id="password" name="password" class="field-input"
+                                    placeholder="Contraseña" required>
+                                    <span id="togglePassword" class="toggle-eye">
+                                        <i class="bi bi-eye"></i>
+                                    </span>
+                                </div>
+                            </div>
+                            <div id="loginCaptchaShell" class="login-captcha-shell d-none" data-site-key="{{ LOGIN_RECAPTCHA_SITE_KEY|default:'' }}" data-enabled="{% if LOGIN_RECAPTCHA_ENABLED %}1{% else %}0{% endif %}" data-autoshow="0">
+                                <div class="login-captcha-label">Verificación de seguridad</div>
+                                <div id="loginRecaptchaWidget"></div>
+                                <div class="login-captcha-help" id="captchaHelpText"></div>
+                            </div>
+                            <div class="recovery-links">
+                                <a href="{% url 'usuarios:recuperar' %}" class="forgot-link">
+                                    ¿Olvidaste tu contraseña?
+                                </a>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-login">
+                            <i class="bi bi-box-arrow-in-right me-2"></i>Ingresar
+                        </button>
+                    </form>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<main>
+    {% block content %}{% endblock %}
+</main>
+
+<!-- ==================== FOOTER ==================== -->
+{% block footer %}
+<footer class="footer">
+    <div class="footer-content">
+        <p>&copy; 2025 MONA KERATINA. Todos los derechos reservados.</p>
+        <div class="footer-links">
+            <a href="#">Política de privacidad</a>
+            <a href="#">Términos de uso</a>
+            <a href="{% url 'core:ayuda' %}">Ayuda y referencias</a>
+        </div>
+    </div>
+        <p class="footer-credits">Recursos gráficos institucionales de MONA Keratina y componentes de Bootstrap, Bootstrap Icons y SweetAlert2.</p>
+</footer>
+{% endblock %}
+
+<!-- ==================== JS ==================== -->
+<script>
+    window.tieneErrorPermiso = "{{ messages|yesno:'true,false' }}" === "true";
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{% static 'core/js/main.js' %}"></script>
+{% if LOGIN_RECAPTCHA_ENABLED and LOGIN_RECAPTCHA_SITE_KEY %}
+<script src="https://www.google.com/recaptcha/api.js?render=explicit" defer></script>
+{% endif %}
+<script src="{% static 'usuarios/js/login.js' %}"></script>
+
+{% block extra_js %}{% endblock %}
+
+<script src="{% static 'core/js/sienna.js' %}" defer></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            if (typeof SiennaAccessibility !== 'undefined') {
+                SiennaAccessibility.init();
+            }
+        });
+    </script>
+
+<script>
+    (function initSiennaDraggable() {
+        function makeDraggable() {
+            const btn = document.querySelector('.asw-menu-btn');
+            if (!btn) { setTimeout(makeDraggable, 300); return; }
+
+            let isDragging = false, hasMoved = false, offsetX, offsetY;
+            btn.style.cursor = 'grab';
+
+            btn.addEventListener('mousedown', (e) => {
+                isDragging = true; hasMoved = false;
+                const rect = btn.getBoundingClientRect();
+                offsetX = e.clientX - rect.left;
+                offsetY = e.clientY - rect.top;
+                btn.style.cursor = 'grabbing';
+                btn.style.transition = 'none';
+                e.preventDefault();
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                hasMoved = true;
+                let x = Math.max(0, Math.min(window.innerWidth - btn.offsetWidth, e.clientX - offsetX));
+                let y = Math.max(0, Math.min(window.innerHeight - btn.offsetHeight, e.clientY - offsetY));
+                btn.style.left = x + 'px';
+                btn.style.top = y + 'px';
+                btn.style.right = 'auto';
+                btn.style.bottom = 'auto';
+            });
+
+            document.addEventListener('mouseup', () => {
+                if (isDragging) { isDragging = false; btn.style.cursor = 'grab'; }
+            });
+
+            btn.addEventListener('touchstart', (e) => {
+                const t = e.touches[0];
+                isDragging = true;
+                hasMoved = false;
+                const rect = btn.getBoundingClientRect();
+                offsetX = t.clientX - rect.left;
+                offsetY = t.clientY - rect.top;
+                btn.style.transition = 'none';
+            }, { passive: true });
+
+            document.addEventListener('touchmove', (e) => {
+                if (!isDragging) return;
+                hasMoved = true;
+                const t = e.touches[0];
+                let x = Math.max(0, Math.min(window.innerWidth - btn.offsetWidth, t.clientX - offsetX));
+                let y = Math.max(0, Math.min(window.innerHeight - btn.offsetHeight, t.clientY - offsetY));
+                btn.style.left = x + 'px';
+                btn.style.top = y + 'px';
+                btn.style.right = 'auto';
+                btn.style.bottom = 'auto';
+            }, { passive: true });
+
+            document.addEventListener('touchend', () => { isDragging = false; });
+
+            btn.addEventListener('click', (e) => {
+                if (hasMoved) {
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                    hasMoved = false;
+                }
+            }, true);
+        }
+        makeDraggable();
+    })();
+</script>
+
+</body>
+</html>

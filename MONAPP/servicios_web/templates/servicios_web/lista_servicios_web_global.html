@@ -1,0 +1,183 @@
+
+<div id="serviciosWebView" class="services-view" data-view="grid-3">
+
+<!-- GRID -->
+<div class="services-grid sw-enter sw-enter-up sw-enter-delay-4" id="servicesGrid">
+    {% for servicio in servicios_web %}
+    <div class="sq-card sw-grid-card {% if not servicio.imagen %}no-image{% endif %} {% if servicio.video %}has-video{% endif %}"
+         data-search="{{ servicio.nombre|lower }} {{ servicio.descripcion|lower }} {{ servicio.precio }} {% if servicio.activo %}activo{% else %}inactivo{% endif %}"
+         {% if servicio.imagen %}style="background-image: url('{{ servicio.imagen.url }}');"{% endif %}
+         data-servicio-id="{{ servicio.id_servicio_web }}"
+         data-imagen="{% if servicio.imagen %}{{ servicio.imagen.url }}{% endif %}"
+         data-video="{% if servicio.video %}{{ servicio.video.url }}{% endif %}">
+
+        <div class="sq-blur"></div>
+
+        {% if servicio.video %}
+        <div class="sw-play-hint">
+            <i class="bi bi-play-fill"></i>
+            <span>Click para reproducir</span>
+        </div>
+        <video class="sq-video" muted loop playsinline preload="metadata">
+            <source src="{{ servicio.video.url }}" type="video/mp4" />
+        </video>
+        {% endif %}
+
+        {% if not servicio.imagen and not servicio.video %}
+        <div class="metaballs-slot" data-metaballs="1" aria-label="Servicio sin multimedia"></div>
+        {% elif not servicio.imagen and servicio.video %}
+        <div class="media-placeholder">
+            <div class="icon-row"><i class="bi bi-image"></i><i class="bi bi-camera-video"></i></div>
+            <div class="hint">Sin imagen</div>
+        </div>
+        {% endif %}
+
+        <div class="actions-overlay">
+            <button class="btn-action edit btn-edit-servicioweb"
+                    data-url="{% url 'servicios_web:editar_servicio_web' servicio.id_servicio_web %}"
+                    title="Editar">
+                <i class="bi bi-pencil-square" style="font-size:28px"></i>
+            </button>
+            {% if permisos.roles.es_admin %}
+            <button class="btn-action delete-outline btn-delete-servicioweb"
+                    data-url="{% url 'servicios_web:eliminar_servicio_web' servicio.id_servicio_web %}"
+                    data-nombre="{{ servicio.nombre|escape }}"
+                    title="Eliminar">
+                <i class="bi bi-trash3" style="font-size:28px"></i>
+            </button>
+            {% endif %}
+            <button class="btn-action toggle-activo-servicioweb"
+                    data-url="{% url 'servicios_web:toggle_estado_servicio_web' servicio.id_servicio_web %}"
+                    data-activo="{{ servicio.activo|yesno:'true,false' }}"
+                    data-nombre="{{ servicio.nombre|escape }}"
+                    title="Activar / Desactivar">
+                {% if servicio.activo %}
+                    <i class="bi bi-toggle-on text-white" style="font-size:28px"></i>
+                {% else %}
+                    <i class="bi bi-toggle-off text-secondary" style="font-size:28px"></i>
+                {% endif %}
+            </button>
+        </div>
+
+        <div class="sq-card-content">
+            <h3>{{ servicio.nombre }}</h3>
+            <p class="price">${{ servicio.precio|floatformat:0 }}</p>
+            <p class="text-white-50 small description-truncate">{{ servicio.descripcion }}</p>
+        </div>
+    </div>
+
+    {% empty %}
+    <div class="empty-state w-100">
+        <i class="bi bi-cloud-slash mb-3" style="font-size:3rem;color:#ced4da"></i>
+        <h4>No hay servicios web{% if q %} para "{{ q }}"{% endif %}</h4>
+        <p class="text-muted">Comienza agregando tu primer servicio para mostrarlo en la web.</p>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- TABLA -->
+<div class="services-table-wrapper sw-enter sw-enter-up sw-enter-delay-4" id="servicesTableWrapper">
+    <div class="table-card sw-table-card">
+        <div class="table-responsive">
+            <table class="table table-dashboard align-middle mb-0 sw-table">
+                <thead>
+                    <tr>
+                        <th style="width:90px">Imagen</th>
+                        <th class="sw-sortable" data-sort-type="text" data-sort-key="nombre">
+                            Nombre <i class="bi bi-arrow-down-up ms-1"></i>
+                        </th>
+                        <th class="sw-sortable text-center" data-sort-type="number" data-sort-key="precio" style="width:140px">
+                            Precio <i class="bi bi-arrow-down-up ms-1"></i>
+                        </th>
+                        <th class="sw-sortable" data-sort-type="text" data-sort-key="descripcion">
+                            Descripción <i class="bi bi-arrow-down-up ms-1"></i>
+                        </th>
+                        <th class="sw-sortable text-center" data-sort-type="text" data-sort-key="estado" style="width:130px">
+                            Estado <i class="bi bi-arrow-down-up ms-1"></i>
+                        </th>
+                        <th class="text-center" style="width:150px">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for servicio in servicios_web %}
+                    <tr data-nombre="{{ servicio.nombre|lower }}"
+                        data-precio="{{ servicio.precio }}"
+                        data-descripcion="{{ servicio.descripcion|lower }}"
+                        data-search="{{ servicio.nombre|lower }} {{ servicio.descripcion|lower }} {{ servicio.precio }} {% if servicio.activo %}activo{% else %}inactivo{% endif %}">
+                        
+                        <td class="text-center">
+                            <button type="button"
+                                    class="sw-media-trigger sw-thumb-button"
+                                    data-servicio-id="{{ servicio.id_servicio_web }}"
+                                    data-nombre="{{ servicio.nombre|escape }}"
+                                    data-imagen="{% if servicio.imagen %}{{ servicio.imagen.url }}{% endif %}"
+                                    data-video="{% if servicio.video %}{{ servicio.video.url }}{% endif %}">
+                                {% if servicio.imagen %}
+                                    <img src="{{ servicio.imagen.url }}" alt="{{ servicio.nombre }}" class="sw-thumb" />
+                                {% elif servicio.video %}
+                                    <div class="sw-thumb sw-thumb-fallback"><i class="bi bi-camera-video-fill"></i></div>
+                                {% else %}
+                                    <div class="sw-thumb sw-thumb-fallback"><i class="bi bi-image"></i></div>
+                                {% endif %}
+                            </button>
+                        </td>
+
+                        <td class="fw-semibold sw-cell-name">{{ servicio.nombre }}</td>
+
+                        <td class="text-center sw-cell-price">
+                            ${{ servicio.precio|floatformat:0 }}
+                        </td>
+
+                        <td>
+                            <div class="sw-table-description" title="{{ servicio.descripcion }}">
+                                {{ servicio.descripcion }}
+                            </div>
+                        </td>
+
+                        <td class="text-center">
+                            <button type="button"
+                                    class="sw-status-toggle toggle-activo-servicioweb"
+                                    data-url="{% url 'servicios_web:toggle_estado_servicio_web' servicio.id_servicio_web %}"
+                                    data-activo="{{ servicio.activo|yesno:'true,false' }}"
+                                    data-nombre="{{ servicio.nombre|escape }}"
+                                    title="{% if servicio.activo %}Desactivar{% else %}Activar{% endif %}">
+                                {% if servicio.activo %}
+                                    <i class="bi bi-toggle-on"></i>
+                                {% else %}
+                                    <i class="bi bi-toggle-off"></i>
+                                {% endif %}
+                            </button>
+                        </td>
+
+                        <td>
+                            <div class="actions table-action-group justify-content-center sw-actions">
+                                <button type="button"
+                                        class="act act-edit btn-edit-servicioweb"
+                                        data-url="{% url 'servicios_web:editar_servicio_web' servicio.id_servicio_web %}"
+                                        title="Editar">
+                                    <i class="bi bi-pencil-square"></i>
+                                </button>
+                                {% if permisos.roles.es_admin %}
+                                <button type="button"
+                                        class="act act-del btn-delete-servicioweb"
+                                        data-url="{% url 'servicios_web:eliminar_servicio_web' servicio.id_servicio_web %}"
+                                        data-nombre="{{ servicio.nombre|escape }}"
+                                        title="Eliminar">
+                                    <i class="bi bi-trash3"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center table-empty-state">
+                            No hay servicios web{% if q %} para "{{ q }}"{% endif %}.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

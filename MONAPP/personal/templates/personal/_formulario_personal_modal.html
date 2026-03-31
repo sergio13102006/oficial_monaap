@@ -1,0 +1,91 @@
+<form method="post" id="{% if editando %}form-editar-personal{% else %}form-crear-personal{% endif %}" novalidate data-personal-id="{% if personal %}{{ personal.id }}{% endif %}">
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+        <div class="personal-alert danger">
+            <i class="fas fa-exclamation-triangle"></i>
+            <div>
+                <strong>Errores:</strong>
+                <ul style="margin: 8px 0 0 0; padding-left: 20px;">
+                    {% for error in form.non_field_errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    {% endif %}
+
+    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+        <div class="personal-form-group">
+            <label class="personal-form-label">Tipo de Documento <span style="color: #c7412b;">*</span></label>
+            {{ form.tipo_documento }}
+            <div class="invalid-feedback" style="display: none;"></div>
+        </div>
+
+        <div class="personal-form-group">
+            <label class="personal-form-label">Numero de Documento <span style="color: #c7412b;">*</span></label>
+            {{ form.numero_documento }}
+            <small style="color: #6c757d; font-size: 0.8rem; margin-top: 4px; display: block;">Aqui solo se pueden ingresar numeros</small>
+            <div class="invalid-feedback" style="display: none;"></div>
+        </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+        <div class="personal-form-group">
+            <label class="personal-form-label">Nombres <span style="color: #c7412b;">*</span></label>
+            {{ form.nombres }}
+            <small style="color: #6c757d; font-size: 0.8rem; margin-top: 4px; display: block;">Aqui no se pueden ingresar numeros</small>
+            <div class="invalid-feedback" style="display: none;"></div>
+        </div>
+
+        <div class="personal-form-group">
+            <label class="personal-form-label">Apellidos <span style="color: #c7412b;">*</span></label>
+            {{ form.apellidos }}
+            <small style="color: #6c757d; font-size: 0.8rem; margin-top: 4px; display: block;">Aqui no se pueden ingresar numeros</small>
+            <div class="invalid-feedback" style="display: none;"></div>
+        </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+        <div class="personal-form-group">
+            <label class="personal-form-label">Telefono <span style="color: #c7412b;">*</span></label>
+            {{ form.telefono }}
+            <small style="color: #6c757d; font-size: 0.8rem; margin-top: 4px; display: block;">Aqui no se pueden ingresar letras</small>
+            <div class="invalid-feedback" style="display: none;"></div>
+        </div>
+
+        <div class="personal-form-group">
+            <label class="personal-form-label">Correo Electronico <span style="color: #c7412b;">*</span></label>
+            {{ form.correo }}
+            <div class="invalid-feedback" style="display: none;"></div>
+        </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+        <div class="personal-form-group">
+            <label class="personal-form-label">Rol <span style="color: #c7412b;">*</span></label>
+            {{ form.rol }}
+            <div class="invalid-feedback" style="display: none;"></div>
+        </div>
+    </div>
+
+    <div class="personal-switch">
+        <label class="personal-switch-wrapper" for="id_activo">
+            {{ form.activo }}
+            <span class="personal-switch-slider"></span>
+        </label>
+        <label class="personal-switch-label" for="id_activo">Personal Activo</label>
+    </div>
+
+    <div class="personal-form-actions">
+        <button type="submit" id="btnGuardarPersonal" class="personal-btn personal-btn-dark success">
+            <i class="fas fa-save"></i> Guardar
+        </button>
+        <button type="button"
+                class="personal-btn secondary"
+                data-personal-action="close-modal"
+                data-modal-id="{% if editando %}modalEditarPersonal{% else %}modalPersonal{% endif %}">
+            <i class="fas fa-times"></i> Cancelar
+        </button>
+    </div>
+</form>

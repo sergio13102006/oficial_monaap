@@ -1,0 +1,150 @@
+
+{% extends 'core/panel_admin_base.html' %}
+{% block title %}Inventario{% endblock %}
+{% load static %}
+{% load sort_tags %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item active" aria-current="page">Inventario</li>
+{% endblock %}
+{% block page_icon %}<i class="bi bi-boxes page-icon"></i>{% endblock %}
+{% block page_title %}Inventario{% endblock %}
+{% block page_subtitle %}Stock actual y estados de almacen{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'inventario/css/inventario.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="mb-0 fw-semibold">Inventario de Productos</h3>
+            <small class="text-muted">Stock actual y estados de almacén</small>
+        </div>
+        <a class="btn btn-sm btn-pill-dark"
+           href="{% url 'inventario:reporte_stock_csv' %}?q={{ q|urlencode }}&estado_stock={{ estado_stock|urlencode }}"
+           aria-label="Descargar reporte de stock en CSV">
+            <i class="bi bi-file-earmark-spreadsheet" aria-hidden="true"></i> Reporte stock
+        </a>
+    </div>
+        <div class="module-filters-card">
+            <form method="get" class="module-filters-form js-instant-filter-form" style="width: 100%;" data-instant-filter-debounce="300">
+                        {% if estado_stock %}
+                            <input type="hidden" name="estado_stock" value="{{ estado_stock }}">
+                        {% endif %}
+                        {% if current_sort %}
+                            <input type="hidden" name="sort" value="{{ current_sort }}">
+                        {% endif %}
+                        {% if current_dir %}
+                            <input type="hidden" name="dir" value="{{ current_dir }}">
+                        {% endif %}
+
+                <div class="module-filter-field module-filter-field--wide">
+                    <label class="module-filter-label">Buscar</label>
+                        {% include 'core/componentes/busqueda_global.html' with placeholder='Buscar producto...' search_value=q name='q' modo='inline' %}
+                </div>
+                <div class="module-filter-field module-filter-field--medium">
+                    <label class="module-filter-label">Estado</label>
+                    <select name="estado_stock" class="form-select">
+                        <option value="" {% if not estado_stock %}selected{% endif %}>Filtrar por estado</option>
+                        <option value="bajo" {% if estado_stock == 'bajo' %}selected{% endif %}>Solo stock bajo</option>
+                        <option value="normal" {% if estado_stock == 'normal' %}selected{% endif %}>Stock normal</option>
+                        <option value="alto" {% if estado_stock == 'alto' %}selected{% endif %}>Solo stock alto</option>
+                    </select>
+                </div>
+                <div class="module-filter-field module-filter-field--small">
+                    <label class="module-filter-label">&nbsp;</label>
+                    <a class="module-filter-btn module-filter-btn--secondary" href="{% url 'inventario:inventario_lista' %}">
+                        <i class="bi bi-x-circle"></i> Limpiar
+                    </a>
+                </div>
+            </form>
+        </div>
+    <!-- Card Principal -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="styled-table">
+                    <thead>
+                        <tr>
+                            <th>Imagen</th>
+                            <th>
+                                <a href="{% sort_url 'producto' %}">Producto
+                                    {% if current_sort == 'producto' %}<i class="bi bi-caret-{% if current_dir == 'asc' %}up{% else %}down{% endif %}-fill ms-1" aria-hidden="true"></i>{% endif %}
+                                </a>
+                            </th>
+                            <th>
+                                <a href="{% sort_url 'unidad' %}">Unidad de medida
+                                    {% if current_sort == 'unidad' %}<i class="bi bi-caret-{% if current_dir == 'asc' %}up{% else %}down{% endif %}-fill ms-1" aria-hidden="true"></i>{% endif %}
+                                </a>
+                            </th>
+                            <th>
+                                <a href="{% sort_url 'stock' %}">Stock total actual
+                                    {% if current_sort == 'stock' %}<i class="bi bi-caret-{% if current_dir == 'asc' %}up{% else %}down{% endif %}-fill ms-1" aria-hidden="true"></i>{% endif %}
+                                </a>
+                            </th>
+                            <th>
+                                <a href="{% sort_url 'actualizacion' %}">Última actualización
+                                    {% if current_sort == 'actualizacion' %}<i class="bi bi-caret-{% if current_dir == 'asc' %}up{% else %}down{% endif %}-fill ms-1" aria-hidden="true"></i>{% endif %}
+                                </a>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in stock %}
+                            <tr>
+                                <td>
+                                    <div class="product-thumb-wrap">
+                                        {% if s.producto.imagen %}
+                                            <img src="{{ s.producto.imagen.url }}"
+                                                alt="{{ s.producto.nombre }}"
+                                                class="product-thumb">
+                                        {% else %}
+                                            <div class="product-thumb product-thumb-placeholder">
+                                                <i class="bi bi-image"></i>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </td>
+
+                                <td class="fw-medium">
+                                    {{ s.producto.nombre }}
+                                    {% if not s.producto.activo %}
+                                        <span class="badge bg-secondary ms-2">Inactivo</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ s.producto.get_unidad_medida_display }}</td>
+                                <td>
+                                    {% if s.cantidad_actual < 10 %}
+                                        <span class="stock-pill stock-pill-danger" title="Stock bajo">
+                                            <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>
+                                            <span>{{ s.cantidad_actual }}</span>
+                                        </span>
+                                    {% else %}
+                                        <span class="stock-pill stock-pill-success" title="Stock disponible">
+                                            <i class="bi bi-check-circle-fill" aria-hidden="true"></i>
+                                            <span>{{ s.cantidad_actual }}</span>
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ s.actualizado_en|date:"d/m/Y H:i" }}</td>
+                            </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-4 text-muted">
+                                No hay stock registrado en el sistema.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'inventario/js/inventario.js' %}"></script>
+{% endblock %}

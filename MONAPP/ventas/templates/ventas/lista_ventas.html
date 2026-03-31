@@ -1,0 +1,616 @@
+﻿{% extends "core/panel_admin_base.html" %}
+{% load static %}
+{% load humanize %}
+{% load sort_tags %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item active" aria-current="page">Ventas</li>
+{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/tom-select/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'ventas/css/ventas.css' %}">
+<link rel="stylesheet" href="{% static 'compras/css/comprobante.css' %}">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+{% endblock %}
+
+{% block title %}
+Ventas
+{% endblock %}
+
+{% block page_icon %}
+<i class="bi bi-cart page-icon ventas-cart-icon"></i>
+{% endblock %}
+
+{% block page_title %}
+<span class="ventas-title-wrap">
+  <span class="ventas-title-text">Ventas</span>
+</span>
+{% endblock %}
+
+{% block page_subtitle %}
+<span class="ventas-subtitle-anim">Gestión de ventas registradas</span>
+{% endblock %}
+
+{% block page_actions %}
+<div class="d-flex gap-2 anim-from-top">
+  <button type="button"
+          class="btn-pill-dark"
+          id="btnNuevaVenta"
+          data-url="{% url 'ventas:crear' %}">
+    <i class="fas fa-plus"></i> Nueva venta
+  </button>
+
+  <button type="button"
+          class="btn-pill-dark"
+          data-bs-toggle="modal"
+          data-bs-target="#modalReporteVentas">
+    <i class="bi bi-bar-chart-line"></i> Reporte
+  </button>
+</div>
+{% endblock %}
+
+{% block content %}
+
+<div class="module-filters-card ventas-filters-card">
+  <form method="get" class="ventas-filters-form js-instant-filter-form" data-instant-filter-debounce="300">
+      {% if estado_stock %}
+          <input type="hidden" name="estado_stock" value="{{ estado_stock }}">
+      {% endif %}
+      {% if current_sort %}
+        <input type="hidden" name="sort" value="{{ current_sort }}">
+      {% endif %}
+      {% if current_dir %}
+        <input type="hidden" name="dir" value="{{ current_dir }}">
+      {% endif %}
+
+      <div class="ventas-filter-search">
+        <label class="module-filter-label">Buscar</label>
+        <div class="ventas-search-inline">
+          {% include 'core/componentes/busqueda_global.html' with placeholder='Buscar venta...' search_value=q name='q' modo='inline' %}
+        </div>
+      </div>
+
+      <div class="ventas-filter-status">
+        <label class="module-filter-label">Estado</label>
+        <select name="estado" class="form-select ventas-toolbar-select">
+          <option value="activa" {% if estado == 'activa' %}selected{% endif %}>Activa</option>
+          <option value="anulada" {% if estado == 'anulada' %}selected{% endif %}>Anulada</option>
+          <option value="" {% if not estado %}selected{% endif %}>Todas</option>
+        </select>
+      </div>
+
+      <div class="ventas-toolbar-actions">
+        <a href="{% url 'ventas:lista' %}" class="module-filter-btn module-filter-btn--secondary">
+          <i class="bi bi-arrow-clockwise"></i> Limpiar
+        </a>
+      </div>
+  </form>
+</div>
+
+<!-- TABLA -->
+<div class="table-card anim-from-bottom ventas-table-card" style="animation-delay:.18s">
+  <div class="table-responsive" aria-label="Tabla de ventas">
+  <table class="table table-hover align-middle mb-0 styled-table">
+    <thead>
+      <tr>
+        <th class="ventas-col-codigo">
+          <a
+            href="{% sort_url 'codigo_venta' %}"
+            class="text-decoration-none text-white"
+          >
+            Código venta
+            {% if current_sort == 'codigo_venta' %}
+              <i class="bi bi-caret-{% if current_dir == 'asc' %}up{% else %}down{% endif %}-fill"></i>
+            {% endif %}
+          </a>
+        </th>
+
+        <th class="ventas-col-cliente">
+          <a
+            href="{% sort_url 'cliente' %}"
+            class="text-decoration-none text-white"
+          >
+            Cliente
+            {% if current_sort == 'cliente' %}
+              <i class="bi bi-caret-{% if current_dir == 'asc' %}up{% else %}down{% endif %}-fill"></i>
+            {% endif %}
+          </a>
+        </th>
+
+        <th class="text-white ventas-col-detalles">Productos / Servicios</th>
+
+        <th class="ventas-col-fecha">
+          <a
+            href="{% sort_url 'fecha' %}"
+            class="text-decoration-none text-white"
+          >
+            Fecha
+            {% if current_sort == 'fecha' %}
+              <i class="bi bi-caret-{% if current_dir == 'asc' %}up{% else %}down{% endif %}-fill"></i>
+            {% endif %}
+          </a>
+        </th>
+
+        <th class="ventas-col-total">
+          <a
+            href="{% sort_url 'total' %}"
+            class="text-decoration-none text-white"
+          >
+            Total
+            {% if current_sort == 'total' %}
+              <i class="bi bi-caret-{% if current_dir == 'asc' %}up{% else %}down{% endif %}-fill"></i>
+            {% endif %}
+          </a>
+        </th>
+
+        <th class="text-center ventas-col-estado">
+          <a
+            href="{% sort_url 'estado' %}"
+            class="text-decoration-none text-white"
+          >
+            Estado
+            {% if current_sort == 'estado' %}
+              <i class="bi bi-caret-{% if current_dir == 'asc' %}up{% else %}down{% endif %}-fill"></i>
+            {% endif %}
+          </a>
+        </th>
+
+        <th class="text-end text-white ventas-col-acciones">Acciones</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      {% for venta in ventas %}
+      <tr>
+        <td class="fw-semibold ventas-cell-codigo">{{ venta.codigo_venta }}</td>
+        <td class="ventas-cell-cliente">{{ venta.cliente }}</td>
+
+        <td class="ventas-cell-detalles">
+          {% for d in venta.detalles.all %}
+            <div class="ventas-item-detalle">
+              {% if d.producto %}
+                {{ d.producto.nombre }}
+              {% elif d.servicio %}
+                {{ d.servicio.nombre }}
+              {% else %}
+                <span class="text-muted">Ítem sin nombre</span>
+              {% endif %}
+              <span class="text-muted ventas-item-cantidad">x{{ d.cantidad }}</span>
+            </div>
+          {% empty %}
+            <span class="text-muted">Sin detalles</span>
+          {% endfor %}
+        </td>
+
+        <td class="ventas-cell-fecha">{{ venta.fecha|date:"d/m/Y H:i" }}</td>
+
+        <td class="fw-semibold ventas-cell-total">$ {{ venta.total|intcomma }}</td>
+
+        <!-- SWITCH ESTADO -->
+        <td class="text-center ventas-cell-estado">
+          <form
+            method="post"
+            action="{% url 'ventas:toggle_estado' venta.id %}"
+            class="d-inline form-toggle-estado"
+          >
+            {% csrf_token %}
+
+            <label class="sw">
+              <input
+                type="checkbox"
+                class="sw__input toggle-estado"
+                {% if venta.estado == 'activa' %}checked{% endif %}
+                data-estado="{{ venta.estado }}"
+              />
+              <span class="sw__slider"></span>
+            </label>
+          </form>
+        </td>
+
+        <!-- ACCIONES -->
+        <td class="text-end ventas-cell-acciones">
+          <div class="table-action-group ms-auto">
+          <button
+            type="button"
+            class="btn-ver-detalle"
+            data-url="{% url 'ventas:detalle_json' venta.id %}"
+            data-bs-toggle="modal"
+            data-bs-target="#modalDetalleVenta"
+            title="Ver detalles"
+          >
+            <i class="bi bi-eye"></i>
+          </button>
+
+          <button
+            type="button"
+            class="btn-editar"
+            data-url="{% url 'ventas:editar_modal' venta.id %}"
+            title="Editar"
+          >
+            <i class="bi bi-pencil-square"></i>
+          </button>
+
+          {% if venta.estado == 'activa' %}
+          <button
+            type="button"
+            class="btn-devolucion btn-crud-wide btn-crud-wide--devolucion"
+            data-id="{{ venta.id }}"
+            data-url="{% url 'ventas:devolucion_items' venta.id %}"
+            data-url-registrar="{% url 'ventas:registrar_devolucion' venta.id %}"
+            title="Registrar devolución "
+          >
+            <i class="bi bi-arrow-return-left"></i>
+          </button>
+          {% endif %}
+          </div>
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="7" class="text-center table-empty-state">
+          No hay ventas registradas
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</div>
+
+<!-- MODAL DETALLE -->
+<div class="modal fade" id="modalDetalleVenta" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content ventas-modal-content">
+      <div class="modal-header ventas-modal-header">
+        <h5 class="modal-title ventas-modal-title"><i class="bi bi-eye me-2"></i>Detalle de venta</h5>
+        <button type="button" class="btn-close btn-close-white ventas-modal-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body" id="contenidoDetalleVenta">
+        <div class="text-center text-muted py-4 ventas-modal-empty-note">Selecciona una venta</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL EDITAR -->
+<div class="modal fade" id="modalEditarVenta" tabindex="-1">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content ventas-modal-content">
+      <div class="modal-header ventas-modal-header">
+        <h5 class="modal-title ventas-modal-title"><i class="bi bi-pencil-square me-2"></i>Editar venta</h5>
+        <button type="button" class="btn-close btn-close-white ventas-modal-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body" id="contenidoEditarVenta">
+        <div class="text-center text-muted py-4 ventas-modal-empty-note">Cargando...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NUEVA VENTA -->
+<div class="modal fade" id="modalNuevaVenta" tabindex="-1">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content ventas-modal-content">
+      <div class="modal-header ventas-modal-header">
+        <h5 class="modal-title ventas-modal-title"><i class="fas fa-plus me-2"></i>Nueva venta</h5>
+        <button type="button" class="btn-close btn-close-white ventas-modal-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+
+      <div class="modal-body" id="contenidoNuevaVenta">
+        <div class="text-center text-muted py-4 ventas-modal-empty-note">Cargando formulario...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CONFIGURAR REPORTE -->
+<div
+  class="modal fade"
+  id="modalReporteVentas"
+  tabindex="-1"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content ventas-modal-content">
+      <form id="formReporteVentas">
+        <div class="modal-header ventas-modal-header">
+          <h5 class="modal-title ventas-modal-title"><i class="bi bi-bar-chart-line me-2"></i>Configurar reporte de ventas</h5>
+          <button type="button" class="btn-close btn-close-white ventas-modal-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+
+        <div class="modal-body">
+          <div class="row g-4">
+            <div class="col-md-6">
+              <h6 class="mb-3">Columnas a incluir</h6>
+
+              <div class="row g-2">
+                <div class="col-md-6">
+                  <label class="report-option">
+                    <input
+                      type="checkbox"
+                      name="columnas"
+                      value="codigo_venta"
+                      checked
+                    />
+                    <span class="report-circle"></span>
+                    <span class="report-label-text">Código venta</span>
+                  </label>
+                </div>
+
+                <div class="col-md-6">
+                  <label class="report-option">
+                    <input
+                      type="checkbox"
+                      name="columnas"
+                      value="cliente"
+                      checked
+                    />
+                    <span class="report-circle"></span>
+                    <span class="report-label-text">Cliente</span>
+                  </label>
+                </div>
+
+                <div class="col-md-6">
+                  <label class="report-option">
+                    <input
+                      type="checkbox"
+                      name="columnas"
+                      value="productos_servicios"
+                      checked
+                    />
+                    <span class="report-circle"></span>
+                    <span class="report-label-text">Productos / Servicios</span>
+                  </label>
+                </div>
+
+                <div class="col-md-6">
+                  <label class="report-option">
+                    <input
+                      type="checkbox"
+                      name="columnas"
+                      value="fecha"
+                      checked
+                    />
+                    <span class="report-circle"></span>
+                    <span class="report-label-text">Fecha</span>
+                  </label>
+                </div>
+
+                <div class="col-md-6">
+                  <label class="report-option">
+                    <input
+                      type="checkbox"
+                      name="columnas"
+                      value="total"
+                      checked
+                    />
+                    <span class="report-circle"></span>
+                    <span class="report-label-text">Total</span>
+                  </label>
+                </div>
+
+                <div class="col-md-6">
+                  <label class="report-option">
+                    <input
+                      type="checkbox"
+                      name="columnas"
+                      value="estado"
+                      checked
+                    />
+                    <span class="report-circle"></span>
+                    <span class="report-label-text">Estado</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <h6 class="mb-3">Rango principal</h6>
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label">Fecha inicial</label>
+                  <input
+                    type="date"
+                    name="fecha_inicio"
+                    id="id_fecha_inicio"
+                    class="form-control"
+                    required
+                  />
+                  <div class="invalid-feedback" id="err_fecha_inicio"></div>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Fecha final</label>
+                  <input
+                    type="date"
+                    name="fecha_fin"
+                    id="id_fecha_fin"
+                    class="form-control"
+                    required
+                  />
+                  <div class="invalid-feedback" id="err_fecha_fin"></div>
+                </div>
+              </div>
+
+              <h6 class="mt-4 mb-3">Opciones adicionales</h6>
+              <div class="row g-2">
+                <div class="col-12">
+                  <label class="report-option">
+                    <input type="checkbox" name="incluir_total" value="1" />
+                    <span class="report-circle"></span>
+                    <span class="report-label-text">Calcular total de ventas entre fechas</span>
+                  </label>
+                </div>
+
+                <div class="col-12">
+                  <label class="report-option">
+                    <input type="checkbox" name="incluir_grafica" value="1" />
+                    <span class="report-circle"></span>
+                    <span class="report-label-text">Mostrar gráfica diaria</span>
+                  </label>
+                </div>
+
+                <div class="col-12 d-none" id="bloqueTipoGraficaVentas">
+                  <label class="form-label mt-2">Tipo de gráfica</label>
+                  <select name="tipo_grafica" class="form-select">
+                    <option value="bar">Barras</option>
+                    <option value="line">Líneas</option>
+                    <option value="pie">Torta</option>
+                  </select>
+                </div>
+
+                <div class="col-12">
+                  <label class="report-option">
+                    <input
+                      type="checkbox"
+                      name="comparativo"
+                      value="1"
+                      id="checkComparativoVentas"
+                    />
+                    <span class="report-circle"></span>
+                    <span class="report-label-text">Hacer comparativo</span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="row g-3 mt-2 d-none" id="bloqueComparativoVentas">
+                <div class="col-12">
+                  <h6 class="mb-1">Rango comparativo</h6>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Fecha inicial comparativa</label>
+                  <input
+                    type="date"
+                    name="fecha_inicio_comp"
+                    id="id_fecha_inicio_comp"
+                    class="form-control"
+                  />
+                  <div class="invalid-feedback" id="err_fecha_inicio_comp"></div>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Fecha final comparativa</label>
+                  <input
+                    type="date"
+                    name="fecha_fin_comp"
+                    id="id_fecha_fin_comp"
+                    class="form-control"
+                  />
+                  <div class="invalid-feedback" id="err_fecha_fin_comp"></div>
+                </div>
+              </div>
+
+              <h6 class="mt-4 mb-3">Formato de salida</h6>
+              <div class="row g-2">
+                <div class="col-md-6">
+                  <label class="report-option">
+                    <input type="radio" name="formato" value="pdf" checked />
+                    <span class="report-circle"></span>
+                    <span class="report-label-text">PDF</span>
+                  </label>
+                </div>
+                <div class="col-md-6">
+                  <label class="report-option">
+                    <input type="radio" name="formato" value="excel" />
+                    <span class="report-circle"></span>
+                    <span class="report-label-text">Excel</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn btn-outline-secondary"
+            data-bs-dismiss="modal"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            class="btn btn-outline-dark"
+            id="btnVistaPreviaReporte"
+          >
+            <i class="bi bi-eye me-1"></i> Vista previa
+          </button>
+          <button type="submit" class="btn btn-guardar-venta">
+            <i class="bi bi-download me-1"></i> Generar archivo
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL VISTA PREVIA REPORTE -->
+<div
+  class="modal fade"
+  id="modalVistaPreviaReporte"
+  tabindex="-1"
+  aria-hidden="true"
+>
+  <div
+    class="modal-dialog modal-fullscreen-lg-down modal-xl modal-dialog-centered comprobante-print-dialog"
+  >
+    <div class="modal-content comprobante-modal ventas-modal-content">
+      <div class="modal-header ventas-modal-header">
+        <h5 class="modal-title ventas-modal-title"><i class="bi bi-eye me-2"></i>Vista previa del reporte</h5>
+        <button type="button" class="btn-close btn-close-white ventas-modal-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body comprobante-modal-body" id="contenidoVistaPreviaReporte">
+        <div id="reporteVentasPreviewBody" style="width:100%;">
+          <div class="text-center text-muted py-5 ventas-modal-empty-note">
+            Configura el reporte y pulsa Vista previa.
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-dark" id="btnDescargarReporteVentas">
+          <i class="bi bi-download me-1"></i> Descargar
+        </button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DEVOLUCIÓN -->
+<div class="modal fade" id="modalDevolucion" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content ventas-modal-content">
+      <div class="modal-header ventas-modal-header">
+        <h5 class="modal-title ventas-modal-title">
+          <i class="bi bi-arrow-return-left me-2"></i>Registrar devolución
+        </h5>
+        <button type="button" class="btn-close btn-close-white ventas-modal-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body" id="contenidoDevolucion" style="padding:24px;">
+        <div class="text-center text-muted py-4 ventas-modal-empty-note">Cargando...</div>
+      </div>
+      <div class="modal-footer d-none border-0 pt-0" id="footerDevolucion" style="padding:0 24px 20px;">
+        <button type="button" class="btn btn-outline-secondary btn-sm px-4" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-guardar-venta btn-sm px-4" id="btnConfirmarDevolucion">
+          <i class="bi bi-check-circle me-1"></i> Confirmar devolución
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/tom-select/dist/js/tom-select.complete.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"
+        integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg=="
+        crossorigin="anonymous"
+        referrerpolicy="no-referrer"></script>
+<script src="{% static 'ventas/js/ventas.js' %}"></script>
+{% endblock %}
+
+
