@@ -43,7 +43,7 @@
             {% for gestion in gestiones %}
             <tr>
                 <td>{{ gestion.fecha_hora|date:"d/m/Y H:i" }}</td>
-                <td>{{ gestion.cliente.nombre }} {{ gestion.cliente.apellido }}</td>
+                <td>{% if gestion.cliente %}{{ gestion.cliente.nombre }} {{ gestion.cliente.apellido }}{% else %}<span class="text-muted">Sin cliente</span>{% endif %}</td>
                 <td>{{ gestion.procedimiento_realizado_por }}</td>
                 <td>{{ gestion.tipo_alisado }}</td>
                 <td>${{ gestion.precio_alisado|intcomma }} COP</td>
@@ -56,14 +56,16 @@
                 </td>
                 <td>
                     <div class="table-action-group">
+                        {% if request.user.is_staff %}
                         <a href="{% url 'gestion_alisados:ver_gestion_alisado_modal_content' gestion.pk %}" class="table-action-btn js-open-gestion-info-modal" data-modal-title="Detalle de gestion de datos" title="Ver detalles" aria-label="Ver detalles de la gestion {{ gestion.pk }}">
                             <i class="bi bi-eye" aria-hidden="true"></i>
                         </a>
+                        {% endif %}
                         <a href="{% url 'gestion_alisados:editar_gestion_alisado' gestion.pk %}?modal=1" class="table-action-btn js-open-gestion-form-modal" data-form-title="Editar gestion de datos" data-form-url="{% url 'gestion_alisados:editar_gestion_alisado' gestion.pk %}?modal=1" title="Editar" aria-label="Editar gestion {{ gestion.pk }}">
                             <i class="bi bi-pencil" aria-hidden="true"></i>
                         </a>
                         {% if permisos.roles.es_admin %}    
-                        <a href="#" class="table-action-btn table-action-btn--danger js-delete-gestion-swal" data-delete-url="{% url 'gestion_alisados:eliminar_gestion_alisado' gestion.pk %}" data-gestion-label="{{ gestion.cliente.nombre }} {{ gestion.cliente.apellido }} - {{ gestion.fecha_hora|date:'d/m/Y H:i' }}" title="Eliminar" aria-label="Eliminar gestion {{ gestion.pk }}">
+                        <a href="#" class="table-action-btn table-action-btn--danger js-delete-gestion-swal" data-delete-url="{% url 'gestion_alisados:eliminar_gestion_alisado' gestion.pk %}" data-gestion-label="{% if gestion.cliente %}{{ gestion.cliente.nombre }} {{ gestion.cliente.apellido }}{% else %}Sin cliente{% endif %} - {{ gestion.fecha_hora|date:'d/m/Y H:i' }}" title="Eliminar" aria-label="Eliminar gestion {{ gestion.pk }}">
                             <i class="bi bi-trash" aria-hidden="true"></i>
                         </a>
                         {% endif %}

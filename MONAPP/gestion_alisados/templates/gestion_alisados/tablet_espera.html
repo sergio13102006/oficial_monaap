@@ -203,11 +203,11 @@
                 <div>
                     <span class="badge rounded-pill mb-2">Pantalla fija de espera</span>
                     <h1>Tablet lista, esperando proceso</h1>
-                    <p>Mantén esta pantalla abierta en la tablet. Cuando el PC seleccione un cliente y pulse iniciar proceso, el formulario se abrirá automáticamente aquí.</p>
+                    <p>Manten esta pantalla abierta en la tablet. Cuando el PC seleccione un cliente y pulse iniciar proceso, el formulario se abrira automaticamente aqui.</p>
                 </div>
                 <div class="text-lg-end">
                     <p class="mb-1 text-muted small">Esta pantalla se mantiene abierta hasta recibir un proceso nuevo.</p>
-                    <p class="mb-0 text-muted small">No diligencies nada aquí hasta que el PC envíe el cliente.</p>
+                    <p class="mb-0 text-muted small">No diligencies nada aqui hasta que el PC envie el cliente.</p>
                 </div>
             </div>
         </section>
@@ -219,14 +219,14 @@
             <h2 class="tablet-title">Sin procesos activos por ahora</h2>
             <p class="tablet-text">
                 Esperando un nuevo cliente desde el PC. Cuando se pulse <strong>Iniciar proceso</strong>,
-                la tablet cargará el tratamiento con ese cliente fijo.
+                la tablet cargara el tratamiento con ese cliente fijo.
             </p>
             <div class="tablet-state" id="tabletStateBadge">
                 <i class="bi bi-dot"></i>
                 <span>Estado: en espera</span>
             </div>
             <div class="tablet-meta">
-                <div>Última revisión: <strong id="tabletLastCheck">nunca</strong></div>
+                <div>Ultima revision: <strong id="tabletLastCheck">nunca</strong></div>
                 <div>URL de espera: <code class="text-break">{{ tablet_wait_url }}</code></div>
             </div>
 
@@ -252,10 +252,28 @@
         (function () {
             const estadoUrl = "{{ tablet_estado_url|escapejs }}";
             const waitUrl = "{{ tablet_wait_url|escapejs }}";
+            const tabletWsUrl = "{{ tablet_ws_url|default:''|escapejs }}";
             const lastCheck = document.getElementById('tabletLastCheck');
             const stateBadge = document.getElementById('tabletStateBadge');
             const checkBtn = document.getElementById('tabletCheckBtn');
             const fullscreenBtn = document.getElementById('tabletFullscreenBtn');
+            const seenEventIds = new Set();
+            const latestStateByKey = new Map();
+            const statusRank = {
+                ok: 5,
+                pendiente: 10,
+                enviada_a_tablet: 20,
+                abierta_en_tablet: 30,
+                firmada: 40,
+                cancelada: 50,
+                expirada: 60,
+                error: 70,
+                reconnect_required: 80,
+            };
+            let socket = null;
+            let pollTimer = null;
+            let reconnectTimer = null;
+            let reconnectDelay = 1000;
 
             function setState(text, tone) {
                 if (!stateBadge) return;
@@ -266,28 +284,199 @@
                 stateBadge.innerHTML = `<i class="bi bi-dot"></i><span>${text}</span>`;
             }
 
-            async function checkState() {
+            function updateLastCheck(label) {
+                if (!lastCheck) return;
+                lastCheck.textContent = label || new Date().toLocaleTimeString('es-CO', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                });
+            }
+
+            function goToProcess(processUrl) {
+                if (!processUrl) return;
+                setState('Proceso detectado. Abriendo formulario...', 'success');
+                window.location.href = processUrl;
+            }
+
+            function startPolling() {
+                window.clearInterval(pollTimer);
+                pollTimer = window.setInterval(() => {
+                    checkState({ silent: true });
+                }, 8000);
+            }
+
+            function scheduleReconnect() {
+                if (!tabletWsUrl || typeof WebSocket === 'undefined') return;
+                window.clearTimeout(reconnectTimer);
+                reconnectTimer = window.setTimeout(connectRealtime, reconnectDelay);
+                reconnectDelay = Math.min(reconnectDelay * 2, 15000);
+            }
+
+            function eventKey(event) {
+                return event.session_id || `tablet:${event.tablet_id || 'default-tablet'}`;
+            }
+
+            function eventTimestamp(event) {
+                const raw = Date.parse(event.timestamp || '');
+                return Number.isNaN(raw) ? 0 : raw;
+            }
+
+            function eventRank(event) {
+                return statusRank[event.status] || 0;
+            }
+
+            function validateEventContract(event) {
+                return Boolean(
+                    event &&
+                    typeof event.type === 'string' &&
+                    typeof event.event_id === 'string' &&
+                    typeof event.message_id === 'string' &&
+                    typeof event.timestamp === 'string' &&
+                    typeof event.status === 'string' &&
+                    typeof event.source === 'string' &&
+                    typeof event.payload === 'object' &&
+                    event.payload !== null
+                );
+            }
+
+            function shouldApplyEvent(event) {
+                if (!validateEventContract(event)) return false;
+                if (seenEventIds.has(event.event_id)) return false;
+
+                seenEventIds.add(event.event_id);
+                if (seenEventIds.size > 200) {
+                    const oldest = seenEventIds.values().next().value;
+                    seenEventIds.delete(oldest);
+                }
+
+                const key = eventKey(event);
+                const nextState = {
+                    timestamp: eventTimestamp(event),
+                    rank: eventRank(event),
+                };
+                const previousState = latestStateByKey.get(key);
+                if (
+                    previousState &&
+                    (
+                        nextState.timestamp < previousState.timestamp ||
+                        (nextState.timestamp === previousState.timestamp && nextState.rank < previousState.rank)
+                    )
+                ) {
+                    return false;
+                }
+
+                latestStateByKey.set(key, nextState);
+                return true;
+            }
+
+            function handleRealtimeEvent(event) {
+                if (!shouldApplyEvent(event)) return;
+
+                switch (event.type) {
+                    case 'session_assigned':
+                        updateLastCheck();
+                        if (event.payload && event.payload.tablet_process_url) {
+                            goToProcess(event.payload.tablet_process_url);
+                            return;
+                        }
+                        setState('Nueva sesion asignada. Resincronizando...', 'success');
+                        checkState({ silent: true });
+                        return;
+                    case 'session_cancelled':
+                        updateLastCheck();
+                        setState('Sesion cancelada. La tablet queda en espera.', 'warning');
+                        return;
+                    case 'back_to_waiting':
+                        updateLastCheck();
+                        if (window.location.href !== waitUrl) {
+                            window.location.href = waitUrl;
+                            return;
+                        }
+                        setState('Estado: en espera', 'warning');
+                        return;
+                    case 'reconnect_required':
+                        updateLastCheck();
+                        setState('Resincronizando estado...', 'warning');
+                        checkState({ silent: true });
+                        return;
+                    default:
+                        break;
+                }
+            }
+
+            function connectRealtime() {
+                if (!tabletWsUrl || typeof WebSocket === 'undefined') return;
+
                 try {
-                    setState('Estado: revisando...', 'warning');
+                    socket = new WebSocket(tabletWsUrl);
+                } catch (error) {
+                    scheduleReconnect();
+                    return;
+                }
+
+                socket.addEventListener('open', () => {
+                    reconnectDelay = 1000;
+                    updateLastCheck();
+                    setState('Tablet conectada. Esperando proceso...', 'warning');
+                    try {
+                        socket.send(JSON.stringify({
+                            type: 'sync_request',
+                            source: 'tablet_waiting_screen',
+                            status: 'ready',
+                            payload: {},
+                        }));
+                    } catch (error) {
+                        // El polling sigue cubriendo el estado persistido.
+                    }
+                });
+
+                socket.addEventListener('message', (raw) => {
+                    try {
+                        handleRealtimeEvent(JSON.parse(raw.data));
+                    } catch (error) {
+                        // Ignora eventos invalidos para no romper la pantalla.
+                    }
+                });
+
+                socket.addEventListener('close', () => {
+                    setState('Conexion realtime perdida. Siguiendo con verificacion...', 'danger');
+                    scheduleReconnect();
+                });
+
+                socket.addEventListener('error', () => {
+                    try {
+                        socket.close();
+                    } catch (error) {
+                        // Puede fallar si el socket ya cerro por si mismo.
+                    }
+                });
+            }
+
+            async function checkState(options = {}) {
+                const { silent = false } = options;
+                try {
+                    if (!silent) {
+                        setState('Estado: revisando...', 'warning');
+                    }
                     const url = `${estadoUrl}?ts=${Date.now()}`;
                     const response = await fetch(url, { cache: 'no-store', credentials: 'same-origin' });
                     const data = await response.json();
-                    if (lastCheck) lastCheck.textContent = new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                    updateLastCheck();
 
                     if (data && data.has_process && data.tablet_process_url) {
-                        setState('Proceso detectado. Abriendo formulario...', 'success');
-                        window.location.href = data.tablet_process_url;
+                        goToProcess(data.tablet_process_url);
                         return;
                     }
 
                     setState('Estado: en espera', 'warning');
                 } catch (error) {
-                    setState('Estado: sin conexión', 'danger');
-                    if (lastCheck) lastCheck.textContent = 'falló la revisión';
+                    setState('Estado: sin conexion', 'danger');
+                    updateLastCheck('fallo la revision');
                 }
             }
 
-            checkBtn?.addEventListener('click', checkState);
+            checkBtn?.addEventListener('click', () => checkState());
 
             fullscreenBtn?.addEventListener('click', async () => {
                 try {
@@ -295,12 +484,13 @@
                         await document.documentElement.requestFullscreen();
                     }
                 } catch (error) {
-                    // Los navegadores móviles pueden bloquear fullscreen sin gesto adicional.
+                    // Los navegadores moviles pueden bloquear fullscreen sin gesto adicional.
                 }
             });
 
             checkState();
-            setInterval(checkState, 3500);
+            startPolling();
+            connectRealtime();
         })();
     </script>
 </body>

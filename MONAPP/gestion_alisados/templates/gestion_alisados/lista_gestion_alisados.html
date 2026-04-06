@@ -24,7 +24,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid">
+<div class="container-fluid" id="gestionAdminRealtimeRoot" data-admin-ws-url="{{ admin_ws_url|default:'' }}">
     <div class="module-filters-card">
         <form method="get"
               id="filtrosForm"
@@ -137,5 +137,6 @@
 {% block extra_js %}
 <script src="{% static 'gestion_alisados/js/form_gestion_alisado.js' %}?v={% now 'U' %}"></script>
 <script src="{% static 'gestion_alisados/js/gestion_alisados.js' %}?v={% now 'U' %}"></script>
+<script src="{% static 'gestion_alisados/js/realtime_gestion_alisados.js' %}?v={% now 'U' %}"></script>
 {% endblock %}
 

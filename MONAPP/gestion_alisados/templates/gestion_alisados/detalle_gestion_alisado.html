@@ -20,11 +20,11 @@
             <div>
                 <div class="gestion-detail-hero__title">Gestión de datos</div>
                 <div class="gestion-detail-hero__subtitle">
-                    Registro completo de {{ gestion.cliente.nombre }} {{ gestion.cliente.apellido }}
+                    Registro completo de {% if gestion.cliente %}{{ gestion.cliente.nombre }} {{ gestion.cliente.apellido }}{% else %}Sin cliente{% endif %}
                 </div>
                 <div class="gestion-detail-badges">
                     <span class="gestion-detail-badge">
-                        <i class="bi bi-person"></i> {{ gestion.cliente.numero_documento }}
+                        <i class="bi bi-person"></i> {% if gestion.cliente %}{{ gestion.cliente.numero_documento }}{% else %}Sin documento{% endif %}
                     </span>
                     <span class="gestion-detail-badge">
                         <i class="bi bi-calendar-event"></i> {{ gestion.fecha_hora|date:"d/m/Y H:i" }}
@@ -41,7 +41,7 @@
                    class="btn btn-outline-light js-delete-gestion-swal"
                    data-delete-url="{% url 'gestion_alisados:eliminar_gestion_alisado' gestion.pk %}"
                    data-delete-redirect-url="{% url 'gestion_alisados:lista_gestion_alisados' %}"
-                   data-gestion-label="{{ gestion.cliente.nombre }} {{ gestion.cliente.apellido }} - {{ gestion.fecha_hora|date:'d/m/Y H:i' }}">
+                   data-gestion-label="{% if gestion.cliente %}{{ gestion.cliente.nombre }} {{ gestion.cliente.apellido }}{% else %}Sin cliente{% endif %} - {{ gestion.fecha_hora|date:'d/m/Y H:i' }}">
                     <i class="bi bi-trash"></i> Eliminar
                 </a>
                 {% endif %}

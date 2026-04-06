@@ -65,7 +65,7 @@
           {% for g in gestiones %}
           <tr>
             <td>{{ g.fecha_hora|date:"d/m/Y" }}</td>
-            <td>{{ g.cliente.nombre }} {{ g.cliente.apellido }}</td>
+            <td>{% if g.cliente %}{{ g.cliente.nombre }} {{ g.cliente.apellido }}{% else %}Sin cliente{% endif %}</td>
             <td>{{ g.procedimiento_realizado_por|default:"-" }}</td>
             <td>{{ g.tipo_alisado|default:"-" }}</td>
             <td class="text-end">${{ g.precio_alisado|floatformat:0|intcomma }}</td>

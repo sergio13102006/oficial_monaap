@@ -8,10 +8,10 @@
         <div class="d-flex flex-column flex-lg-row justify-content-between gap-3 align-items-lg-start">
             <div>
                 <h5>Gestion de datos</h5>
-                <small>Registro de {{ gestion.cliente.nombre }} {{ gestion.cliente.apellido }}</small>
+                <small>Registro de {% if gestion.cliente %}{{ gestion.cliente.nombre }} {{ gestion.cliente.apellido }}{% else %}Sin cliente{% endif %}</small>
                 <div class="gestion-detail-badges mt-3">
                     <span class="gestion-detail-badge">
-                        <i class="bi bi-person"></i> {{ gestion.cliente.numero_documento }}
+                        <i class="bi bi-person"></i> {% if gestion.cliente %}{{ gestion.cliente.numero_documento }}{% else %}Sin documento{% endif %}
                     </span>
                     <span class="gestion-detail-badge">
                         <i class="bi bi-calendar-event"></i> {{ gestion.fecha_hora|date:"d/m/Y H:i" }}

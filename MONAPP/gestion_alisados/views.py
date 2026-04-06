@@ -18,6 +18,29 @@ from compras.comprobante import _get_logo_path, _get_watermark_path
 
 from .models import GestionAlisado, TabletConsentToken, TabletKioskState
 from .forms import GestionAlisadoForm
+from .services import (
+    build_admin_capture_context,
+    build_invalid_tablet_context,
+    build_modal_capture_context,
+    build_tablet_capture_context,
+    build_tablet_launch_payload,
+    build_tablet_waiting_payload,
+    build_tablet_websocket_url,
+    build_websocket_url,
+    complete_tablet_capture,
+    get_cliente_nombre_gestion,
+    get_kiosk_state,
+    get_last_gestion_payload,
+    get_last_gestion_values,
+    get_valid_alisado_service_name,
+    mark_kiosk_ready,
+    mark_kiosk_waiting,
+    mark_tablet_session_error,
+    mark_tablet_session_opened,
+    save_gestion_form,
+    sync_token_process_state,
+    start_tablet_session,
+)
 from clientes.models import Cliente
 from promociones.models import Promocion
 from servicios.models import Servicio
@@ -28,158 +51,39 @@ def es_staff(user):
 
 
 def _promociones_activas():
-    return Promocion.objects.filter(activa=True).order_by("nombre")
+    return build_admin_capture_context(GestionAlisadoForm())["promociones_activas"]
 
 
 def _servicio_alisado_valido(nombre_servicio):
-    nombre = (nombre_servicio or "").strip()
-    if not nombre:
-        return ""
-    if Servicio.objects.filter(nombre__iexact=nombre, activo=True).exists():
-        return nombre
-    return ""
+    return get_valid_alisado_service_name(nombre_servicio)
 
 
 def _iniciales_ultima_gestion(cliente_obj):
-    if not cliente_obj:
-        return {}
-
-    ultima = GestionAlisado.objects.filter(cliente=cliente_obj).order_by("-fecha_hora").first()
-    if not ultima:
-        return {"cliente": cliente_obj}
-
-    return {
-        "cliente": cliente_obj,
-        "precio_alisado": ultima.precio_alisado,
-        "es_oferta_especial": ultima.es_oferta_especial,
-        "descripcion_oferta": ultima.descripcion_oferta or "",
-        "anticipo_cliente": ultima.anticipo_cliente,
-        "medio_pago": ultima.medio_pago,
-        "saldo_pendiente": ultima.saldo_pendiente,
-        "procedimiento_realizado_por": ultima.procedimiento_realizado_por,
-        "tipo_alisado": _servicio_alisado_valido(ultima.tipo_alisado),
-        "requiere_resellado": ultima.requiere_resellado,
-        "porcentaje_alisado": ultima.porcentaje_alisado,
-        "porosidad": ultima.porosidad,
-        "textura": ultima.textura,
-        "forma_natural": ultima.forma_natural,
-        "elasticidad": ultima.elasticidad,
-        "longitud": ultima.longitud,
-        "densidad": ultima.densidad,
-        "piel_cabelludo": ultima.piel_cabelludo,
-        "alopecia": ultima.alopecia,
-        "caida_cabello": ultima.caida_cabello,
-        "lactante": ultima.lactante,
-        "gestante": ultima.gestante,
-        "caspa": ultima.caspa,
-        "procesos_tintura": ultima.procesos_tintura,
-        "procesos_decoloracion": ultima.procesos_decoloracion,
-        "procesos_ondulados": ultima.procesos_ondulados,
-        "procesos_extracciones": ultima.procesos_extracciones,
-        "procesos_alisados": ultima.procesos_alisados,
-        "procesos_super_aclarante": ultima.procesos_super_aclarante,
-        "procesos_otro": ultima.procesos_otro or "",
-        "cuenta_con_secador": ultima.cuenta_con_secador,
-        "frecuencia_recoge_cabello": ultima.frecuencia_recoge_cabello,
-        "realiza_ejercicio": ultima.realiza_ejercicio,
-        "frecuencia_ejercicio": ultima.frecuencia_ejercicio or "",
-        "usa_casco": ultima.usa_casco,
-        "productos_capilares": ultima.productos_capilares,
-        "se_bana_agua_caliente": ultima.se_bana_agua_caliente,
-        "requiere_refuerzo_15dias": ultima.requiere_refuerzo_15dias,
-        "sufre_tiroides": ultima.sufre_tiroides,
-        "medicamento_tiroides": ultima.medicamento_tiroides or "",
-        "despunte_hoy": ultima.despunte_hoy,
-        "recomendaciones_post_cuidados": ultima.recomendaciones_post_cuidados,
-    }
+    return get_last_gestion_values(cliente_obj)
 
 
 def _datos_ultima_gestion(cliente_obj):
-    if not cliente_obj:
-        return {}
-    ultima = GestionAlisado.objects.filter(cliente=cliente_obj).order_by("-fecha_hora").first()
-    if not ultima:
-        return {}
-    return {
-        "cliente": str(cliente_obj.pk),
-        "cliente_nombre": f"{cliente_obj.nombre} {cliente_obj.apellido}",
-        "cliente_documento": cliente_obj.numero_documento,
-        "precio_alisado": ultima.precio_alisado,
-        "es_oferta_especial": ultima.es_oferta_especial,
-        "descripcion_oferta": ultima.descripcion_oferta or "",
-        "anticipo_cliente": ultima.anticipo_cliente,
-        "medio_pago": ultima.medio_pago,
-        "saldo_pendiente": ultima.saldo_pendiente,
-        "procedimiento_realizado_por": ultima.procedimiento_realizado_por,
-        "tipo_alisado": _servicio_alisado_valido(ultima.tipo_alisado),
-        "requiere_resellado": ultima.requiere_resellado,
-        "porcentaje_alisado": ultima.porcentaje_alisado,
-        "porosidad": ultima.porosidad,
-        "textura": ultima.textura,
-        "forma_natural": ultima.forma_natural,
-        "elasticidad": ultima.elasticidad,
-        "longitud": ultima.longitud,
-        "densidad": ultima.densidad,
-        "piel_cabelludo": ultima.piel_cabelludo,
-        "alopecia": ultima.alopecia,
-        "caida_cabello": ultima.caida_cabello,
-        "lactante": ultima.lactante,
-        "gestante": ultima.gestante,
-        "caspa": ultima.caspa,
-        "procesos_tintura": ultima.procesos_tintura,
-        "procesos_decoloracion": ultima.procesos_decoloracion,
-        "procesos_ondulados": ultima.procesos_ondulados,
-        "procesos_extracciones": ultima.procesos_extracciones,
-        "procesos_alisados": ultima.procesos_alisados,
-        "procesos_super_aclarante": ultima.procesos_super_aclarante,
-        "procesos_otro": ultima.procesos_otro or "",
-        "cuenta_con_secador": ultima.cuenta_con_secador,
-        "frecuencia_recoge_cabello": ultima.frecuencia_recoge_cabello,
-        "realiza_ejercicio": ultima.realiza_ejercicio,
-        "frecuencia_ejercicio": ultima.frecuencia_ejercicio or "",
-        "usa_casco": ultima.usa_casco,
-        "productos_capilares": ultima.productos_capilares,
-        "se_bana_agua_caliente": ultima.se_bana_agua_caliente,
-        "requiere_refuerzo_15dias": ultima.requiere_refuerzo_15dias,
-        "sufre_tiroides": ultima.sufre_tiroides,
-        "medicamento_tiroides": ultima.medicamento_tiroides or "",
-        "despunte_hoy": ultima.despunte_hoy,
-        "recomendaciones_post_cuidados": ultima.recomendaciones_post_cuidados,
-    }
+    return get_last_gestion_payload(cliente_obj)
+
+
+def _cliente_nombre_gestion(gestion_obj):
+    return get_cliente_nombre_gestion(gestion_obj)
 
 
 def _crear_token_tablet(cliente_obj, user=None, gestion=None, minutos_validos=120):
-    TabletConsentToken.objects.filter(activo=True, usado_en__isnull=True).update(activo=False)
-    return TabletConsentToken.objects.create(
-        cliente=cliente_obj,
-        creado_por=user if getattr(user, 'is_authenticated', False) else None,
-        expira_en=timezone.now() + timedelta(minutes=minutos_validos),
-    )
+    return start_tablet_session(cliente_obj, user=user, minutos_validos=minutos_validos)
 
 
 def _tablet_kiosk_state():
-    state, _ = TabletKioskState.objects.get_or_create(
-        pk=TabletKioskState.SINGLETON_ID,
-        defaults={'estado': TabletKioskState.ESTADO_ESPERA},
-    )
-    if state.estado != TabletKioskState.ESTADO_LISTO and (
-        state.token_id is not None or state.cliente_id is not None or state.gestion_id is not None
-    ):
-        state.marcar_espera()
-    return state
+    return get_kiosk_state()
 
 
 def _tablet_kiosk_waiting():
-    state = _tablet_kiosk_state()
-    if state.estado != TabletKioskState.ESTADO_ESPERA or state.token_id is not None or state.cliente_id is not None or state.gestion_id is not None:
-        state.marcar_espera()
-    return state
+    return mark_kiosk_waiting()
 
 
 def _tablet_kiosk_ready(cliente_obj, token_obj, gestion=None):
-    state = _tablet_kiosk_state()
-    state.marcar_listo(cliente_obj, token_obj, gestion=gestion)
-    return state
+    return mark_kiosk_ready(cliente_obj, token_obj, gestion=gestion)
 
 
 def _filtrar_gestiones_desde_request(request):
@@ -215,34 +119,7 @@ def _filtrar_gestiones_desde_request(request):
 def form_gestion_alisado_modal_content(request):
     cliente_id = (request.GET.get("cliente") or "").strip()
     desde_clientes = (request.GET.get("desde_clientes") or "").strip() == "1"
-
-    cliente_obj = None
-    cliente_bloqueado = False
-
-    if cliente_id:
-        try:
-            cliente_obj = Cliente.objects.get(id=int(cliente_id))
-        except (ValueError, Cliente.DoesNotExist):
-            cliente_obj = None
-
-    form = GestionAlisadoForm(initial=_iniciales_ultima_gestion(cliente_obj) if cliente_obj else None)
-
-    form.fields["cliente"].widget.attrs["id"] = "selectCliente"
-    form.fields["cliente"].widget.attrs["class"] = "form-select"
-
-    if cliente_obj and desde_clientes:
-        form.fields["cliente"].widget.attrs["disabled"] = "disabled"
-        cliente_bloqueado = True
-
-    context = {
-        "form": form,
-        "is_modal": True,
-        "cliente_preseleccionado": cliente_obj,
-        "cliente_bloqueado": cliente_bloqueado,
-        "cliente_id_bloqueado": cliente_obj.id if cliente_obj and cliente_bloqueado else "",
-        "desde_clientes": desde_clientes,
-        "promociones_activas": _promociones_activas(),
-    }
+    context = build_modal_capture_context(cliente_id=cliente_id, desde_clientes=desde_clientes)
 
     return render(
         request,
@@ -256,21 +133,7 @@ def abrir_tablet_gestion_alisado(request, cliente_id):
     cliente_obj = get_object_or_404(Cliente, pk=cliente_id)
     token = _crear_token_tablet(cliente_obj, user=request.user, minutos_validos=120)
     _tablet_kiosk_ready(cliente_obj, token)
-    payload = {
-        'success': True,
-        'message': 'Proceso enviado a la tablet.',
-        'tablet_wait_url': request.build_absolute_uri(
-            reverse('gestion_alisados:tablet_espera')
-        ),
-        'tablet_process_url': request.build_absolute_uri(
-            reverse('gestion_alisados:tablet_gestion_alisado', kwargs={'token': token.token})
-        ),
-        'cliente': {
-            'id': cliente_obj.id,
-            'nombre': f'{cliente_obj.nombre} {cliente_obj.apellido}',
-            'documento': cliente_obj.numero_documento,
-        },
-    }
+    payload = build_tablet_launch_payload(request, cliente_obj, token)
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.GET.get('format') == 'json':
         return JsonResponse(payload)
     messages.success(request, 'Proceso enviado a la tablet. La pantalla de espera recibirá el formulario.')
@@ -279,10 +142,9 @@ def abrir_tablet_gestion_alisado(request, cliente_id):
 
 def tablet_espera(request):
     _tablet_kiosk_waiting()
-    return render(request, 'gestion_alisados/tablet_espera.html', {
-        'tablet_wait_url': request.build_absolute_uri(reverse('gestion_alisados:tablet_espera')),
-        'tablet_estado_url': request.build_absolute_uri(reverse('gestion_alisados:tablet_espera_estado')),
-    })
+    context = build_tablet_waiting_payload(request)
+    context["tablet_ws_url"] = build_tablet_websocket_url(request, "default-tablet")
+    return render(request, 'gestion_alisados/tablet_espera.html', context)
 
 
 def tablet_espera_estado(request):
@@ -291,13 +153,21 @@ def tablet_espera_estado(request):
     if not kiosk_state.listo or not token_obj:
         response = JsonResponse({'success': True, 'has_process': False})
     else:
+        token_obj = sync_token_process_state(token_obj)
         if not token_obj.esta_vigente() or kiosk_state.estado != TabletKioskState.ESTADO_LISTO:
             _tablet_kiosk_waiting()
-            response = JsonResponse({'success': True, 'has_process': False})
+            response = JsonResponse({
+                'success': True,
+                'has_process': False,
+                'process_state': token_obj.estado_proceso,
+                'process_state_label': token_obj.get_estado_proceso_display(),
+            })
         else:
             response = JsonResponse({
                 'success': True,
                 'has_process': True,
+                'process_state': token_obj.estado_proceso,
+                'process_state_label': token_obj.get_estado_proceso_display(),
                 'cliente': {
                     'nombre': f'{token_obj.cliente.nombre} {token_obj.cliente.apellido}',
                     'documento': token_obj.cliente.numero_documento,
@@ -312,22 +182,7 @@ def tablet_espera_estado(request):
 
 
 def _tablet_context_from_token(request, token_obj):
-    cliente_obj = token_obj.cliente
-    form = GestionAlisadoForm(initial=_iniciales_ultima_gestion(cliente_obj) if cliente_obj else None)
-    form.fields["cliente"].widget.attrs["id"] = "selectCliente"
-    form.fields["cliente"].widget.attrs["class"] = "form-select"
-    form.fields["cliente"].widget.attrs["disabled"] = "disabled"
-    return {
-        "form": form,
-        "is_modal": False,
-        "tablet_mode": True,
-        "cliente_preseleccionado": cliente_obj,
-        "cliente_bloqueado": True,
-        "cliente_id_bloqueado": cliente_obj.id if cliente_obj else "",
-        "desde_clientes": False,
-        "promociones_activas": _promociones_activas(),
-        "tablet_token": token_obj,
-    }
+    return build_tablet_capture_context(token_obj)
 
 
 def _tablet_template(request, context):
@@ -335,43 +190,50 @@ def _tablet_template(request, context):
 
 
 def _tablet_invalid(request, message='El enlace de la tablet no es válido o ya expiró.'):
-    return render(request, 'gestion_alisados/tablet_invalid.html', {
-        'message': message,
-        'tablet_wait_url': request.build_absolute_uri(reverse('gestion_alisados:tablet_espera')),
-    }, status=410)
+    return render(
+        request,
+        'gestion_alisados/tablet_invalid.html',
+        build_invalid_tablet_context(
+            message=message,
+            tablet_wait_url=request.build_absolute_uri(reverse('gestion_alisados:tablet_espera')),
+        ),
+        status=410,
+    )
 
 
 def tablet_gestion_alisado(request, token):
     token_obj = get_object_or_404(TabletConsentToken, token=token)
+    token_obj = sync_token_process_state(token_obj)
     if not token_obj.esta_vigente():
         kiosk_state = _tablet_kiosk_state()
         if kiosk_state.token_id == token_obj.token:
             _tablet_kiosk_waiting()
         return _tablet_invalid(request)
 
+    mark_tablet_session_opened(token_obj)
     context = _tablet_context_from_token(request, token_obj)
 
     if request.method == 'POST':
         form = GestionAlisadoForm(request.POST, request.FILES)
         form.fields["cliente"].widget.attrs["disabled"] = "disabled"
         if form.is_valid():
-            gestion = form.save()
-            token_obj.usado_en = timezone.now()
-            token_obj.activo = False
-            token_obj.gestion = gestion
-            token_obj.save(update_fields=['usado_en', 'activo', 'gestion'])
-            kiosk_state = _tablet_kiosk_state()
-            if kiosk_state.token_id == token_obj.token:
-                _tablet_kiosk_waiting()
-            return render(
-                request,
-                'gestion_alisados/tablet_success.html',
-                {
-                    'gestion': gestion,
-                    'cliente': token_obj.cliente,
-                    'tablet_wait_url': request.build_absolute_uri(reverse('gestion_alisados:tablet_espera')),
-                },
-            )
+            try:
+                gestion = complete_tablet_capture(form, token_obj)
+                kiosk_state = _tablet_kiosk_state()
+                if kiosk_state.token_id == token_obj.token:
+                    _tablet_kiosk_waiting()
+                return render(
+                    request,
+                    'gestion_alisados/tablet_success.html',
+                    {
+                        'gestion': gestion,
+                        'cliente': token_obj.cliente,
+                        'tablet_wait_url': request.build_absolute_uri(reverse('gestion_alisados:tablet_espera')),
+                    },
+                )
+            except Exception:
+                mark_tablet_session_error(token_obj, 'Ocurrio un error al guardar la captura en la tablet.')
+                raise
         context['form'] = form
 
     return _tablet_template(request, context)
@@ -436,6 +298,7 @@ def lista_gestion_alisados(request):
         'estado_pago'  : estado_pago,
         'current_sort' : current_sort,
         'current_dir'  : current_dir,
+        'admin_ws_url' : build_websocket_url(request, "/ws/gestion-alisados/admin/"),
     }
 
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -486,7 +349,7 @@ def crear_gestion_alisado(request):
         form = GestionAlisadoForm(request.POST, request.FILES)
 
         if form.is_valid():
-            form.save()
+            gestion = save_gestion_form(form)
             if is_modal or es_ajax:
                 return JsonResponse({
                     'success': True,
@@ -521,7 +384,8 @@ def crear_gestion_alisado(request):
         'form': form,
         'titulo': 'Gestión de Alisado',
         'is_modal': is_modal,
-        'promociones_activas': _promociones_activas(),
+        'action_url': request.get_full_path() if is_modal else request.path,
+        'promociones_activas': build_admin_capture_context(form=form)['promociones_activas'],
     }
 
     # Si es modal, usar template simplificado
@@ -564,6 +428,7 @@ def ver_gestion_alisado(request, pk):
 
 
 @login_required
+@user_passes_test(es_staff)
 def ver_gestion_alisado_modal_content(request, pk):
     gestion = get_object_or_404(GestionAlisado, pk=pk)
     return render(
@@ -583,8 +448,14 @@ def editar_gestion_alisado(request, pk):
     if request.method == 'POST':
         form = GestionAlisadoForm(request.POST, request.FILES, instance=gestion)
         if form.is_valid():
-            form.save()
+            gestion = save_gestion_form(form)
             messages.success(request, 'Gestión de alisado actualizada exitosamente.')
+            if is_modal or es_ajax:
+                return JsonResponse({
+                    'success': True,
+                    'message': 'GestiÃ³n de alisado actualizada exitosamente.',
+                    'gestion_id': str(gestion.pk),
+                }, status=200)
             return redirect('gestion_alisados:ver_gestion_alisado', pk=gestion.pk)
         if is_modal or es_ajax:
             return JsonResponse({
@@ -600,8 +471,8 @@ def editar_gestion_alisado(request, pk):
         'titulo': 'Editar Gestión de Alisado',
         'gestion': gestion,
         'is_modal': is_modal,
-        'action_url': request.path,
-        'promociones_activas': _promociones_activas(),
+        'action_url': request.get_full_path() if is_modal else request.path,
+        'promociones_activas': build_admin_capture_context(form=form)['promociones_activas'],
     }
     if is_modal:
         return render(request, 'gestion_alisados/form_gestion_alisado_modal_content.html', context)
@@ -680,7 +551,7 @@ def exportar_reporte_gestion_csv(request):
         writer.writerow(
             [
                 g.fecha_hora.strftime("%d/%m/%Y %H:%M"),
-                f"{g.cliente.nombre} {g.cliente.apellido}",
+                _cliente_nombre_gestion(g),
                 g.procedimiento_realizado_por,
                 g.tipo_alisado,
                 g.precio_alisado,
@@ -883,7 +754,7 @@ def exportar_reporte_gestion_pdf(request):
     for g in gestiones.order_by("-fecha_hora"):
         table_data.append([
             g.fecha_hora.strftime("%d/%m/%Y"),
-            f"{g.cliente.nombre} {g.cliente.apellido}",
+            _cliente_nombre_gestion(g),
             g.procedimiento_realizado_por or "—",
             g.tipo_alisado or "—",
             _fmt_money(g.precio_alisado),
@@ -1100,7 +971,7 @@ def exportar_reporte_gestion_pdf_v2(request):
         table_data.append(
             [
                 g.fecha_hora.strftime("%d/%m/%Y"),
-                f"{g.cliente.nombre} {g.cliente.apellido}",
+                _cliente_nombre_gestion(g),
                 g.procedimiento_realizado_por or "-",
                 g.tipo_alisado or "-",
                 _fmt_money(g.precio_alisado),

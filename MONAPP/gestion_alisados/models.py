@@ -328,6 +328,23 @@ class GestionAlisado(models.Model):
 
 
 class TabletConsentToken(models.Model):
+    ESTADO_PENDIENTE = 'pendiente'
+    ESTADO_ENVIADA = 'enviada_a_tablet'
+    ESTADO_ABIERTA = 'abierta_en_tablet'
+    ESTADO_FIRMADA = 'firmada'
+    ESTADO_CANCELADA = 'cancelada'
+    ESTADO_EXPIRADA = 'expirada'
+    ESTADO_ERROR = 'error'
+    ESTADOS_PROCESO = [
+        (ESTADO_PENDIENTE, 'Pendiente'),
+        (ESTADO_ENVIADA, 'Enviada a tablet'),
+        (ESTADO_ABIERTA, 'Abierta en tablet'),
+        (ESTADO_FIRMADA, 'Firmada'),
+        (ESTADO_CANCELADA, 'Cancelada'),
+        (ESTADO_EXPIRADA, 'Expirada'),
+        (ESTADO_ERROR, 'Error'),
+    ]
+
     token = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     cliente = models.ForeignKey(
         Cliente,
@@ -353,8 +370,17 @@ class TabletConsentToken(models.Model):
     )
     creado_en = models.DateTimeField(auto_now_add=True)
     expira_en = models.DateTimeField()
+    abierta_en = models.DateTimeField(null=True, blank=True)
     usado_en = models.DateTimeField(null=True, blank=True)
     activo = models.BooleanField(default=True)
+    estado_proceso = models.CharField(
+        max_length=30,
+        choices=ESTADOS_PROCESO,
+        default=ESTADO_PENDIENTE,
+        db_index=True,
+        verbose_name='Estado del proceso'
+    )
+    detalle_estado = models.TextField(blank=True, default='', verbose_name='Detalle del estado')
 
     class Meta:
         verbose_name = 'Token de tablet'
@@ -364,21 +390,47 @@ class TabletConsentToken(models.Model):
     def esta_vigente(self):
         return self.activo and self.usado_en is None and self.expira_en > timezone.now()
 
+    def marcar_estado(self, estado, *, activo=None, detalle='', abierta_en=None, usado_en=None):
+        self.estado_proceso = estado
+        if activo is not None:
+            self.activo = activo
+        if detalle is not None:
+            self.detalle_estado = detalle
+        if abierta_en is not None:
+            self.abierta_en = abierta_en
+        if usado_en is not None:
+            self.usado_en = usado_en
+
+        update_fields = ['estado_proceso', 'activo', 'detalle_estado']
+        if abierta_en is not None:
+            update_fields.append('abierta_en')
+        if usado_en is not None:
+            update_fields.append('usado_en')
+        self.save(update_fields=update_fields)
+
     def __str__(self):
         return f"Tablet token {self.token} - {self.cliente}"
 
 
 class TabletKioskState(models.Model):
     SINGLETON_ID = 1
+    CONEXION_CONECTADA = 'conectada'
+    CONEXION_DESCONECTADA = 'desconectada'
     ESTADO_ESPERA = 'waiting'
     ESTADO_LISTO = 'ready'
+    ESTADOS_CONEXION = [
+        (CONEXION_CONECTADA, 'Conectada'),
+        (CONEXION_DESCONECTADA, 'Desconectada'),
+    ]
     ESTADOS = [
         (ESTADO_ESPERA, 'En espera'),
         (ESTADO_LISTO, 'Proceso listo'),
     ]
 
     id = models.PositiveSmallIntegerField(primary_key=True, default=SINGLETON_ID, editable=False)
+    tablet_id = models.CharField(max_length=100, default='default-tablet', verbose_name='Identificador de tablet')
     estado = models.CharField(max_length=20, choices=ESTADOS, default=ESTADO_ESPERA)
+    conexion_estado = models.CharField(max_length=20, choices=ESTADOS_CONEXION, default=CONEXION_DESCONECTADA)
     cliente = models.ForeignKey(
         Cliente,
         on_delete=models.SET_NULL,
@@ -405,6 +457,7 @@ class TabletKioskState(models.Model):
     )
     creado_en = models.DateTimeField(auto_now_add=True)
     actualizado_en = models.DateTimeField(auto_now=True)
+    ultima_actividad = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         verbose_name = 'Estado de kiosco tablet'
@@ -427,3 +480,21 @@ class TabletKioskState(models.Model):
         self.token = token_obj
         self.gestion = gestion
         self.save(update_fields=['estado', 'cliente', 'token', 'gestion', 'actualizado_en'])
+
+    def marcar_conectada(self, tablet_id=None):
+        self.conexion_estado = self.CONEXION_CONECTADA
+        self.ultima_actividad = timezone.now()
+        if tablet_id:
+            self.tablet_id = tablet_id
+            self.save(update_fields=['conexion_estado', 'ultima_actividad', 'tablet_id', 'actualizado_en'])
+            return
+        self.save(update_fields=['conexion_estado', 'ultima_actividad', 'actualizado_en'])
+
+    def marcar_desconectada(self):
+        self.conexion_estado = self.CONEXION_DESCONECTADA
+        self.ultima_actividad = timezone.now()
+        self.save(update_fields=['conexion_estado', 'ultima_actividad', 'actualizado_en'])
+
+    def touch_actividad(self):
+        self.ultima_actividad = timezone.now()
+        self.save(update_fields=['ultima_actividad', 'actualizado_en'])

@@ -238,10 +238,10 @@ function datosFormulario(form) {
     alisados: getField(form, 'procesos_alisados')?.checked ? 'Si' : 'No',
     superAclarante: getField(form, 'procesos_super_aclarante')?.checked ? 'Si' : 'No',
     otrosProcesos: getField(form, 'procesos_otro')?.value || '—',
-    secador: getField(form, 'cuenta_con_secador')?.checked ? 'Si' : 'No',
-    usaCasco: getField(form, 'usa_casco')?.checked ? 'Si' : 'No',
-    aguaCaliente: getField(form, 'se_bana_agua_caliente')?.checked ? 'Si' : 'No',
-    refuerzo15: getField(form, 'requiere_refuerzo_15dias')?.checked ? 'Si' : 'No',
+    secador: getField(form, 'cuenta_con_secador')?.value === 'si' ? 'Si' : 'No',
+    usaCasco: getField(form, 'usa_casco')?.value === 'si' ? 'Si' : 'No',
+    aguaCaliente: getField(form, 'se_bana_agua_caliente')?.value === 'si' ? 'Si' : 'No',
+    refuerzo15: getField(form, 'requiere_refuerzo_15dias')?.value === 'si' ? 'Si' : 'No',
     ejercicio: getField(form, 'realiza_ejercicio')?.value === 'si' ? 'Si' : 'No',
     frecEjercicio: getField(form, 'frecuencia_ejercicio')?.value || '—',
     frecRecoge: getField(form, 'frecuencia_recoge_cabello')?.value || '—',
@@ -291,6 +291,7 @@ function initGestionForm() {
   const tabletStartProcess = root.getElementById('tabletStartProcess');
   const tabletProcessStatus = root.getElementById('tabletProcessStatus');
   const esEdicion = form.dataset.esEdicion === '1';
+  const isModal = form.dataset.isModal === '1';
 
   let currentStep = 1;
   let signatureDrawing = false;
@@ -662,10 +663,68 @@ function initGestionForm() {
       }
       ['consentimiento_nombre','consentimiento_cedula','consentimiento_fecha','consentimiento_aceptado'].forEach((name) => { form.querySelectorAll(`input[name="${name}"]`).forEach((n) => n.remove()); });
       [['consentimiento_nombre', c.nombre], ['consentimiento_cedula', c.documento], ['consentimiento_fecha', new Date().toLocaleDateString('es-CO', { year:'numeric', month:'long', day:'numeric', hour:'2-digit', minute:'2-digit' })], ['consentimiento_aceptado', 'true']].forEach(([name, value]) => { const i = document.createElement('input'); i.type = 'hidden'; i.name = name; i.value = value; form.appendChild(i); });
-      modal.hide(); form.submit();
+      modal.hide();
+      if (typeof form.requestSubmit === 'function') form.requestSubmit();
+      else form.submit();
     });
     validarConsentimiento();
   }
+
+  function firstServerError(errors) {
+    if (!errors || typeof errors !== 'object') return '';
+    for (const value of Object.values(errors)) {
+      if (Array.isArray(value) && value.length) return String(value[0]);
+      if (typeof value === 'string' && value.trim()) return value.trim();
+    }
+    return '';
+  }
+
+  form.addEventListener('submit', async (event) => {
+    if (!isModal) return;
+    event.preventDefault();
+    if (form.dataset.submitting === '1') return;
+
+    form.dataset.submitting = '1';
+    if (btnConfirmar) btnConfirmar.disabled = true;
+    if (btnGuardar) btnGuardar.disabled = true;
+
+    try {
+      const response = await fetch(form.action, {
+        method: 'POST',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        body: new FormData(form),
+      });
+      const data = await response.json();
+
+      if (response.ok && data?.success) {
+        const consentimientoModal = modalConsentimientoEl && window.bootstrap
+          ? window.bootstrap.Modal.getInstance(modalConsentimientoEl)
+          : null;
+        consentimientoModal?.hide();
+
+        const parentModal = parentModalEl && window.bootstrap
+          ? window.bootstrap.Modal.getInstance(parentModalEl) || window.bootstrap.Modal.getOrCreateInstance(parentModalEl)
+          : null;
+        parentModal?.hide();
+
+        toast(data.message || 'Gestion guardada correctamente.', 'success');
+        window.location.reload();
+        return;
+      }
+
+      setStepAlert(
+        firstServerError(data?.errors) || data?.message || 'No fue posible guardar la gestion.',
+        'error'
+      );
+    } catch (error) {
+      console.warn(error);
+      setStepAlert('No fue posible guardar la gestion desde el modal.', 'error');
+    } finally {
+      form.dataset.submitting = '0';
+      if (btnConfirmar) btnConfirmar.disabled = false;
+      if (btnGuardar) btnGuardar.disabled = false;
+    }
+  });
 
   const syncPcLauncher = async () => {
     updateInfoCliente();
