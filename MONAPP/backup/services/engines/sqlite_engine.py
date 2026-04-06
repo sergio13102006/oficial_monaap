@@ -3,9 +3,12 @@ import sqlite3
 
 from django.db import connection
 
+from backup.constants import BACKUP_DB_FILENAME, DB_ENGINE_SQLITE
+from backup.exceptions import BackupEngineError, BackupValidationError
 from backup.models import BackupRecord
-from backup.exceptions import BackupEngineError
 from backup.selectors import get_database_path
+
+from .base import BackupEngine
 
 
 def _backup_history_key(data):
@@ -23,26 +26,103 @@ def _backup_history_key(data):
     )
 
 
-class SQLiteBackupEngine:
+class SQLiteBackupEngine(BackupEngine):
+    def get_engine_name(self):
+        return DB_ENGINE_SQLITE
+
     def supports_current_database(self):
         return str(get_database_path()).endswith(".sqlite3")
 
-    def create_database_snapshot(self, temp_db_path):
+    def create_database_backup(self, temp_dir):
         db_path = str(get_database_path())
         if not os.path.exists(db_path):
             raise BackupEngineError(f"Base de datos no encontrada: {db_path}")
-        source = sqlite3.connect(db_path)
-        dest = sqlite3.connect(temp_db_path)
-        try:
-            source.backup(dest)
-        finally:
-            source.close()
-            dest.close()
-        if not os.path.exists(temp_db_path):
-            raise BackupEngineError(
-                "No se pudo crear la copia temporal de la base de datos."
-            )
+
+        os.makedirs(temp_dir, exist_ok=True)
+        temp_db_path = os.path.join(temp_dir, f"temp_backup_payload_{os.getpid()}.sqlite3")
+        with open(db_path, "rb") as src, open(temp_db_path, "wb") as dst:
+            dst.write(src.read())
+
+        self.clean_backup_history_in_snapshot(temp_db_path)
+        self.validate_backup_payload(temp_db_path)
+        return {
+            "payload_path": temp_db_path,
+            "member_name": BACKUP_DB_FILENAME,
+        }
+
+    def create_database_snapshot(self, temp_db_path):
+        temp_dir = os.path.dirname(temp_db_path)
+        payload = self.create_database_backup(temp_dir)
+        if payload["payload_path"] != temp_db_path:
+            with open(payload["payload_path"], "rb") as src, open(temp_db_path, "wb") as dst:
+                dst.write(src.read())
         return temp_db_path
+
+    def restore_database_backup(self, temp_dir, payload_path):
+        self.validate_restore_target()
+        self.validate_backup_payload(payload_path)
+
+        db_path = str(get_database_path())
+        connection.close()
+        staged_path = os.path.join(temp_dir, f"restore_db_{os.getpid()}.sqlite3")
+        with open(payload_path, "rb") as src, open(staged_path, "wb") as dst:
+            dst.write(src.read())
+        with open(staged_path, "rb") as src, open(db_path, "wb") as dst:
+            dst.write(src.read())
+        return {
+            "db_path": db_path,
+            "staged_path": staged_path,
+        }
+
+    def restore_database_snapshot(self, zip_file, member_name, backup_dir):
+        payload_path = os.path.join(backup_dir, os.path.basename(member_name))
+        with zip_file.open(member_name) as src, open(payload_path, "wb") as dst:
+            dst.write(src.read())
+        result = self.restore_database_backup(backup_dir, payload_path)
+        return result["db_path"]
+
+    def validate_backup_payload(self, payload_path):
+        if not payload_path or not os.path.exists(payload_path):
+            raise BackupValidationError("El payload SQLite no existe.")
+        conn = sqlite3.connect(payload_path)
+        try:
+            cur = conn.cursor()
+            cur.execute("PRAGMA integrity_check;")
+            result = cur.fetchone()
+            if not result or result[0].lower() != "ok":
+                raise BackupValidationError("El payload SQLite no pasÃ³ integrity_check.")
+        finally:
+            conn.close()
+        return True
+
+    def validate_restore_target(self):
+        db_path = str(get_database_path())
+        if not db_path:
+            raise BackupEngineError("No se pudo resolver la base de datos de destino.")
+        return True
+
+    def can_restore_from(self, metadata):
+        return ((metadata or {}).get("db_engine") or DB_ENGINE_SQLITE) == self.get_engine_name()
+
+    def post_restore_checks(self, restore_result=None):
+        db_path = (restore_result or {}).get("db_path") if restore_result else str(get_database_path())
+        self.validate_restored_database(db_path)
+        conn = sqlite3.connect(db_path)
+        try:
+            cur = conn.cursor()
+            cur.execute("SELECT name FROM sqlite_master WHERE type='table';")
+            tables = {row[0] for row in cur.fetchall()}
+            required = {"django_migrations", "backup_backupconfig", "backup_backuprecord"}
+            missing = required - tables
+            if missing:
+                raise BackupEngineError(f"Faltan tablas criticas tras el restore: {', '.join(sorted(missing))}.")
+            cur.execute('SELECT COUNT(*) FROM "backup_backupconfig";')
+            cur.fetchone()
+            cur.execute('SELECT COUNT(*) FROM "backup_backuprecord";')
+            cur.fetchone()
+        finally:
+            conn.close()
+        return True
 
     def clean_backup_history_in_snapshot(self, db_path):
         if not db_path or not os.path.exists(db_path):
@@ -61,18 +141,6 @@ class SQLiteBackupEngine:
                 conn.close()
         except Exception:
             pass
-
-    def restore_database_snapshot(self, zip_file, member_name, backup_dir):
-        db_path = str(get_database_path())
-        connection.close()
-        temp_db = os.path.join(backup_dir, "restore_temp.sqlite3")
-        with zip_file.open(member_name) as src, open(temp_db, "wb") as dst:
-            dst.write(src.read())
-        from ..storage_service import copy_file, delete_backup_file
-
-        copy_file(temp_db, db_path)
-        delete_backup_file(temp_db)
-        return db_path
 
     def merge_history_after_restore(self, historial, db_path):
         if not historial or not db_path or not os.path.exists(db_path):
@@ -102,6 +170,16 @@ class SQLiteBackupEngine:
                 "es_automatico",
                 "tablas_incluidas",
                 "duracion_segundos",
+                "ultima_accion",
+                "veces_restaurado",
+                "fecha_ultima_restauracion",
+                "checksum",
+                "db_engine",
+                "incluye_media",
+                "origen",
+                "es_backup_seguridad",
+                "backup_padre_id",
+                "detalle_error",
             ]
             columnas_insertables = [c for c in columnas_deseadas if c in columnas_existentes]
             if not columnas_insertables:
@@ -138,6 +216,16 @@ class SQLiteBackupEngine:
                     es_automatico=bool(data.get("es_automatico")),
                     tablas_incluidas=data.get("tablas_incluidas") or "",
                     duracion_segundos=data.get("duracion_segundos") or 0,
+                    ultima_accion=data.get("ultima_accion") or "creado",
+                    veces_restaurado=data.get("veces_restaurado") or 0,
+                    fecha_ultima_restauracion=data.get("fecha_ultima_restauracion"),
+                    checksum=data.get("checksum") or "",
+                    db_engine=data.get("db_engine") or DB_ENGINE_SQLITE,
+                    incluye_media=bool(data.get("incluye_media")),
+                    origen=data.get("origen") or "local",
+                    es_backup_seguridad=bool(data.get("es_backup_seguridad")),
+                    backup_padre_id=data.get("backup_padre_id"),
+                    detalle_error=data.get("detalle_error") or "",
                 )
             )
 
@@ -161,17 +249,27 @@ class SQLiteBackupEngine:
                 "es_automatico",
                 "tablas_incluidas",
                 "duracion_segundos",
+                "ultima_accion",
+                "veces_restaurado",
+                "fecha_ultima_restauracion",
+                "checksum",
+                "db_engine",
+                "incluye_media",
+                "origen",
+                "es_backup_seguridad",
+                "backup_padre_id",
+                "detalle_error",
             ]
             columnas_insertables = [c for c in columnas_deseadas if c in columnas_existentes]
             for item in nuevos:
                 valores = []
                 for columna in columnas_insertables:
-                    if columna == "fecha_creacion":
-                        valores.append(item.fecha_creacion.isoformat(sep=" "))
-                    elif columna == "es_automatico":
-                        valores.append(1 if item.es_automatico else 0)
-                    else:
-                        valores.append(getattr(item, columna))
+                    valor = getattr(item, columna)
+                    if columna in {"fecha_creacion", "fecha_ultima_restauracion"}:
+                        valor = valor.isoformat(sep=" ") if valor else None
+                    elif columna in {"es_automatico", "incluye_media", "es_backup_seguridad"}:
+                        valor = 1 if valor else 0
+                    valores.append(valor)
                 cur.execute(
                     f'INSERT INTO "{BackupRecord._meta.db_table}" '
                     f'({", ".join(columnas_insertables)}) VALUES ({", ".join(["?"] * len(columnas_insertables))})',
@@ -191,7 +289,7 @@ class SQLiteBackupEngine:
             cur.execute("PRAGMA integrity_check;")
             result = cur.fetchone()
             if not result or result[0].lower() != "ok":
-                raise BackupEngineError("La base restaurada no pasó la validación.")
+                raise BackupEngineError("La base restaurada no pasÃ³ la validaciÃ³n.")
         finally:
             conn.close()
         return True

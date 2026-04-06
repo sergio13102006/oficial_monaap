@@ -6,6 +6,7 @@ from .backup_service import (
 )
 from .config_service import get_backup_config, update_backup_config
 from .history_service import (
+    create_event_record,
     mark_backup_failed,
     mark_backup_restored,
     mark_backup_success,

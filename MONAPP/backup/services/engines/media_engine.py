@@ -34,6 +34,25 @@ class MediaBackupEngine:
             zip_file.write(item["file_path"], item["arc_name"])
         return files
 
+    def create_media_payload(self):
+        return self.collect_media_files()
+
+    def validate_media_members(self, members):
+        for member in members:
+            normalized = str(member or "").replace("\\", "/")
+            if normalized.startswith("/") or ".." in normalized.split("/"):
+                raise BackupEngineError("El ZIP contiene rutas de media no seguras.")
+        return True
+
+    def verify_media_root_access(self):
+        media_root = self.get_media_root()
+        if not media_root:
+            return True
+        os.makedirs(media_root, exist_ok=True)
+        if not os.path.isdir(media_root):
+            raise BackupEngineError("MEDIA_ROOT no es accesible despues del restore.")
+        return True
+
     def restore_media_from_zip(self, zip_file, members, mode="overwrite"):
         if mode not in {"overwrite", "mirror"}:
             raise BackupEngineError("Modo de restauración de media no soportado.")
@@ -56,10 +75,10 @@ class MediaBackupEngine:
             total += 1
 
         if mode == "mirror":
+            os.makedirs(media_root, exist_ok=True)
             for dirpath, _, filenames in os.walk(media_root):
                 for filename in filenames:
                     filepath = os.path.normpath(os.path.join(dirpath, filename))
                     if filepath not in restored:
                         os.remove(filepath)
         return total
-

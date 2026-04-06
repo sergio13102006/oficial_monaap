@@ -2,6 +2,7 @@ import re
 
 from django import forms
 
+from .constants import RESTORE_MODE_MIRROR, RESTORE_MODE_OVERWRITE
 from .models import BackupConfig
 
 
@@ -38,6 +39,15 @@ class BackupImportForm(forms.Form):
 
 
 class BackupConfigForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["permitir_restore_cross_engine"].help_text = (
+            "Solo para migracion/importacion asistida. El restore operativo directo entre motores distintos sigue bloqueado."
+        )
+        self.fields["restore_mode_default"].help_text = (
+            "Usa overwrite para restauracion normal. Mirror requiere backup previo y confirmacion fuerte."
+        )
+
     class Meta:
         model = BackupConfig
         fields = (
@@ -45,6 +55,11 @@ class BackupConfigForm(forms.ModelForm):
             "frecuencia_horas",
             "max_backups",
             "incluir_media",
+            "restore_mode_default",
+            "crear_backup_pre_restore",
+            "permitir_restore_cross_engine",
+            "habilitar_mirror_media",
+            "retencion_backups_seguridad",
             "ruta_backups",
         )
 
@@ -60,3 +75,14 @@ class BackupConfigForm(forms.ModelForm):
             raise forms.ValidationError("Debe conservarse al menos una copia.")
         return value
 
+    def clean_restore_mode_default(self):
+        value = self.cleaned_data["restore_mode_default"]
+        if value not in {RESTORE_MODE_OVERWRITE, RESTORE_MODE_MIRROR}:
+            raise forms.ValidationError("El modo de restore no es vÃ¡lido.")
+        return value
+
+    def clean_retencion_backups_seguridad(self):
+        value = self.cleaned_data["retencion_backups_seguridad"]
+        if value < 0:
+            raise forms.ValidationError("La retenciÃ³n de backups de seguridad no puede ser negativa.")
+        return value

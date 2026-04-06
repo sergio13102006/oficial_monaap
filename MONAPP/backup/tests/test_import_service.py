@@ -6,6 +6,9 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse
 
+from backup.models import BackupRecord
+from backup.services.import_service import import_backup
+
 
 class ImportarBackupViewTests(TestCase):
     def setUp(self):
@@ -76,3 +79,14 @@ class ImportarBackupViewTests(TestCase):
         mock_importar.assert_called_once()
         mock_restaurar.assert_not_called()
 
+    def test_importacion_invalida_no_contamina_historial(self):
+        archivo = SimpleUploadedFile(
+            "backup_prueba.txt",
+            b"contenido-falso",
+            content_type="text/plain",
+        )
+
+        with self.assertRaises(Exception):
+            import_backup(archivo, usuario=self.user, notas="fallo")
+
+        self.assertEqual(BackupRecord.objects.count(), 0)

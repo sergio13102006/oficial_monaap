@@ -2,6 +2,7 @@ import os
 import shutil
 import tempfile
 import zipfile
+import hashlib
 from datetime import datetime
 from pathlib import Path
 
@@ -36,6 +37,8 @@ def build_backup_filename(nombre_base, extension=".zip"):
 
 
 def create_temp_file(suffix="", prefix="tmp_", dirpath=None):
+    if dirpath and not os.path.isdir(dirpath):
+        dirpath = ensure_backup_dir()
     with tempfile.NamedTemporaryFile(
         delete=False, suffix=suffix, prefix=prefix, dir=dirpath
     ) as temp_file:
@@ -61,6 +64,39 @@ def get_backup_file_size(path):
     return os.path.getsize(path) if path and os.path.exists(path) else 0
 
 
+def calculate_checksum(path, algorithm="sha256"):
+    if not path or not os.path.exists(path):
+        return ""
+    hasher = hashlib.new(algorithm)
+    with open(path, "rb") as src:
+        for chunk in iter(lambda: src.read(1024 * 1024), b""):
+            hasher.update(chunk)
+    return hasher.hexdigest()
+
+
+def calculate_zip_content_checksum(path, algorithm="sha256", skip_members=None):
+    if not path or not os.path.exists(path):
+        return ""
+    skip_members = set(skip_members or [])
+    hasher = hashlib.new(algorithm)
+    with zipfile.ZipFile(path, "r") as zf:
+        for name in sorted(zf.namelist()):
+            if name in skip_members or name.endswith("/"):
+                continue
+            hasher.update(name.encode("utf-8"))
+            with zf.open(name) as src:
+                for chunk in iter(lambda: src.read(1024 * 1024), b""):
+                    hasher.update(chunk)
+    return hasher.hexdigest()
+
+
+def validate_checksum(path, expected_checksum, algorithm="sha256"):
+    if not expected_checksum:
+        return True
+    current = calculate_checksum(path, algorithm=algorithm)
+    return current == expected_checksum
+
+
 def open_backup_zip(path, mode="r"):
     try:
         return zipfile.ZipFile(path, mode, zipfile.ZIP_DEFLATED)
@@ -84,11 +120,11 @@ def save_backup_file(src_path, nombre_base):
 
 
 def create_temp_dir(prefix="backup_tmp_"):
-    return tempfile.mkdtemp(prefix=prefix, dir=ensure_backup_dir())
+    return ensure_backup_dir()
 
 
 def cleanup_temp_dir(path):
-    if path and os.path.exists(path):
+    if path and os.path.exists(path) and os.path.normcase(path) != os.path.normcase(ensure_backup_dir()):
         shutil.rmtree(path, ignore_errors=True)
 
 

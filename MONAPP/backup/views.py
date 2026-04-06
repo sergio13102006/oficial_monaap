@@ -145,7 +145,14 @@ def restaurar_backup_view(request, pk):
     except FileNotFoundError:
         messages.error(request, "El archivo de backup no existe en el servidor.")
     except Exception as exc:
-        messages.error(request, f"Error al restaurar: {exc}")
+        mensaje = str(exc)
+        if "requiere flujo de migracion/importacion" in mensaje:
+            messages.error(
+                request,
+                "Este respaldo pertenece a otro motor y requiere migracion/importacion controlada; no se puede restaurar directamente desde este panel.",
+            )
+        else:
+            messages.error(request, f"Error al restaurar: {mensaje}")
     return redirect("backup:dashboard")
 
 

@@ -12,7 +12,9 @@ from .models import BackupConfig, BackupRecord
 SORT_MAP = {
     "nombre": ("nombre",),
     "tipo": ("tipo", "nombre"),
+    "accion": ("ultima_accion", "nombre"),
     "estado": ("estado", "nombre"),
+    "motor": ("db_engine", "nombre"),
     "tamano": ("tamano", "nombre"),
     "fecha": ("fecha_creacion",),
 }
@@ -48,6 +50,9 @@ def build_backup_dashboard_queryset(filters):
             | Q(notas__icontains=query)
             | Q(tipo__icontains=query)
             | Q(estado__icontains=query)
+            | Q(ultima_accion__icontains=query)
+            | Q(db_engine__icontains=query)
+            | Q(origen__icontains=query)
             | Q(usuario__username__icontains=query)
         )
     if estado:
@@ -106,6 +111,7 @@ def get_backup_dashboard_summary(filtered_queryset):
         .order_by("-fecha_creacion")
         .first(),
         "historial_total": filtered_queryset.count(),
+        "restaurados": BackupRecord.objects.filter(veces_restaurado__gt=0).count(),
     }
 
 
