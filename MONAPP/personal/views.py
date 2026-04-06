@@ -7,40 +7,15 @@ from django.views.decorators.http import require_POST
 from django.template.loader import render_to_string
 from .models import Personal
 from .forms import PersonalForm, PersonalBusquedaForm
+from .archivo_personal import build_personal_excel_response, build_personal_pdf_response
 
 
-def _puede_modificar_personal(user):
-    grupos = set(user.groups.values_list("name", flat=True))
-    return user.is_superuser or "Administrador" in grupos or "Auxiliar" in grupos
-
-
-def _respuesta_no_autorizado_personal(request):
-    mensaje = "No tienes permisos para modificar personal."
-    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
-        return JsonResponse({"success": False, "mensaje": mensaje}, status=403)
-    messages.error(request, mensaje)
-    return redirect("personal:lista_personal")
-
-
-@login_required
-def lista_personal(request):
-    """Lista todo el personal con búsqueda y filtrado"""
+def _obtener_personal_filtrado(request):
     q = request.GET.get("q", "").strip()
     current_sort = request.GET.get("sort", "").strip()
     current_dir = request.GET.get("dir", "asc").strip().lower()
     if current_dir not in {"asc", "desc"}:
         current_dir = "asc"
-    grupos = list(request.user.groups.values_list("name", flat=True))
-
-    # Verificar si el usuario actual es Administrador (puede eliminar)
-    es_administrador = request.user.is_superuser or "Administrador" in grupos
-
-    # Verificar si puede crear/editar (Administrador o Auxiliar)
-    puede_modificar = (
-        request.user.is_superuser
-        or "Administrador" in grupos
-        or "Auxiliar" in grupos
-    )
 
     personal_list = Personal.objects.all()
     form = PersonalBusquedaForm(request.GET or None)
@@ -49,10 +24,8 @@ def lista_personal(request):
     if form.is_valid() and form.cleaned_data.get("filtro"):
         filtro = form.cleaned_data.get("filtro")
     elif not request.GET:
-        # En carga inicial, establecer el valor del formulario
         form = PersonalBusquedaForm(initial={"filtro": "todos"})
 
-    # BUSQUEDA GLOBAL
     if q:
         query_general = (
             Q(numero_documento__icontains=q) |
@@ -61,13 +34,11 @@ def lista_personal(request):
             Q(telefono__icontains=q) |
             Q(correo__icontains=q)
         )
-        # Solo incluir ID si el termino de busqueda es puramente numerico para evitar ValueError
         if q.isdigit():
             query_general |= Q(id=q)
-            
+
         personal_list = personal_list.filter(query_general)
 
-    # FILTRO (Se ignora si el usuario está usando el buscador global activo para garantizar que encuentre lo que busca)
     if not q:
         if filtro == "activo":
             personal_list = personal_list.filter(activo=True)
@@ -77,7 +48,6 @@ def lista_personal(request):
             rol_valor = filtro.replace("rol_", "")
             personal_list = personal_list.filter(rol=rol_valor)
 
-    # ORDENAMIENTO SEGURO (whitelist)
     sort_map = {
         "id": ("id",),
         "documento": ("numero_documento",),
@@ -98,20 +68,67 @@ def lista_personal(request):
         current_sort = ""
         personal_list = personal_list.order_by("nombres", "apellidos", "id")
 
-    context = {
+    return {
         "personal_list": personal_list,
         "form": form,
         "q": q,
-        "puede_modificar": puede_modificar,
-        "es_administrador": es_administrador,
         "current_sort": current_sort,
         "current_dir": current_dir,
+        "filtro": filtro,
+    }
+
+
+def _puede_modificar_personal(user):
+    grupos = set(user.groups.values_list("name", flat=True))
+    return user.is_superuser or "Administrador" in grupos or "Auxiliar" in grupos
+
+
+def _respuesta_no_autorizado_personal(request):
+    mensaje = "No tienes permisos para modificar personal."
+    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        return JsonResponse({"success": False, "mensaje": mensaje}, status=403)
+    messages.error(request, mensaje)
+    return redirect("personal:lista_personal")
+
+
+@login_required
+def lista_personal(request):
+    """Lista todo el personal con búsqueda y filtrado"""
+    grupos = list(request.user.groups.values_list("name", flat=True))
+
+    # Verificar si el usuario actual es Administrador (puede eliminar)
+    es_administrador = request.user.is_superuser or "Administrador" in grupos
+
+    # Verificar si puede crear/editar (Administrador o Auxiliar)
+    puede_modificar = (
+        request.user.is_superuser
+        or "Administrador" in grupos
+        or "Auxiliar" in grupos
+    )
+
+    context = {
+        **_obtener_personal_filtrado(request),
+        "puede_modificar": puede_modificar,
+        "es_administrador": es_administrador,
+        "print_querystring": request.GET.urlencode(),
     }
 
     if request.headers.get("x-requested-with") == "XMLHttpRequest":
         return render(request, "personal/lista_personal_global.html", context)
 
     return render(request, "personal/lista_personal.html", context)
+
+
+@login_required
+def crear_archivo_personal(request):
+    filtros = _obtener_personal_filtrado(request)
+    personal_list = list(filtros["personal_list"])
+    formato = (request.GET.get("formato") or "pdf").strip().lower()
+
+    if formato == "excel":
+        return build_personal_excel_response(personal_list)
+
+    return build_personal_pdf_response(personal_list)
 @login_required
 def crear_personal(request):
     """Crear nuevo personal"""

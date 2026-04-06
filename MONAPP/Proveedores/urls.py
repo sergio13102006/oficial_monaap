@@ -5,6 +5,7 @@ app_name = 'proveedores'
 
 urlpatterns = [
     path('', views.lista_proveedores, name='lista_proveedor'),
+    path('crear-archivo/', views.crear_archivo_proveedores, name='crear_archivo'),
     path('crear/', views.crear_proveedor, name='crear_proveedor'),
     path('validar-nombre/', views.validar_nombre_proveedor, name='validar_nombre_proveedor'),
     path('editar/<int:pk>/', views.editar_proveedor, name='editar_proveedor'),

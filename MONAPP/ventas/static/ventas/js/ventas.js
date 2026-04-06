@@ -12,8 +12,20 @@ function money(n) {
   return (Math.round(n * 100) / 100).toFixed(2);
 }
 
+function applyTomSelect(sel) {
+  if (!sel || typeof TomSelect === "undefined") return;
+  if (sel.tomselect) return;
+
+  new TomSelect(sel, {
+    create: false,
+    allowEmptyOption: true,
+    dropdownParent: "body",
+    sortField: { field: "text", direction: "asc" },
+  });
+}
+
 // ============================================================
-// 1) INIT CREAR VENTA (REUTILIZABLE: pÃ¡gina y modal)
+// 1) INIT CREAR VENTA (REUTILIZABLE: pá¡gina y modal)
 // ============================================================
 function initCrearVenta(scope = document) {
   // Buscar el FORM (si no existe, salir)
@@ -50,7 +62,7 @@ function initCrearVenta(scope = document) {
   const itemsInput = form.querySelector("#itemsInput");
   const errorCantidad = form.querySelector("#cantidadError");
 
-  // Si faltan piezas crÃ­ticas, salir sin romper
+  // Si faltan piezas crá­ticas, salir sin romper
   const tieneModuloCrearVenta =
     !!btnAgregarItem &&
     !!btnGuardarVenta &&
@@ -143,7 +155,7 @@ function initCrearVenta(scope = document) {
   function validarCantidad() {
     const cantidadStr = String(inputCantidad.value || "").trim();
 
-    //  Si estÃ¡ vacÃ­o (todavÃ­a no han escrito), NO mostrar error
+    //  Si está¡ vacá­o (todavá­a no han escrito), NO mostrar error
     if (cantidadStr === "") {
       if (errorCantidad) errorCantidad.classList.add("d-none");
       inputSubtotal.value = "";
@@ -154,7 +166,7 @@ function initCrearVenta(scope = document) {
     const cantidad = parseInt(cantidadStr, 10);
     const precio = toNum(inputPrecio.value);
 
-    //  Si no es nÃºmero vÃ¡lido, tampoco mostramos error agresivo
+    //  Si no es náºmero vá¡lido, tampoco mostramos error agresivo
     if (isNaN(cantidad) || cantidad <= 0) {
       if (errorCantidad) errorCantidad.classList.add("d-none");
       inputSubtotal.value = "";
@@ -162,7 +174,7 @@ function initCrearVenta(scope = document) {
       return;
     }
 
-    //  Si se pasa del stock, ahÃ­ sÃ­ mostramos el error
+    //  Si se pasa del stock, ahá­ sá­ mostramos el error
     if (cantidad > stockActual) {
       if (errorCantidad) errorCantidad.classList.remove("d-none");
       btnAgregarItem.disabled = true;
@@ -300,7 +312,7 @@ function initCrearVenta(scope = document) {
       if (!cantidad || cantidad <= 0 || cantidad > stockActual) {
         Swal?.fire?.({
           icon: "warning",
-          title: "Cantidad invÃ¡lida o superior al stock disponible",
+          title: "Cantidad invá¡lida o superior al stock disponible",
         });
         return;
       }
@@ -326,7 +338,7 @@ function initCrearVenta(scope = document) {
       if (!selectPersonal || selectPersonal.selectedIndex === 0) {
         Swal?.fire?.({
           icon: "warning",
-          title: "Selecciona la persona que realizÃ³ el servicio",
+          title: "Selecciona la persona que realizá³ el servicio",
         });
         return;
       }
@@ -351,7 +363,7 @@ function initCrearVenta(scope = document) {
   });
 
   // ---------------------------
-  // Eliminar item (delegaciÃ³n)
+  // Eliminar item (delegaciá³n)
   // ---------------------------
   tablaItemsBody.addEventListener("click", (e) => {
     const btn = e.target.closest("button[data-index]");
@@ -406,26 +418,231 @@ function initCrearVenta(scope = document) {
   // ================================
   // Tom Select: quitar azul nativo
   // ================================
-  function applyTomSelect(sel) {
-    if (!sel) return;
-    if (sel.tomselect) return; // ya aplicado
-    new TomSelect(sel, {
-      create: false,
-      allowEmptyOption: true,
-      dropdownParent: "body",
-      sortField: { field: "text", direction: "asc" },
-    });
-  }
-
   applyTomSelect(selectCliente);
   applyTomSelect(selectProducto);
   applyTomSelect(selectServicio);
   applyTomSelect(selectPersonal);
 }
 
-// Init al cargar cualquier pÃ¡gina
+function initVentaRapida(scope = document) {
+  const form =
+    scope.querySelector("#formVentaRapida") || scope.querySelector("form#formVentaRapida");
+  if (!form) return;
+  if (form.dataset.initVentaRapida === "1") return;
+  form.dataset.initVentaRapida = "1";
+
+  const selectCliente = form.querySelector("#id_cliente");
+  const selectProducto = form.querySelector("#id_producto_rapido");
+  const inputPrecio = form.querySelector("#id_precio_unitario_rapido");
+  const inputCantidad = form.querySelector("#id_cantidad_rapido");
+  const inputSubtotal = form.querySelector("#id_subtotal_rapido");
+  const stockInfo = form.querySelector("#stockInfoRapido");
+  const errorCantidad = form.querySelector("#cantidadErrorRapido");
+  const btnAgregar = form.querySelector("#btnAgregarItemRapido");
+  const btnGuardar = form.querySelector("#btnGuardarVentaRapida");
+  const tablaItemsBody = form.querySelector("#tablaItemsRapidos tbody");
+  const totalVenta = form.querySelector("#totalVentaRapida");
+  const itemsInput = form.querySelector("#itemsRapidosInput");
+
+  if (
+    !selectCliente ||
+    !selectProducto ||
+    !inputPrecio ||
+    !inputCantidad ||
+    !inputSubtotal ||
+    !btnAgregar ||
+    !btnGuardar ||
+    !tablaItemsBody ||
+    !totalVenta ||
+    !itemsInput
+  ) {
+    return;
+  }
+
+  let stockActual = 0;
+  let items = [];
+  itemsInput.value = "[]";
+
+  function syncInput() {
+    itemsInput.value = JSON.stringify(items);
+  }
+
+  function totalCantidadReservada(codigo) {
+    return items
+      .filter((item) => String(item.id) === String(codigo))
+      .reduce((acc, item) => acc + (parseInt(item.cantidad, 10) || 0), 0);
+  }
+
+  function actualizarInfoStock() {
+    if (!stockInfo) return;
+    const value = selectProducto.value;
+    if (!value) {
+      stockInfo.classList.add("d-none");
+      return;
+    }
+
+    const reservado = totalCantidadReservada(value);
+    const disponible = Math.max(stockActual - reservado, 0);
+
+    stockInfo.classList.remove("d-none");
+    if (disponible > 0) {
+      stockInfo.textContent = `Disponible: ${disponible} unidades`;
+      stockInfo.className = "text-success small";
+    } else {
+      stockInfo.textContent = "Sin stock disponible";
+      stockInfo.className = "text-danger small";
+    }
+  }
+
+  function renderTabla() {
+    tablaItemsBody.innerHTML = "";
+    let total = 0;
+
+    items.forEach((item, index) => {
+      total += item.subtotal;
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${item.nombre}</td>
+        <td class="text-end">$${money(item.precio)}</td>
+        <td class="text-center">${item.cantidad}</td>
+        <td class="text-end">$${money(item.subtotal)}</td>
+        <td class="text-center">
+          <button type="button" class="btn btn-sm btn-danger" data-index="${index}">×</button>
+        </td>
+      `;
+      tablaItemsBody.appendChild(tr);
+    });
+
+    totalVenta.textContent = money(total);
+    syncInput();
+    actualizarInfoStock();
+    actualizarBotones();
+  }
+
+  function limpiarCamposProducto() {
+    if (selectProducto.tomselect) {
+      selectProducto.tomselect.clear(true);
+    } else {
+      selectProducto.value = "";
+    }
+    inputPrecio.value = "";
+    inputCantidad.value = "";
+    inputSubtotal.value = "";
+    stockActual = 0;
+    if (errorCantidad) errorCantidad.classList.add("d-none");
+    if (stockInfo) stockInfo.classList.add("d-none");
+  }
+
+  function actualizarBotones() {
+    const clienteOk = !!selectCliente.value;
+    const productoOk = !!selectProducto.value;
+    const precio = toNum(inputPrecio.value);
+    const cantidad = parseInt(inputCantidad.value || 0, 10);
+    const reservado = totalCantidadReservada(selectProducto.value);
+    const disponible = Math.max(stockActual - reservado, 0);
+
+    btnAgregar.disabled = !(productoOk && precio > 0 && cantidad > 0 && cantidad <= disponible);
+    btnGuardar.disabled = !(clienteOk && items.length > 0);
+  }
+
+  function validarCantidad() {
+    if (!selectProducto.value) {
+      inputSubtotal.value = "";
+      actualizarBotones();
+      return;
+    }
+
+    const cantidad = parseInt(inputCantidad.value || 0, 10);
+    const precio = toNum(inputPrecio.value);
+    const reservado = totalCantidadReservada(selectProducto.value);
+    const disponible = Math.max(stockActual - reservado, 0);
+
+    if (!cantidad || cantidad <= 0) {
+      if (errorCantidad) errorCantidad.classList.add("d-none");
+      inputSubtotal.value = "";
+      actualizarBotones();
+      return;
+    }
+
+    if (cantidad > disponible) {
+      if (errorCantidad) errorCantidad.classList.remove("d-none");
+      inputSubtotal.value = "";
+      btnAgregar.disabled = true;
+      return;
+    }
+
+    if (errorCantidad) errorCantidad.classList.add("d-none");
+    inputSubtotal.value = money(precio * cantidad);
+    actualizarBotones();
+  }
+
+  selectProducto.addEventListener("change", () => {
+    const opt = selectProducto.options[selectProducto.selectedIndex];
+    if (!opt || !selectProducto.value) {
+      limpiarCamposProducto();
+      actualizarBotones();
+      return;
+    }
+
+    stockActual = parseInt(opt.dataset.stock || "0", 10) || 0;
+    inputPrecio.value = money(toNum(opt.dataset.precio));
+    inputCantidad.value = "";
+    inputSubtotal.value = "";
+    if (errorCantidad) errorCantidad.classList.add("d-none");
+    actualizarInfoStock();
+    actualizarBotones();
+  });
+
+  inputCantidad.addEventListener("input", validarCantidad);
+  selectCliente.addEventListener("change", actualizarBotones);
+
+  btnAgregar.addEventListener("click", (e) => {
+    e.preventDefault();
+
+    if (!selectProducto.value) return;
+
+    const opt = selectProducto.options[selectProducto.selectedIndex];
+    const cantidad = parseInt(inputCantidad.value || 0, 10);
+    const precio = toNum(inputPrecio.value);
+    const reservado = totalCantidadReservada(selectProducto.value);
+    const disponible = Math.max(stockActual - reservado, 0);
+
+    if (!cantidad || cantidad <= 0 || cantidad > disponible) {
+      if (errorCantidad) errorCantidad.classList.remove("d-none");
+      return;
+    }
+
+    items.push({
+      tipo: "producto",
+      id: selectProducto.value,
+      nombre: opt.textContent.trim(),
+      precio,
+      cantidad,
+      subtotal: precio * cantidad,
+    });
+
+    renderTabla();
+    limpiarCamposProducto();
+  });
+
+  tablaItemsBody.addEventListener("click", (e) => {
+    const btn = e.target.closest("button[data-index]");
+    if (!btn) return;
+    const index = parseInt(btn.dataset.index, 10);
+    if (Number.isNaN(index)) return;
+    items.splice(index, 1);
+    renderTabla();
+  });
+
+  applyTomSelect(selectCliente);
+  applyTomSelect(selectProducto);
+  actualizarBotones();
+}
+
+// Init al cargar cualquier pá¡gina
 document.addEventListener("DOMContentLoaded", () => {
   initCrearVenta(document);
+  initVentaRapida(document);
 });
 
 // ============================================================
@@ -458,7 +675,7 @@ document.addEventListener("click", async function (e) {
     const data = await res.json();
     contenido.innerHTML = data.html || "";
 
-    // âœ… activar lÃ³gica del formulario dentro del modal
+    // âœ… activar lá³gica del formulario dentro del modal
     initCrearVenta(modalEl);
 
     modal.show();
@@ -468,18 +685,44 @@ document.addEventListener("click", async function (e) {
   }
 });
 
+document.addEventListener("click", async function (e) {
+  const btnVentaRapida = e.target.closest("#btnVentaRapida");
+  if (!btnVentaRapida) return;
+
+  const url = btnVentaRapida.dataset.url;
+  const modalEl = document.getElementById("modalVentaRapida");
+  const contenido = document.getElementById("contenidoVentaRapida");
+
+  if (!modalEl || !contenido) return;
+
+  const modal = new bootstrap.Modal(modalEl);
+  contenido.innerHTML = `<div class="text-center text-muted py-4">Cargando...</div>`;
+
+  try {
+    const res = await fetch(url, { headers: esAjaxRequestHeaders() });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+
+    const data = await res.json();
+    contenido.innerHTML = data.html || "";
+    initVentaRapida(modalEl);
+    modal.show();
+  } catch (err) {
+    contenido.innerHTML = `<div class="alert alert-danger mb-0">No se pudo cargar: ${err.message}</div>`;
+  }
+});
+
 // Submit del form crear venta dentro del modal (AJAX)
 document.addEventListener("submit", async function (e) {
   const form = e.target;
   if (!form.matches("#formCrearVenta")) return;
 
-  // Solo si estÃ¡ dentro del modal
+  // Solo si está¡ dentro del modal
   const modalEl = form.closest("#modalNuevaVenta");
   if (!modalEl) return;
 
   e.preventDefault();
 
-  // El form NO tiene action en tu parcial, entonces usamos el data-url del botÃ³n
+  // El form NO tiene action en tu parcial, entonces usamos el data-url del botá³n
   const btnNueva = document.getElementById("btnNuevaVenta");
   const url = btnNueva ? btnNueva.dataset.url : window.location.href;
 
@@ -516,6 +759,62 @@ document.addEventListener("submit", async function (e) {
 
       // volver a enganchar listeners
       initCrearVenta(modalEl);
+    }
+  } catch (err) {
+    Swal?.fire?.({
+      icon: "error",
+      title: "Error al guardar",
+      text: err.message,
+    });
+  }
+});
+
+document.addEventListener("submit", async function (e) {
+  const form = e.target;
+  if (!form.matches("#formVentaRapida")) return;
+
+  const modalEl = form.closest("#modalVentaRapida");
+  if (!modalEl) return;
+
+  e.preventDefault();
+
+  const btnVentaRapida = document.getElementById("btnVentaRapida");
+  const url = btnVentaRapida ? btnVentaRapida.dataset.url : window.location.href;
+
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: esAjaxRequestHeaders(),
+      body: new FormData(form),
+    });
+
+    if (!res.ok) {
+      const data = await res.json();
+      const contenido = document.getElementById("contenidoVentaRapida");
+      contenido.innerHTML =
+        data.html || "<div class='alert alert-danger'>No se pudo guardar la venta rápida.</div>";
+      initVentaRapida(modalEl);
+      return;
+    }
+
+    const data = await res.json();
+    if (data.success === true) {
+      const modal = bootstrap.Modal.getInstance(modalEl);
+      if (modal) modal.hide();
+
+      await Swal.fire({
+        icon: "success",
+        title: "Venta rápida registrada",
+        timer: 1400,
+        showConfirmButton: false,
+      });
+
+      location.reload();
+    } else {
+      const contenido = document.getElementById("contenidoVentaRapida");
+      contenido.innerHTML =
+        data.html || "<div class='alert alert-danger'>Error en formulario.</div>";
+      initVentaRapida(modalEl);
     }
   } catch (err) {
     Swal?.fire?.({
@@ -631,7 +930,7 @@ document.addEventListener("click", async function (e) {
 
       cont.innerHTML = `
         <div class="row g-2 mb-3">
-          <div class="col-md-6"><strong>CÃ³digo venta:</strong> ${v.codigo_venta || "-"}</div>
+          <div class="col-md-6"><strong>Cá³digo venta:</strong> ${v.codigo_venta || "-"}</div>
           <div class="col-md-6"><strong>Fecha:</strong> ${v.fecha || "-"}</div>
           <div class="col-md-6"><strong>Cliente:</strong> ${v.cliente || "-"}</div>
           <div class="col-md-6"><strong>Estado:</strong> ${v.estado || "-"}</div>
@@ -698,7 +997,7 @@ function precargarItemsEdicion(form, items) {
   var totalEl = form.querySelector("#totalVenta");
   if (!tablaBody || !itemsInput) return;
 
-  // Inyectar Ã­tems directamente en el input hidden y renderizar la tabla
+  // Inyectar á­tems directamente en el input hidden y renderizar la tabla
   itemsInput.value = JSON.stringify(items);
 
   var total = 0;
@@ -769,7 +1068,7 @@ document.addEventListener("input", function(e) {
     var val = parseInt(cant.value) || 0;
     var errEl = document.querySelector('.err-stock-' + id);
 
-    // No permitir escribir mÃ¡s de lo disponible (1..stock)
+    // No permitir escribir má¡s de lo disponible (1..stock)
     if (stock <= 0) {
       cant.value = 0;
       cant.classList.add("is-invalid");
@@ -876,7 +1175,7 @@ function recalcTotalEditar() {
   if (totalEl) totalEl.textContent = "$ " + total.toLocaleString("es-CO", {minimumFractionDigits:2});
 }
 
-// Eliminar funciÃ³n precargarItemsEdicion si existe (ya no se usa)
+// Eliminar funciá³n precargarItemsEdicion si existe (ya no se usa)
 
 
 // ============================================================
@@ -890,7 +1189,7 @@ document.addEventListener(
 
     if (typeof Swal === "undefined") {
       console.error(
-        "âŒ SweetAlert2 no estÃ¡ cargado. Revisa el orden de scripts.",
+        " SweetAlert2 no está cargado. Revisa el orden de scripts.",
       );
       return;
     }
@@ -904,14 +1203,14 @@ document.addEventListener(
     const vaAActivar = estadoAntes === "anulada";
 
     const titulo = vaAActivar
-      ? "Â¿Seguro de activar nuevamente la venta?"
-      : "Â¿Seguro de anular la venta?";
+      ? "¿Seguro de activar nuevamente la venta?"
+      : "¿Seguro de anular la venta?";
 
     const texto = vaAActivar
-      ? "La venta quedarÃ¡ ACTIVA nuevamente."
-      : "La venta quedarÃ¡ ANULADA.";
+      ? "La venta quedará¡ ACTIVA nuevamente."
+      : "La venta quedará¡ ANULADA.";
 
-    const confirmText = vaAActivar ? "SÃ­, activar" : "SÃ­, anular";
+    const confirmText = vaAActivar ? "Sí, activar" : "Sí, anular";
 
     Swal.fire({
       title: titulo,
@@ -1149,8 +1448,8 @@ function validarFechasReporte(form) {
     // Rango comparativo no puede ser igual al principal
     if (dFi && dFf && dFic && dFfc &&
         dFi.getTime() === dFic.getTime() && dFf.getTime() === dFfc.getTime()) {
-      setFieldError("id_fecha_inicio_comp", "err_fecha_inicio_comp", "El rango comparativo no puede ser idÃ©ntico al rango principal.");
-      setFieldError("id_fecha_fin_comp", "err_fecha_fin_comp", "El rango comparativo no puede ser idÃ©ntico al rango principal.");
+      setFieldError("id_fecha_inicio_comp", "err_fecha_inicio_comp", "El rango comparativo no puede ser idá©ntico al rango principal.");
+      setFieldError("id_fecha_fin_comp", "err_fecha_fin_comp", "El rango comparativo no puede ser idá©ntico al rango principal.");
       errores.push("comp_igual_principal");
     }
   }
@@ -1358,7 +1657,7 @@ document.addEventListener("click", async function (e) {
 
   async function descargarPreviewComoPDF() {
     if (typeof html2pdf === "undefined") {
-      throw new Error("html2pdf.js no estÃ¡ disponible.");
+      throw new Error("html2pdf.js no está¡ disponible.");
     }
 
     const wrapper = document.createElement("div");
@@ -1371,7 +1670,7 @@ document.addEventListener("click", async function (e) {
 
     const clone = sheet.cloneNode(true);
 
-    // Copiar contenido de canvases (Chart.js) a imÃ¡genes en el clon para que html2canvas lo renderice.
+    // Copiar contenido de canvases (Chart.js) a imá¡genes en el clon para que html2canvas lo renderice.
     const srcCanvases = Array.from(sheet.querySelectorAll("canvas"));
     const dstCanvases = Array.from(clone.querySelectorAll("canvas"));
     srcCanvases.forEach((srcCanvas, idx) => {
@@ -1474,7 +1773,7 @@ document.addEventListener("click", async function (e) {
   } else {
     result = await Swal.fire({
       title: "Descargar reporte",
-      text: "Se descargarÃ¡ en PDF.",
+      text: "Se descargará¡ en PDF.",
       icon: "question",
       showCancelButton: true,
       confirmButtonText: "PDF",
@@ -1511,7 +1810,7 @@ document.addEventListener("click", async function (e) {
       Swal.fire({
         icon: "warning",
         title: "Sin archivo",
-        text: "No se encontrÃ³ la ruta del Excel.",
+        text: "No se encontrá³ la ruta del Excel.",
       });
       return;
     }
@@ -1564,7 +1863,7 @@ document.addEventListener("submit", function (e) {
     Swal.fire({
       icon: "error",
       title: "No se pudo generar el PDF",
-      text: "No se encontrÃ³ el botÃ³n de vista previa.",
+      text: "No se encontrá³ el botá³n de vista previa.",
     });
   }
 });
@@ -1828,7 +2127,7 @@ function getCookie(name) {
 }
 
 // ============================================================
-// BOTÃ“N X MODAL DEVOLUCIÃ“N â€” GIRO HORARIO/ANTIHORARIO
+// BOTá“N X MODAL DEVOLUCIá“N â€” GIRO HORARIO/ANTIHORARIO
 // ============================================================
 document.addEventListener("mouseleave", function(e) {
   if (!e.target.closest) return;
@@ -1841,7 +2140,7 @@ document.addEventListener("mouseleave", function(e) {
   icon.classList.remove("spin-reset");
   icon.classList.add("spin-back");
 
-  // DespuÃ©s de la transiciÃ³n, resetear a 0 sin animaciÃ³n
+  // Despuá©s de la transiciá³n, resetear a 0 sin animaciá³n
   setTimeout(function() {
     icon.classList.remove("spin-back");
     icon.classList.add("spin-reset");

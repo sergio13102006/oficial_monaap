@@ -27,7 +27,7 @@
 /* â”€â”€ BODY â”€â”€ */
 .db-body { padding: 28px 32px 0; position: relative; z-index: 1; }
 
-/* â”€â”€ TOP ROW: hero cuadrado + stock crÃ­tico â”€â”€ */
+/* â”€â”€ TOP ROW: hero cuadrado + stock crá­tico â”€â”€ */
 .top-row {
   display: grid;
   grid-template-columns: 1fr 260px;
@@ -57,7 +57,7 @@
   justify-content: flex-start;
 }
 
-/* â”€â”€ FONDO DE LA TARJETA con cÃ­rculos decorativos â”€â”€ */
+/* â”€â”€ FONDO DE LA TARJETA con cá­rculos decorativos â”€â”€ */
 .hero-card-bg {
   position: absolute;
   inset: 0;
@@ -67,7 +67,7 @@
   z-index: 0;
 }
 
-/* CÃ­rculo decorativo arriba-izquierda */
+/* Cá­rculo decorativo arriba-izquierda */
 .hero-card-bg::before {
   content: '';
   position: absolute;
@@ -80,7 +80,7 @@
   pointer-events: none;
 }
 
-/* CÃ­rculo decorativo abajo-derecha */
+/* Cá­rculo decorativo abajo-derecha */
 .hero-card-bg::after {
   content: '';
   position: absolute;
@@ -93,7 +93,7 @@
   pointer-events: none;
 }
 
-/* CÃ­rculo extra central-superior */
+/* Cá­rculo extra central-superior */
 .hero-card-circle1 {
   position: absolute;
   width: 160px;
@@ -106,7 +106,7 @@
   z-index: 1;
 }
 
-/* CÃ­rculo extra pequeÃ±o inferior-izquierda */
+/* Cá­rculo extra pequeá±o inferior-izquierda */
 .hero-card-circle2 {
   position: absolute;
   width: 90px;
@@ -130,7 +130,7 @@
   overflow: hidden;
 }
 
-/* CÃ­rculo anillo decorativo */
+/* Cá­rculo anillo decorativo */
 .hero-card-circle3 {
   position: absolute;
   width: 200px;

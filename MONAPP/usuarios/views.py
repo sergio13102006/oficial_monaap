@@ -163,7 +163,7 @@ def _login_portal_url(request):
     if next_url:
         params["next"] = next_url
     return f"{reverse('core:index')}?{urlencode(params)}"
-# ==================== VISTAS DE AUTENTICACIÃ“N ====================
+# ==================== VISTAS DE AUTENTICACIá“N ====================
 
 @csrf_protect
 @never_cache
@@ -325,7 +325,7 @@ def logout_view(request):
     return redirect('core:index')
 
 
-# ==================== RECUPERACIÃ“N DE CONTRASEÃ‘A ====================
+# ==================== RECUPERACIá“N DE CONTRASEá‘A ====================
 
 
 @csrf_protect
@@ -472,7 +472,7 @@ def lista_usuarios_view(request):
 
     q = form.cleaned_data.get('busqueda', '') if form.is_valid() else ''
     context = {
-        'titulo'          : 'GestiÃ³n de Usuarios',
+        'titulo'          : 'Gestiá³n de Usuarios',
         'usuarios'        : usuarios,
         'form'            : form,
         'es_administrador': es_administrador,
@@ -497,7 +497,7 @@ def crear_usuario_view(request):
         messages.error(request, 'No tienes permisos para crear usuarios.')
         return redirect('usuarios:lista_usuarios')
     
-    # Verificar si es una peticiÃ³n AJAX para cargar el modal
+    # Verificar si es una peticiá³n AJAX para cargar el modal
     is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
 
     if request.method == 'POST':
@@ -537,7 +537,7 @@ def crear_usuario_view(request):
                                      request=request)
         return JsonResponse({'html_form': html_form})
 
-    # Si no es AJAX, mostrar la pÃ¡gina completa (comportamiento anterior)
+    # Si no es AJAX, mostrar la pá¡gina completa (comportamiento anterior)
     return render(
         request,
         'crear_usuario.html',
@@ -689,7 +689,7 @@ def eliminar_usuario_view(request, user_id):
             )
             return redirect('usuarios:lista_usuarios')
 
-    # Si es AJAX y es GET, retornar el HTML del modal de confirmaciÃ³n
+    # Si es AJAX y es GET, retornar el HTML del modal de confirmaciá³n
     if is_ajax:
         try:
             html_content = render_to_string('usuarios/_confirmar_eliminar_modal.html', 
@@ -702,7 +702,7 @@ def eliminar_usuario_view(request, user_id):
                 'message': f'Error al cargar el contenido: {str(e)}'
             }, status=500)
 
-    # Si no es AJAX, mostrar la pÃ¡gina completa (comportamiento anterior)
+    # Si no es AJAX, mostrar la pá¡gina completa (comportamiento anterior)
     return render(
         request,
         'usuarios/eliminar_usuario.html',
@@ -715,7 +715,7 @@ def eliminar_usuario_view(request, user_id):
 
 @login_required
 def detalle_usuario_view(request, user_id):
-    """Ver detalles de un usuario vÃ­a AJAX."""
+    """Ver detalles de un usuario vá­a AJAX."""
     grupos = list(request.user.groups.values_list('name', flat=True))
     es_administrador = request.user.is_superuser or 'Administrador' in grupos
     puede_modificar = request.user.is_superuser or 'Administrador' in grupos or 'Auxiliar' in grupos
@@ -741,11 +741,11 @@ def detalle_usuario_view(request, user_id):
 @login_required
 @require_POST
 def toggle_activo_usuario_view(request, user_id):
-    """Cambia el estado activo/inactivo de un usuario vÃ­a AJAX."""
+    """Cambia el estado activo/inactivo de un usuario vá­a AJAX."""
     is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
 
     if not is_ajax or request.method != 'POST':
-        return JsonResponse({'success': False, 'mensaje': 'Solicitud no vÃ¡lida.'}, status=400)
+        return JsonResponse({'success': False, 'mensaje': 'Solicitud no vá¡lida.'}, status=400)
 
     if not _puede_modificar_usuarios(request.user):
         return JsonResponse({'success': False, 'mensaje': 'No tienes permisos para modificar usuarios.'}, status=403)
@@ -817,33 +817,33 @@ def validar_documento_ajax(request):
                 'mensaje': 'El documento es requerido'
             })
         
-        # Validar que solo contenga nÃºmeros
+        # Validar que solo contenga náºmeros
         if not documento.isdigit():
             return JsonResponse({
                 'valido': False,
-                'mensaje': 'El documento solo puede contener nÃºmeros'
+                'mensaje': 'El documento solo puede contener náºmeros'
             })
         
-        # Validar longitud mÃ­nima
+        # Validar longitud má­nima
         if len(documento) < 6:
             return JsonResponse({
                 'valido': False,
-                'mensaje': 'El documento debe tener al menos 6 dÃ­gitos'
+                'mensaje': 'El documento debe tener al menos 6 dá­gitos'
             })
         
         # Verificar si ya existe
         if PerfilUsuario.objects.filter(documento=documento).exists():
             return JsonResponse({
                 'valido': False,
-                'mensaje': 'Este documento ya estÃ¡ registrado'
+                'mensaje': 'Este documento ya está¡ registrado'
             })
         
         return JsonResponse({
             'valido': True,
-            'mensaje': 'Documento vÃ¡lido'
+            'mensaje': 'Documento vá¡lido'
         })
     
-    return JsonResponse({'error': 'MÃ©todo no permitido'}, status=405)
+    return JsonResponse({'error': 'Má©todo no permitido'}, status=405)
 
 
 # ==================== RECUPERACIÓN DE USUARIO ====================
@@ -876,9 +876,9 @@ def validar_documento_usuario(request):
     numero = (request.GET.get('numero') or '').strip()
     user_id = request.GET.get('user_id')
 
-    # Validar nÃºmero
+    # Validar náºmero
     if not numero.isdigit():
-        return JsonResponse({'valido': False, 'mensaje': 'Solo nÃºmeros'})
+        return JsonResponse({'valido': False, 'mensaje': 'Solo náºmeros'})
 
     # Normalizar user_id
     if not user_id or user_id in ('undefined', 'null', ''):
@@ -891,7 +891,7 @@ def validar_documento_usuario(request):
 
     qs = PerfilUsuario.objects.filter(documento=numero)
 
-    # Si es ediciÃ³n, excluye el mismo usuario
+    # Si es ediciá³n, excluye el mismo usuario
     if user_id is not None:
         qs = qs.exclude(user__id=user_id)
 
@@ -914,7 +914,7 @@ def validar_email_usuario(request):
 
     # Validar formato de email (solo verificar @ y .)
     if '@' not in email or '.' not in email.split('@')[-1]:
-        return JsonResponse({'valido': False, 'mensaje': 'Correo electrÃ³nico invÃ¡lido'})
+        return JsonResponse({'valido': False, 'mensaje': 'Correo electrá³nico invá¡lido'})
 
     # Normalizar user_id
     if not user_id or user_id in ('undefined', 'null', ''):
@@ -927,7 +927,7 @@ def validar_email_usuario(request):
 
     qs = User.objects.filter(email=email)
 
-    # Si es ediciÃ³n, excluye el mismo usuario
+    # Si es ediciá³n, excluye el mismo usuario
     if user_id is not None:
         qs = qs.exclude(id=user_id)
 

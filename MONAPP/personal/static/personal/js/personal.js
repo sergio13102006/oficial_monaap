@@ -187,7 +187,7 @@ function inicializarValidacionesPersonal() {
                 if (!campo || (campo.value || '').trim() === '' || (!campo.classList.contains('is-valid') && campo.tagName !== 'SELECT') || campo.classList.contains('is-invalid')) {
                     // Nota: Los SELECT como tipo_documento y rol pueden no tener 'is-valid' si no se les ha disparado el evento change,
                     // pero verificamos que tengan valor.
-                    if (campo.tagName === 'SELECT' && (campo.value || '').trim() !== '') {
+                    if (campo && campo.tagName === 'SELECT' && (campo.value || '').trim() !== '') {
                         // Es un select con valor, OK
                     } else {
                         habilitar = false;
