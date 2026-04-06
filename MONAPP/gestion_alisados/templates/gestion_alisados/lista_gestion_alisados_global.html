@@ -56,10 +56,10 @@
                 </td>
                 <td>
                     <div class="table-action-group">
-                        <a href="{% url 'gestion_alisados:ver_gestion_alisado_modal_content' gestion.pk %}" class="table-action-btn js-open-gestion-info-modal" data-modal-title="Detalle de gestiÃ³n de datos" title="Ver detalles" aria-label="Ver detalles de la gestion {{ gestion.pk }}">
+                        <a href="{% url 'gestion_alisados:ver_gestion_alisado_modal_content' gestion.pk %}" class="table-action-btn js-open-gestion-info-modal" data-modal-title="Detalle de gestiá³n de datos" title="Ver detalles" aria-label="Ver detalles de la gestion {{ gestion.pk }}">
                             <i class="bi bi-eye" aria-hidden="true"></i>
                         </a>
-                        <a href="{% url 'gestion_alisados:editar_gestion_alisado' gestion.pk %}?modal=1" class="table-action-btn js-open-gestion-form-modal" data-form-title="Editar gestiÃ³n de datos" data-form-url="{% url 'gestion_alisados:editar_gestion_alisado' gestion.pk %}?modal=1" title="Editar" aria-label="Editar gestion {{ gestion.pk }}">
+                        <a href="{% url 'gestion_alisados:editar_gestion_alisado' gestion.pk %}?modal=1" class="table-action-btn js-open-gestion-form-modal" data-form-title="Editar gestiá³n de datos" data-form-url="{% url 'gestion_alisados:editar_gestion_alisado' gestion.pk %}?modal=1" title="Editar" aria-label="Editar gestion {{ gestion.pk }}">
                             <i class="bi bi-pencil" aria-hidden="true"></i>
                         </a>
                         {% if permisos.roles.es_admin %}

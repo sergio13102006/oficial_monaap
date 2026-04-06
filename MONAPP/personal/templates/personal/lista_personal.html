@@ -12,6 +12,13 @@
 {% block page_subtitle %}Gestion de auxiliares y colaboradores{% endblock %}
 
 {% block page_actions %}
+<button type="button"
+        class="btn-pill-dark"
+        id="btnCrearArchivoPersonal"
+        data-base-url="{% url 'personal:crear_archivo' %}"
+        data-querystring="{{ print_querystring|default:'' }}">
+    <i class="bi bi-file-earmark-arrow-down"></i> Crear archivo
+</button>
 {% if puede_modificar %}
 <button type="button" class="btn-pill-dark" data-personal-action="open-create">
     <i class="fas fa-plus"></i> Nuevo Personal

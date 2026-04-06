@@ -1,4 +1,33 @@
 document.addEventListener('DOMContentLoaded', function () {
+    const btnCrearArchivoClientes = document.getElementById('btnCrearArchivoClientes');
+
+    if (btnCrearArchivoClientes) {
+        btnCrearArchivoClientes.addEventListener('click', async function () {
+            const baseUrl = btnCrearArchivoClientes.dataset.baseUrl || '';
+            const querystring = btnCrearArchivoClientes.dataset.querystring || '';
+
+            if (!baseUrl) return;
+
+            const result = await Swal.fire({
+                title: 'Crear archivo de clientes',
+                html: 'Selecciona el formato en el que deseas generar el archivo.',
+                icon: 'question',
+                showCancelButton: true,
+                showDenyButton: true,
+                confirmButtonText: 'PDF',
+                denyButtonText: 'Excel',
+                cancelButtonText: 'Cancelar',
+            });
+
+            if (!result.isConfirmed && !result.isDenied) return;
+
+            const params = new URLSearchParams(querystring);
+            params.set('formato', result.isDenied ? 'excel' : 'pdf');
+            const finalUrl = `${baseUrl}?${params.toString()}`;
+            window.open(finalUrl, '_blank');
+        });
+    }
+
     function getCookie(name) {
         const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
         return match ? decodeURIComponent(match[2]) : '';

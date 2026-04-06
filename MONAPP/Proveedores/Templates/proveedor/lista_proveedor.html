@@ -11,6 +11,14 @@
 {% block page_title %}Proveedores{% endblock %}
 {% block page_subtitle %}Gestion de proveedores registrados{% endblock %}
 {% block page_actions %}
+<button class="btn-pill-dark"
+        type="button"
+        id="btnCrearArchivoProveedores"
+        data-base-url="{% url 'proveedores:crear_archivo' %}"
+        data-querystring="{{ print_querystring|default:'' }}">
+    <i class="bi bi-file-earmark-arrow-down"></i>
+    Crear archivo
+</button>
 <a href="{% url 'proveedores:crear_proveedor' %}"
    class="btn-pill-dark"
    data-modal-url="{% url 'proveedores:crear_proveedor' %}"

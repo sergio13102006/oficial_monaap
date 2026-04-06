@@ -35,6 +35,13 @@ Ventas
 {% block page_actions %}
 <div class="d-flex gap-2 anim-from-top">
   <button type="button"
+          class="btn-pill-yellow"
+          id="btnVentaRapida"
+          data-url="{% url 'ventas:crear_rapida' %}">
+    <i class="bi bi-lightning-charge-fill"></i> Venta rápida
+  </button>
+
+  <button type="button"
           class="btn-pill-dark"
           id="btnNuevaVenta"
           data-url="{% url 'ventas:crear' %}">
@@ -298,6 +305,24 @@ Ventas
       </div>
 
       <div class="modal-body" id="contenidoNuevaVenta">
+        <div class="text-center text-muted py-4 ventas-modal-empty-note">Cargando formulario...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL VENTA RÁPIDA -->
+<div class="modal fade" id="modalVentaRapida" tabindex="-1">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content ventas-modal-content">
+      <div class="modal-header ventas-modal-header ventas-modal-header--yellow">
+        <h5 class="modal-title ventas-modal-title ventas-modal-title--dark">
+          <i class="bi bi-lightning-charge-fill me-2"></i>Venta rápida
+        </h5>
+        <button type="button" class="btn-close ventas-modal-close ventas-modal-close--dark" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+
+      <div class="modal-body" id="contenidoVentaRapida">
         <div class="text-center text-muted py-4 ventas-modal-empty-note">Cargando formulario...</div>
       </div>
     </div>

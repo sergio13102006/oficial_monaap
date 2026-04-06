@@ -1,4 +1,33 @@
 document.addEventListener("DOMContentLoaded", function () {
+    const btnCrearArchivoProveedores = document.getElementById("btnCrearArchivoProveedores");
+
+    if (btnCrearArchivoProveedores) {
+        btnCrearArchivoProveedores.addEventListener("click", async function () {
+            const baseUrl = btnCrearArchivoProveedores.dataset.baseUrl || "";
+            const querystring = btnCrearArchivoProveedores.dataset.querystring || "";
+
+            if (!baseUrl) return;
+
+            const result = await Swal.fire({
+                title: "Crear archivo de proveedores",
+                html: "Selecciona el formato en el que deseas generar el archivo.",
+                icon: "question",
+                showCancelButton: true,
+                showDenyButton: true,
+                confirmButtonText: "PDF",
+                denyButtonText: "Excel",
+                cancelButtonText: "Cancelar",
+            });
+
+            if (!result.isConfirmed && !result.isDenied) return;
+
+            const params = new URLSearchParams(querystring);
+            params.set("formato", result.isDenied ? "excel" : "pdf");
+            const finalUrl = `${baseUrl}?${params.toString()}`;
+            window.open(finalUrl, "_blank");
+        });
+    }
+
     const getCSRFToken = () => {
         const match = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/);
         return match ? decodeURIComponent(match[1]) : "";

@@ -7,7 +7,7 @@
     <div class="detail-modal-hero">
         <div class="d-flex flex-column flex-lg-row justify-content-between gap-3 align-items-lg-start">
             <div>
-                <h5>GestiÃ³n de datos</h5>
+                <h5>Gestiá³n de datos</h5>
                 <small>Registro de {{ gestion.cliente.nombre }} {{ gestion.cliente.apellido }}</small>
                 <div class="gestion-detail-badges mt-3">
                     <span class="gestion-detail-badge">
@@ -94,7 +94,7 @@
     </div>
 
     <div class="detail-modal-section-card">
-        <h6><i class="bi bi-person-lines-fill"></i> CaracterÃ­sticas del cabello</h6>
+        <h6><i class="bi bi-person-lines-fill"></i> Caracterá­sticas del cabello</h6>
         <div class="detail-modal-grid">
             <div class="detail-modal-item"><span class="detail-modal-label">Porosidad</span><span class="detail-modal-value">{{ gestion.get_porosidad_display }}</span></div>
             <div class="detail-modal-item"><span class="detail-modal-label">Textura</span><span class="detail-modal-value">{{ gestion.get_textura_display }}</span></div>
@@ -104,7 +104,7 @@
             <div class="detail-modal-item"><span class="detail-modal-label">Densidad</span><span class="detail-modal-value">{{ gestion.get_densidad_display }}</span></div>
             <div class="detail-modal-item"><span class="detail-modal-label">Piel cabelludo</span><span class="detail-modal-value">{{ gestion.get_piel_cabelludo_display }}</span></div>
             <div class="detail-modal-item"><span class="detail-modal-label">Alopecia</span><span class="detail-modal-value">{{ gestion.get_alopecia_display }}</span></div>
-            <div class="detail-modal-item"><span class="detail-modal-label">CaÃ­da de cabello</span><span class="detail-modal-value">{{ gestion.get_caida_cabello_display }}</span></div>
+            <div class="detail-modal-item"><span class="detail-modal-label">Caá­da de cabello</span><span class="detail-modal-value">{{ gestion.get_caida_cabello_display }}</span></div>
             <div class="detail-modal-item"><span class="detail-modal-label">Caspa</span><span class="detail-modal-value">{{ gestion.get_caspa_display }}</span></div>
         </div>
     </div>
@@ -118,7 +118,7 @@
             <div class="detail-modal-item"><span class="detail-modal-label">Cuenta con secador</span><span class="detail-modal-value">{{ gestion.get_cuenta_con_secador_display }}</span></div>
             <div class="detail-modal-item"><span class="detail-modal-label">Usa casco</span><span class="detail-modal-value">{{ gestion.get_usa_casco_display }}</span></div>
             <div class="detail-modal-item"><span class="detail-modal-label">Agua caliente</span><span class="detail-modal-value">{{ gestion.get_se_bana_agua_caliente_display }}</span></div>
-            <div class="detail-modal-item"><span class="detail-modal-label">Refuerzo 15 dÃ­as</span><span class="detail-modal-value">{{ gestion.get_requiere_refuerzo_15dias_display }}</span></div>
+            <div class="detail-modal-item"><span class="detail-modal-label">Refuerzo 15 dá­as</span><span class="detail-modal-value">{{ gestion.get_requiere_refuerzo_15dias_display }}</span></div>
             <div class="detail-modal-item"><span class="detail-modal-label">Realiza ejercicio</span><span class="detail-modal-value">{{ gestion.get_realiza_ejercicio_display }}</span></div>
         </div>
         {% if gestion.frecuencia_ejercicio %}
@@ -136,16 +136,16 @@
     </div>
 
     <div class="detail-modal-section-card">
-        <h6><i class="bi bi-droplet"></i> Procesos quÃ­micos previos</h6>
+        <h6><i class="bi bi-droplet"></i> Procesos quá­micos previos</h6>
         <div class="detail-modal-pills">
             {% if gestion.procesos_tintura %}<span class="detail-modal-pill ok">âœ“ Tintura</span>{% endif %}
-            {% if gestion.procesos_decoloracion %}<span class="detail-modal-pill ok">âœ“ DecoloraciÃ³n</span>{% endif %}
+            {% if gestion.procesos_decoloracion %}<span class="detail-modal-pill ok">âœ“ Decoloraciá³n</span>{% endif %}
             {% if gestion.procesos_ondulados %}<span class="detail-modal-pill ok">âœ“ Ondulados Perm</span>{% endif %}
             {% if gestion.procesos_extracciones %}<span class="detail-modal-pill ok">âœ“ Extracciones</span>{% endif %}
             {% if gestion.procesos_alisados %}<span class="detail-modal-pill ok">âœ“ Alisados</span>{% endif %}
             {% if gestion.procesos_super_aclarante %}<span class="detail-modal-pill ok">âœ“ Super Aclarante</span>{% endif %}
             {% if not gestion.procesos_tintura and not gestion.procesos_decoloracion and not gestion.procesos_ondulados and not gestion.procesos_extracciones and not gestion.procesos_alisados and not gestion.procesos_super_aclarante %}
-                <span class="detail-modal-pill">No registra procesos quÃ­micos previos</span>
+                <span class="detail-modal-pill">No registra procesos quá­micos previos</span>
             {% endif %}
         </div>
         {% if gestion.procesos_otro %}

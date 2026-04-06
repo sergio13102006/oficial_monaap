@@ -1,0 +1,103 @@
+<div class="container-fluid px-4 py-4">
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <form method="post" novalidate id="formVentaRapida">
+                {% csrf_token %}
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Cliente</label>
+                        {{ form.cliente }}
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Producto</label>
+                        <select id="id_producto_rapido" class="form-select">
+                            <option value="">Seleccione un producto</option>
+                            {% for item in productos_stock %}
+                                <option
+                                    value="{{ item.producto.codigo }}"
+                                    data-precio="{{ item.producto.precio }}"
+                                    data-stock="{{ item.stock }}"
+                                >
+                                    {{ item.producto.codigo }} - {{ item.producto.nombre }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <small id="stockInfoRapido" class="text-muted d-none"></small>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Precio unitario</label>
+                        <input type="number" id="id_precio_unitario_rapido" class="form-control" readonly>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Cantidad</label>
+                        <input type="number" id="id_cantidad_rapido" class="form-control" min="1">
+                        <small id="cantidadErrorRapido" class="text-danger d-none">
+                            No hay suficientes unidades en stock
+                        </small>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Subtotal</label>
+                        <input type="number" id="id_subtotal_rapido" class="form-control" readonly tabindex="-1">
+                    </div>
+
+                    <div class="col-12">
+                        <button
+                            type="button"
+                            id="btnAgregarItemRapido"
+                            class="btn btn-venta-rapida-agregar"
+                            disabled
+                        >
+                            <i class="fas fa-plus me-1"></i> Agregar producto
+                        </button>
+                    </div>
+                </div>
+
+                <hr>
+
+                <h6>Productos de la venta rápida</h6>
+
+                <div class="table-card">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0 styled-table" id="tablaItemsRapidos">
+                            <thead>
+                                <tr>
+                                    <th>Producto</th>
+                                    <th class="text-end">Precio</th>
+                                    <th class="text-center">Cantidad</th>
+                                    <th class="text-end">Subtotal</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <input type="hidden" name="items" id="itemsRapidosInput">
+
+                <div class="text-end fw-bold">
+                    Total: $<span id="totalVentaRapida">0.00</span>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2 mt-4">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+                    <button
+                        id="btnGuardarVentaRapida"
+                        type="submit"
+                        class="btn btn-guardar-venta"
+                        disabled
+                    >
+                        Guardar venta rápida
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

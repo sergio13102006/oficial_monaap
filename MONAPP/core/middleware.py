@@ -58,7 +58,7 @@ class RolePermissionMiddleware:
         if namespace in RUTAS_ADMIN_PUBLICAS or path.startswith("/admin/"):
             return None
 
-        # Rutas pÃºblicas (no requieren sesiÃ³n)
+        # Rutas páºblicas (no requieren sesiá³n)
         if namespace == "core" and url_name == "index":
             return None
 

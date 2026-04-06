@@ -1920,7 +1920,7 @@ body.bg-black {
     align-self: flex-start;
 }
 
-/* En pantallas sin hover (mÃ³vil), mostrar la info sin depender del hover */
+/* En pantallas sin hover (má³vil), mostrar la info sin depender del hover */
 @media (hover: none) {
     .sq-product-info {
         opacity: 1;
@@ -2093,7 +2093,7 @@ body.bg-black {
     flex-wrap: wrap;
 }
 
-/* En la nueva versiÃ³n (tipo video), ocultamos el layout viejo */
+/* En la nueva versiá³n (tipo video), ocultamos el layout viejo */
 .sq-contact-info {
     display: none;
 }

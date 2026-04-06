@@ -1,0 +1,190 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Imprimir clientes</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background: #f5f1ee;
+            color: #2d2320;
+        }
+        .print-shell {
+            max-width: 1100px;
+            margin: 24px auto;
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: 0 18px 40px rgba(18, 11, 10, 0.12);
+            overflow: hidden;
+        }
+        .print-header {
+            padding: 24px 28px 18px;
+            background: linear-gradient(135deg, #2a1713 0%, #4b2f2a 100%);
+            color: #fff;
+        }
+        .print-header h1 {
+            margin: 0 0 6px;
+            font-size: 1.8rem;
+        }
+        .print-header p {
+            margin: 0;
+            color: rgba(255, 247, 239, 0.88);
+        }
+        .print-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            padding: 18px 28px;
+            background: #fff7f0;
+            border-bottom: 1px solid #ecdccf;
+        }
+        .print-meta {
+            color: #6b564d;
+            font-size: 0.95rem;
+        }
+        .print-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .print-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: 40px;
+            padding: 8px 14px;
+            border-radius: 10px;
+            border: 1px solid #2a1d18;
+            background: linear-gradient(135deg, #3a2a24 0%, #1f1412 100%);
+            color: #fff;
+            text-decoration: none;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .print-btn--light {
+            border-color: #d8c4b4;
+            background: #fff;
+            color: #4a352f;
+        }
+        .print-content {
+            padding: 24px 28px 30px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        thead th {
+            background: #3a2a24;
+            color: #fff;
+            text-align: left;
+            padding: 12px 14px;
+            font-size: 0.82rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        tbody td {
+            padding: 12px 14px;
+            border-bottom: 1px solid #eaded5;
+            vertical-align: top;
+        }
+        .estado {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 0.82rem;
+            font-weight: 700;
+        }
+        .estado--activo {
+            background: #d8ecdd;
+            color: #28613d;
+        }
+        .estado--inactivo {
+            background: #ece7e4;
+            color: #6a5b53;
+        }
+        .empty-state {
+            padding: 30px 0;
+            text-align: center;
+            color: #7a6860;
+        }
+        @media print {
+            body {
+                background: #fff;
+            }
+            .print-shell {
+                margin: 0;
+                max-width: none;
+                box-shadow: none;
+                border-radius: 0;
+            }
+            .print-toolbar {
+                display: none;
+            }
+            .print-content {
+                padding: 16px 20px;
+            }
+            @page {
+                margin: 12mm;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="print-shell">
+        <div class="print-header">
+            <h1>Clientes de Monakeratina</h1>
+            <p>Listado de clientes registrados en MONAAPP</p>
+        </div>
+
+        <div class="print-toolbar">
+            <div class="print-meta">
+                Fecha de impresión: {{ fecha_impresion|date:"d/m/Y" }} | Total de clientes: {{ clientes|length }}
+            </div>
+            <div class="print-actions">
+                <button type="button" class="print-btn" onclick="window.print()">Imprimir</button>
+                <a href="{% url 'clientes:lista' %}" class="print-btn print-btn--light">Volver</a>
+            </div>
+        </div>
+
+        <div class="print-content">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Cliente</th>
+                        <th>Documento</th>
+                        <th>Teléfono</th>
+                        <th>Correo</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cliente in clientes %}
+                    <tr>
+                        <td>{{ cliente.codigo_cliente }}</td>
+                        <td>{{ cliente.nombre }} {{ cliente.apellido }}</td>
+                        <td>{{ cliente.tipo_documento }} {{ cliente.numero_documento }}</td>
+                        <td>{{ cliente.telefono|default:"—" }}</td>
+                        <td>{{ cliente.correo|default:"—" }}</td>
+                        <td>
+                            <span class="estado {% if cliente.estado == 'activo' %}estado--activo{% else %}estado--inactivo{% endif %}">
+                                {{ cliente.estado|capfirst }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="empty-state">No hay clientes para imprimir.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

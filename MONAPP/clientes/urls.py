@@ -4,6 +4,8 @@ from . import views
 app_name = 'clientes'
 urlpatterns = [
     path('', views.lista_clientes, name='lista'),
+    path('imprimir/', views.imprimir_clientes, name='imprimir'),
+    path('crear-archivo/', views.crear_archivo_clientes, name='crear_archivo'),
     path('crear/', views.crear_cliente, name='crear'),
     path('validar-documento/', views.validar_documento, name='validar_documento'),
     path('editar/<int:cliente_id>/', views.editar_cliente, name='editar'),

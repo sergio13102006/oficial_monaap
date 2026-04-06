@@ -1,11 +1,58 @@
 (function () {
     const root = document.getElementById('personal-page');
     if (!root) return;
+    const btnCrearArchivoPersonal = document.getElementById('btnCrearArchivoPersonal');
+
+    if (btnCrearArchivoPersonal) {
+        btnCrearArchivoPersonal.addEventListener('click', async function () {
+            const baseUrl = btnCrearArchivoPersonal.dataset.baseUrl || '';
+            const querystring = btnCrearArchivoPersonal.dataset.querystring || '';
+
+            if (!baseUrl) return;
+
+            const result = await Swal.fire({
+                title: 'Crear archivo de personal',
+                html: 'Selecciona el formato en el que deseas generar el archivo.',
+                icon: 'question',
+                showCancelButton: true,
+                showDenyButton: true,
+                confirmButtonText: 'PDF',
+                denyButtonText: 'Excel',
+                cancelButtonText: 'Cancelar',
+            });
+
+            if (!result.isConfirmed && !result.isDenied) return;
+
+            const params = new URLSearchParams(querystring);
+            params.set('formato', result.isDenied ? 'excel' : 'pdf');
+            const finalUrl = `${baseUrl}?${params.toString()}`;
+            window.open(finalUrl, '_blank');
+        });
+    }
 
     const urls = {
         create: root.dataset.crearUrl || '/personal/crear/',
         list: root.dataset.listUrl || '/personal/',
     };
+
+    function recargarPaginaSegura() {
+        if (typeof window !== 'undefined' && window.location) {
+            window.location.reload();
+        }
+    }
+
+    function mostrarExitoYRecargar(options) {
+        if (typeof Swal !== 'undefined' && Swal.fire) {
+            Swal.fire(options)
+                .catch(() => null)
+                .finally(() => {
+                    recargarPaginaSegura();
+                });
+            return;
+        }
+
+        recargarPaginaSegura();
+    }
 
     function getCookie(name) {
         let cookieValue = null;
@@ -278,14 +325,14 @@
             .then((data) => {
                 if (data.success) {
                     cerrarModalPersonal();
-                    Swal.fire({
+                    mostrarExitoYRecargar({
                         title: 'Creado exitosamente',
                         text: data.message,
                         icon: 'success',
                         timer: 1500,
                         showConfirmButton: false,
                         confirmButtonColor: '#5d4037',
-                    }).then(() => location.reload());
+                    });
                     return;
                 }
 
@@ -327,14 +374,14 @@
             .then((data) => {
                 if (data.success) {
                     cerrarModalEditarPersonal();
-                    Swal.fire({
+                    mostrarExitoYRecargar({
                         title: 'Actualizado exitosamente',
                         text: data.message,
                         icon: 'success',
                         timer: 1500,
                         showConfirmButton: false,
                         confirmButtonColor: '#5d4037',
-                    }).then(() => location.reload());
+                    });
                     return;
                 }
 
@@ -405,14 +452,14 @@
             allowOutsideClick: () => !Swal.isLoading(),
         }).then((result) => {
             if (!result.isConfirmed) return;
-            Swal.fire({
+            mostrarExitoYRecargar({
                 title: 'Eliminado',
                 text: result.value.message || 'Personal eliminado exitosamente',
                 icon: 'success',
                 timer: 1500,
                 showConfirmButton: false,
                 confirmButtonColor: '#5d4037',
-            }).then(() => location.reload());
+            });
         });
     }
 
@@ -420,14 +467,14 @@
         performDeletePersonal(personalId)
             .then((data) => {
                 hideModal('modalEliminarPersonal');
-                Swal.fire({
+                mostrarExitoYRecargar({
                     title: 'Eliminado',
                     text: data.message || 'Personal eliminado exitosamente',
                     icon: 'success',
                     timer: 1500,
                     showConfirmButton: false,
                     confirmButtonColor: '#5d4037',
-                }).then(() => location.reload());
+                });
             })
             .catch((error) => {
                 Swal.fire({

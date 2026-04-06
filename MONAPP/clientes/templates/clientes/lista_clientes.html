@@ -24,7 +24,15 @@
 {% endblock %}
 
 {% block page_actions %}
-<div class="anim-from-top">
+<div class="anim-from-top d-flex gap-2 flex-wrap">
+  <button class="btn-pill-dark"
+          type="button"
+          id="btnCrearArchivoClientes"
+          data-base-url="{% url 'clientes:crear_archivo' %}"
+          data-querystring="{{ print_querystring|default:'' }}">
+    <i class="bi bi-file-earmark-arrow-down"></i> Crear archivo
+  </button>
+
   <button class="btn-pill-dark" data-bs-toggle="modal" data-bs-target="#modalCrearCliente">
     <i class="fas fa-plus"></i> Nuevo cliente
   </button>

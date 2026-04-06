@@ -20,6 +20,10 @@ from django.views.decorators.http import require_POST
 from core.global_ordenamiento import sorting_context,apply_smart_sorting
 
 from .models import Proveedor
+from .archivo_proveedores import (
+    build_proveedores_excel_response,
+    build_proveedores_pdf_response,
+)
 def is_ajax(request):
     return request.headers.get("x-requested-with") == "XMLHttpRequest"
 
@@ -51,7 +55,7 @@ def validar_nombre_proveedor(request):
     })
 
 @login_required
-def lista_proveedores(request):
+def _obtener_proveedores_filtrados(request):
     q = request.GET.get("q", "").strip()
     estado = request.GET.get("estado", "todos").strip()
 
@@ -82,11 +86,19 @@ def lista_proveedores(request):
         }
     )
 
-    context = {
+    return {
         "proveedores": proveedores,
         "estado_actual": estado,
         "q": q,
         **sorting_context(sort_key, direction),
+    }
+
+
+@login_required
+def lista_proveedores(request):
+    context = {
+        **_obtener_proveedores_filtrados(request),
+        "print_querystring": request.GET.urlencode(),
     }
 
     if request.headers.get("X-Requested-With") == "XMLHttpRequest":
@@ -97,6 +109,18 @@ def lista_proveedores(request):
         "proveedor/lista_proveedor.html",
         context,
     )
+
+
+@login_required
+def crear_archivo_proveedores(request):
+    filtros = _obtener_proveedores_filtrados(request)
+    proveedores = list(filtros["proveedores"])
+    formato = (request.GET.get("formato") or "pdf").strip().lower()
+
+    if formato == "excel":
+        return build_proveedores_excel_response(proveedores)
+
+    return build_proveedores_pdf_response(proveedores)
 @login_required
 def crear_proveedor(request):
     form = ProveedorcrearForm(request.POST or None, request.FILES or None)

@@ -352,6 +352,31 @@ def render_crear_venta(request, form, productos_stock, servicios, personal, stat
     )
 
 
+def render_crear_venta_rapida(request, form, productos_stock, status=200):
+    if es_ajax(request):
+        html = render_to_string(
+            "ventas/partials/crear_venta_rapida_form.html",
+            {
+                "form": form,
+                "productos_stock": productos_stock,
+            },
+            request=request,
+        )
+        return JsonResponse({"success": False, "html": html}, status=status)
+
+    return render(
+        request,
+        "ventas/crear_venta.html",
+        {
+            "form": form,
+            "productos_stock": productos_stock,
+            "servicios": [],
+            "personal": [],
+        },
+        status=status,
+    )
+
+
 @transaction.atomic
 def crear_venta(request):
     productos = Producto.objects.filter(activo=True).select_related("stock")
@@ -539,6 +564,97 @@ def crear_venta(request):
             "personal": personal,
         },
     )
+
+
+@transaction.atomic
+def crear_venta_rapida(request):
+    productos = Producto.objects.filter(activo=True).select_related("stock")
+    productos_stock = [
+        {"producto": p, "stock": p.stock_actual, "activo": p.activo}
+        for p in productos
+    ]
+
+    if request.method == "POST":
+        form = VentaForm(request.POST)
+        items_json = request.POST.get("items")
+
+        if not items_json:
+            messages.error(request, "Agrega al menos un producto para registrar la venta rápida.")
+            return render_crear_venta_rapida(request, form, productos_stock, status=400)
+
+        try:
+            items = json.loads(items_json)
+        except json.JSONDecodeError:
+            messages.error(request, "Los productos seleccionados no llegaron correctamente.")
+            return render_crear_venta_rapida(request, form, productos_stock, status=400)
+
+        if not items:
+            messages.error(request, "Debes agregar al menos un producto.")
+            return render_crear_venta_rapida(request, form, productos_stock, status=400)
+
+        if not form.is_valid():
+            messages.error(request, "Completa los datos del cliente para guardar la venta.")
+            return render_crear_venta_rapida(request, form, productos_stock, status=400)
+
+        venta = form.save(commit=False)
+        venta.codigo_colaborador = "VENTA RAPIDA"
+        venta.nombre_colaborador = "Venta rapida"
+
+        primer_item = items[0]
+        codigo_base = primer_item.get("id", "")
+        venta.codigo_producto = (
+            str(codigo_base) if len(items) == 1 else f"{codigo_base} (+{len(items) - 1})"
+        )
+        venta.save()
+
+        try:
+            for item in items:
+                codigo = item.get("id")
+                cantidad = int(item.get("cantidad", 0))
+
+                if not codigo or cantidad <= 0:
+                    raise ValidationError("Cada producto de la venta rápida debe tener producto y cantidad válidos.")
+
+                producto = Producto.objects.select_for_update().get(codigo=codigo)
+                if not producto.activo:
+                    raise ValidationError(f"El producto {producto.nombre} no está activo para ventas.")
+
+                stock_real = producto.stock_actual
+                if cantidad > stock_real:
+                    raise ValidationError(f"Stock insuficiente para {producto.nombre}. Disponible: {stock_real}.")
+
+                DetalleVenta.objects.create(
+                    venta=venta,
+                    producto=producto,
+                    precio_unitario=producto.precio,
+                    cantidad=cantidad,
+                    subtotal=producto.precio * cantidad,
+                )
+                _ajustar_stock_producto(producto, -cantidad)
+        except (ValidationError, Producto.DoesNotExist) as exc:
+            transaction.set_rollback(True)
+            messages.error(request, str(exc))
+            return render_crear_venta_rapida(request, form, productos_stock, status=400)
+
+        if es_ajax(request):
+            return JsonResponse({"success": True})
+
+        messages.success(request, "Venta rápida registrada correctamente.")
+        return redirect("ventas:lista")
+
+    form = VentaForm()
+    if es_ajax(request):
+        html = render_to_string(
+            "ventas/partials/crear_venta_rapida_form.html",
+            {
+                "form": form,
+                "productos_stock": productos_stock,
+            },
+            request=request,
+        )
+        return JsonResponse({"success": True, "html": html})
+
+    return render_crear_venta_rapida(request, form, productos_stock)
 
 
 def editar_venta_modal(request, pk):

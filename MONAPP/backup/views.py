@@ -32,7 +32,7 @@ def es_administrador(user):
 @login_required
 @user_passes_test(es_administrador)
 def backup_dashboard(request):
-    """Vista principal del mÃ³dulo de backup."""
+    """Vista principal del má³dulo de backup."""
     query = request.GET.get('q', '').strip()
     current_sort = request.GET.get('sort', 'fecha').strip()
     current_dir = request.GET.get('dir', 'desc').strip().lower()
@@ -92,7 +92,7 @@ def backup_dashboard(request):
     config = BackupConfig.get_config()
     stats = get_database_stats()
 
-    # EstadÃ­sticas de backups
+    # Estadá­sticas de backups
     total_backups = BackupRecord.objects.exclude(estado='en_progreso').count()
     exitosos = BackupRecord.objects.filter(estado='exitoso').count()
     fallidos = BackupRecord.objects.filter(estado='fallido').count()
