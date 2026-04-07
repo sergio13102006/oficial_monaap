@@ -94,7 +94,7 @@
     </div>
 
     <div class="detail-modal-section-card">
-        <h6><i class="bi bi-person-lines-fill"></i> CaracterÃ­sticas del cabello</h6>
+        <h6><i class="bi bi-person-lines-fill"></i> Características del cabello</h6>
         <div class="detail-modal-grid">
             <div class="detail-modal-item"><span class="detail-modal-label">Porosidad</span><span class="detail-modal-value">{{ gestion.get_porosidad_display }}</span></div>
             <div class="detail-modal-item"><span class="detail-modal-label">Textura</span><span class="detail-modal-value">{{ gestion.get_textura_display }}</span></div>
@@ -104,7 +104,7 @@
             <div class="detail-modal-item"><span class="detail-modal-label">Densidad</span><span class="detail-modal-value">{{ gestion.get_densidad_display }}</span></div>
             <div class="detail-modal-item"><span class="detail-modal-label">Piel cabelludo</span><span class="detail-modal-value">{{ gestion.get_piel_cabelludo_display }}</span></div>
             <div class="detail-modal-item"><span class="detail-modal-label">Alopecia</span><span class="detail-modal-value">{{ gestion.get_alopecia_display }}</span></div>
-            <div class="detail-modal-item"><span class="detail-modal-label">CaÃ­da de cabello</span><span class="detail-modal-value">{{ gestion.get_caida_cabello_display }}</span></div>
+            <div class="detail-modal-item"><span class="detail-modal-label">Caída de cabello</span><span class="detail-modal-value">{{ gestion.get_caida_cabello_display }}</span></div>
             <div class="detail-modal-item"><span class="detail-modal-label">Caspa</span><span class="detail-modal-value">{{ gestion.get_caspa_display }}</span></div>
         </div>
     </div>
@@ -118,7 +118,7 @@
             <div class="detail-modal-item"><span class="detail-modal-label">Cuenta con secador</span><span class="detail-modal-value">{{ gestion.get_cuenta_con_secador_display }}</span></div>
             <div class="detail-modal-item"><span class="detail-modal-label">Usa casco</span><span class="detail-modal-value">{{ gestion.get_usa_casco_display }}</span></div>
             <div class="detail-modal-item"><span class="detail-modal-label">Agua caliente</span><span class="detail-modal-value">{{ gestion.get_se_bana_agua_caliente_display }}</span></div>
-            <div class="detail-modal-item"><span class="detail-modal-label">Refuerzo 15 dÃ­as</span><span class="detail-modal-value">{{ gestion.get_requiere_refuerzo_15dias_display }}</span></div>
+            <div class="detail-modal-item"><span class="detail-modal-label">Refuerzo 15 días</span><span class="detail-modal-value">{{ gestion.get_requiere_refuerzo_15dias_display }}</span></div>
             <div class="detail-modal-item"><span class="detail-modal-label">Realiza ejercicio</span><span class="detail-modal-value">{{ gestion.get_realiza_ejercicio_display }}</span></div>
         </div>
         {% if gestion.frecuencia_ejercicio %}
@@ -136,16 +136,16 @@
     </div>
 
     <div class="detail-modal-section-card">
-        <h6><i class="bi bi-droplet"></i> Procesos quÃ­micos previos</h6>
+        <h6><i class="bi bi-droplet"></i> Procesos químicos previos</h6>
         <div class="detail-modal-pills">
-            {% if gestion.procesos_tintura %}<span class="detail-modal-pill ok">âœ“ Tintura</span>{% endif %}
-            {% if gestion.procesos_decoloracion %}<span class="detail-modal-pill ok">âœ“ DecoloraciÃ³n</span>{% endif %}
-            {% if gestion.procesos_ondulados %}<span class="detail-modal-pill ok">âœ“ Ondulados Perm</span>{% endif %}
-            {% if gestion.procesos_extracciones %}<span class="detail-modal-pill ok">âœ“ Extracciones</span>{% endif %}
-            {% if gestion.procesos_alisados %}<span class="detail-modal-pill ok">âœ“ Alisados</span>{% endif %}
-            {% if gestion.procesos_super_aclarante %}<span class="detail-modal-pill ok">âœ“ Super Aclarante</span>{% endif %}
+            {% if gestion.procesos_tintura %}<span class="detail-modal-pill ok">✓ Tintura</span>{% endif %}
+            {% if gestion.procesos_decoloracion %}<span class="detail-modal-pill ok">✓ Decoloración</span>{% endif %}
+            {% if gestion.procesos_ondulados %}<span class="detail-modal-pill ok">✓ Ondulados Perm</span>{% endif %}
+            {% if gestion.procesos_extracciones %}<span class="detail-modal-pill ok">✓ Extracciones</span>{% endif %}
+            {% if gestion.procesos_alisados %}<span class="detail-modal-pill ok">✓ Alisados</span>{% endif %}
+            {% if gestion.procesos_super_aclarante %}<span class="detail-modal-pill ok">✓ Super Aclarante</span>{% endif %}
             {% if not gestion.procesos_tintura and not gestion.procesos_decoloracion and not gestion.procesos_ondulados and not gestion.procesos_extracciones and not gestion.procesos_alisados and not gestion.procesos_super_aclarante %}
-                <span class="detail-modal-pill">No registra procesos quÃ­micos previos</span>
+                <span class="detail-modal-pill">No registra procesos químicos previos</span>
             {% endif %}
         </div>
         {% if gestion.procesos_otro %}
@@ -170,6 +170,39 @@
             <span class="detail-modal-value">{{ gestion.productos_capilares }}</span>
         </div>
     </div>
+
+    {% if gestion.tratamiento_firmado %}
+    <div class="detail-modal-section-card">
+        <h6><i class="bi bi-shield-check"></i> Tratamiento firmado y auditoria</h6>
+        <div class="detail-modal-grid">
+            <div class="detail-modal-item"><span class="detail-modal-label">Estado</span><span class="detail-modal-value">{{ gestion.tratamiento_firmado.get_estado_display }}</span></div>
+            <div class="detail-modal-item"><span class="detail-modal-label">Fecha de firma</span><span class="detail-modal-value">{% if gestion.tratamiento_firmado.fecha_hora_firma %}{{ gestion.tratamiento_firmado.fecha_hora_firma|date:"d/m/Y H:i" }}{% else %}Sin firma{% endif %}</span></div>
+            <div class="detail-modal-item"><span class="detail-modal-label">Version</span><span class="detail-modal-value">{{ gestion.tratamiento_firmado.version_tratamiento }}</span></div>
+            <div class="detail-modal-item"><span class="detail-modal-label">Sede</span><span class="detail-modal-value">{{ gestion.tratamiento_firmado.sede|default:"No registrada" }}</span></div>
+            <div class="detail-modal-item"><span class="detail-modal-label">Tablet</span><span class="detail-modal-value">{{ gestion.tratamiento_firmado.tablet_utilizada|default:"No registrada" }}</span></div>
+            <div class="detail-modal-item"><span class="detail-modal-label">Usuario inicio</span><span class="detail-modal-value">{{ gestion.tratamiento_firmado.usuario_inicio_proceso|default:"No registrado" }}</span></div>
+            <div class="detail-modal-item"><span class="detail-modal-label">Usuario cierre</span><span class="detail-modal-value">{{ gestion.tratamiento_firmado.usuario_cierre_proceso|default:"No registrado" }}</span></div>
+            <div class="detail-modal-item"><span class="detail-modal-label">Hash</span><span class="detail-modal-value long">{{ gestion.tratamiento_firmado.hash_integridad|default:"No disponible" }}</span></div>
+        </div>
+        <div class="detail-modal-item mt-3">
+            <span class="detail-modal-label">Texto del tratamiento firmado</span>
+            <span class="detail-modal-value long">{{ gestion.tratamiento_firmado.texto_tratamiento }}</span>
+        </div>
+        {% if gestion.tratamiento_firmado.snapshot_cliente %}
+        <div class="detail-modal-item mt-3">
+            <span class="detail-modal-label">Snapshot del cliente</span>
+            <span class="detail-modal-value long">
+                Documento: {{ gestion.tratamiento_firmado.snapshot_cliente.tipo_documento }} {{ gestion.tratamiento_firmado.snapshot_cliente.numero_documento }}<br>
+                Nombre: {{ gestion.tratamiento_firmado.snapshot_cliente.nombre }} {{ gestion.tratamiento_firmado.snapshot_cliente.apellido }}<br>
+                Telefono: {{ gestion.tratamiento_firmado.snapshot_cliente.telefono|default:"No registrado" }}<br>
+                Correo: {{ gestion.tratamiento_firmado.snapshot_cliente.correo|default:"No registrado" }}<br>
+                Direccion: {{ gestion.tratamiento_firmado.snapshot_cliente.direccion|default:"No registrada" }}<br>
+                Ciudad: {{ gestion.tratamiento_firmado.snapshot_cliente.ciudad|default:"No registrada" }}
+            </span>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
 
     {% if gestion.firma_consentimiento %}
     <div class="detail-modal-section-card">

@@ -32,6 +32,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const modalInfoTitle = document.getElementById('modalGestionInfoLabel');
     const modalInfoContent = document.getElementById('modalGestionInfoContent');
     const modalFormTitle = document.getElementById('modalFormGestionLabel');
+    const tableWrap = document.getElementById('gestion-tabla-wrap');
+    const filtrosForm = document.getElementById('filtrosForm');
 
     const spinnerHTML = `
         <div class="text-center py-5">
@@ -61,6 +63,37 @@ document.addEventListener('DOMContentLoaded', function () {
                         Error al cargar el formulario. Por favor, intenta nuevamente.
                     </div>`;
             });
+    }
+
+    function bindDynamicListControls(scope = document) {
+        scope.querySelectorAll('select[name="per_page"]').forEach((select) => {
+            if (select.dataset.gestionBound === '1') return;
+            select.dataset.gestionBound = '1';
+            select.addEventListener('change', () => {
+                if (filtrosForm?.requestSubmit) {
+                    filtrosForm.requestSubmit();
+                } else if (filtrosForm) {
+                    filtrosForm.submit();
+                }
+            });
+        });
+    }
+
+    async function cargarListadoGestion(url) {
+        if (!tableWrap || !url) return;
+        tableWrap.style.opacity = '0.55';
+        try {
+            const response = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+            const html = await response.text();
+            tableWrap.innerHTML = html;
+            execScriptsInContainer(tableWrap);
+            bindDynamicListControls(tableWrap);
+        } catch (error) {
+            window.location.href = url;
+            return;
+        } finally {
+            tableWrap.style.opacity = '';
+        }
     }
 
     document.addEventListener('click', function (event) {
@@ -205,6 +238,17 @@ document.addEventListener('DOMContentLoaded', function () {
             deleteTrigger.dataset.deleteRedirectUrl || ''
         );
     });
+
+    document.addEventListener('click', function (event) {
+        const navLink = event.target.closest('.js-gestion-nav-link');
+        if (!navLink || !tableWrap) return;
+        event.preventDefault();
+        const url = navLink.getAttribute('href');
+        if (!url) return;
+        cargarListadoGestion(url);
+    });
+
+    bindDynamicListControls(document);
 
 });
 

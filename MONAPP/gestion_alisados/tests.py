@@ -7,7 +7,7 @@ from clientes.models import Cliente
 from personal.models import Personal
 from servicios.models import Servicio
 
-from .models import GestionAlisado, TabletConsentToken
+from .models import AtencionServicio, GestionAlisado, TabletConsentToken, TabletKioskState, TratamientoDatosFirmado
 from .services.realtime_notifications import build_runtime_event, notify_session_assigned
 from .services.realtime_service import generate_tablet_ws_token, validate_tablet_ws_token
 from .services import start_tablet_session
@@ -223,9 +223,49 @@ class GestionAlisadoViewRegressionTest(GestionAlisadoBaseTestCase):
                 "gestion_id": str(self.gestion.pk),
             },
         )
-        self.gestion.refresh_from_db()
-        self.assertEqual(self.gestion.precio_alisado, 80000)
-        self.assertEqual(self.gestion.saldo_pendiente, 50000)
+
+    def test_create_flow_generates_atencion_and_signed_treatment(self):
+        self.client.force_login(self.staff_user)
+        response = self.client.post(
+            reverse("gestion_alisados:crear_gestion_alisado") + "?modal=1",
+            data=self.gestion_form_payload(),
+            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+        )
+        self.assertEqual(response.status_code, 201)
+
+        gestion = GestionAlisado.objects.order_by("-fecha_hora").first()
+        self.assertIsNotNone(gestion.atencion)
+        self.assertIsNotNone(gestion.tratamiento_firmado)
+        self.assertTrue(AtencionServicio.objects.filter(pk=gestion.atencion.pk).exists())
+        self.assertTrue(TratamientoDatosFirmado.objects.filter(pk=gestion.tratamiento_firmado.pk).exists())
+        self.assertEqual(gestion.atencion.cliente, self.cliente)
+        self.assertEqual(gestion.tratamiento_firmado.cliente, self.cliente)
+        self.assertEqual(gestion.tratamiento_firmado.atencion, gestion.atencion)
+        self.assertEqual(gestion.tratamiento_firmado.estado, TratamientoDatosFirmado.ESTADO_FIRMADA)
+        self.assertEqual(
+            gestion.tratamiento_firmado.snapshot_cliente["numero_documento"],
+            self.cliente.numero_documento,
+        )
+
+    def test_signed_treatment_cannot_be_edited(self):
+        self.client.force_login(self.staff_user)
+        response = self.client.post(
+            reverse("gestion_alisados:crear_gestion_alisado") + "?modal=1",
+            data=self.gestion_form_payload(),
+            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+        )
+        self.assertEqual(response.status_code, 201)
+
+        gestion = GestionAlisado.objects.order_by("-fecha_hora").first()
+        edit_response = self.client.post(
+            reverse("gestion_alisados:editar_gestion_alisado", args=[gestion.pk]) + "?modal=1",
+            data=self.gestion_form_payload(precio_alisado=90000, anticipo_cliente=10000, saldo_pendiente=80000),
+            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+        )
+        self.assertEqual(edit_response.status_code, 403)
+        gestion.refresh_from_db()
+        self.assertEqual(gestion.precio_alisado, 50000)
+        self.assertEqual(gestion.saldo_pendiente, 30000)
 
     def test_exports_do_not_break_when_cliente_is_null(self):
         GestionAlisado.objects.create(**self.gestion_kwargs(cliente=None))
@@ -280,6 +320,38 @@ class GestionAlisadoViewRegressionTest(GestionAlisadoBaseTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'const tabletWsUrl = "ws://testserver/ws/gestion')
         self.assertContains(response, "access_token")
+
+    def test_tablet_wait_view_preserves_ready_session(self):
+        token = start_tablet_session(self.cliente, user=self.staff_user, minutos_validos=120)
+        kiosk_state, _ = TabletKioskState.objects.get_or_create(
+            pk=TabletKioskState.SINGLETON_ID,
+            defaults={"estado": TabletKioskState.ESTADO_ESPERA},
+        )
+        kiosk_state.marcar_listo(self.cliente, token)
+
+        response = self.client.get(reverse("gestion_alisados:tablet_espera"))
+
+        self.assertEqual(response.status_code, 200)
+        kiosk_state.refresh_from_db()
+        self.assertEqual(kiosk_state.estado, TabletKioskState.ESTADO_LISTO)
+        self.assertEqual(kiosk_state.token_id, token.token)
+
+        estado_response = self.client.get(reverse("gestion_alisados:tablet_espera_estado"))
+        self.assertEqual(estado_response.status_code, 200)
+        self.assertJSONEqual(
+            estado_response.content,
+            {
+                "success": True,
+                "has_process": True,
+                "process_state": token.estado_proceso,
+                "process_state_label": token.get_estado_proceso_display(),
+                "cliente": {
+                    "nombre": f"{self.cliente.nombre} {self.cliente.apellido}",
+                    "documento": self.cliente.numero_documento,
+                },
+                "tablet_process_url": f"http://testserver{reverse('gestion_alisados:tablet_gestion_alisado', args=[token.token])}",
+            },
+        )
 
     @override_settings(ENABLE_CHANNELS=False)
     def test_realtime_notifications_fallback_cleanly_when_channels_are_disabled(self):

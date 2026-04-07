@@ -1,0 +1,56 @@
+{% load humanize %}
+
+<div class="detail-modal-shell">
+    <div class="detail-modal-hero">
+        <div class="d-flex flex-column flex-lg-row justify-content-between gap-3 align-items-lg-start">
+            <div>
+                <h5>Historial del cliente</h5>
+                <small>{{ cliente.nombre }} {{ cliente.apellido }} · {{ total_tratamientos }} tratamientos</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="detail-modal-section-card">
+        <h6><i class="bi bi-clock-history"></i> Tratamientos registrados</h6>
+        {% if gestiones %}
+        <div class="table-responsive">
+            <table class="styled-table">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Servicio</th>
+                        <th>Profesional</th>
+                        <th>Estado</th>
+                        <th>Saldo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for gestion in gestiones %}
+                    <tr>
+                        <td>{{ gestion.fecha_hora|date:"d/m/Y H:i" }}</td>
+                        <td>{{ gestion.tipo_alisado }}</td>
+                        <td>{{ gestion.procedimiento_realizado_por }}</td>
+                        <td>
+                            {% if gestion.tratamiento_firmado %}
+                                {{ gestion.tratamiento_firmado.get_estado_display }}
+                            {% else %}
+                                Pendiente
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if gestion.saldo_pendiente > 0 %}
+                                ${{ gestion.saldo_pendiente|intcomma }} COP
+                            {% else %}
+                                Pagado
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="mb-0 text-muted">Este cliente no tiene tratamientos registrados.</p>
+        {% endif %}
+    </div>
+</div>

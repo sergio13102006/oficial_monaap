@@ -14,6 +14,7 @@ urlpatterns = [
     path('tablet/abrir/<int:cliente_id>/', views.abrir_tablet_gestion_alisado, name='abrir_tablet_gestion_alisado'),
     path('tablet/<uuid:token>/', views.tablet_gestion_alisado, name='tablet_gestion_alisado'),
     path('ultima-gestion-cliente/', views.ultima_gestion_cliente, name='ultima_gestion_cliente'),
+    path('cliente/<int:cliente_id>/historial-modal/', views.ver_historial_cliente_modal, name='ver_historial_cliente_modal'),
     path('<uuid:pk>/detalle-modal/', views.ver_gestion_alisado_modal_content, name='ver_gestion_alisado_modal_content'),
     path('<uuid:pk>/', views.ver_gestion_alisado, name='ver_gestion_alisado'),
     path('<uuid:pk>/editar/', views.editar_gestion_alisado, name='editar_gestion_alisado'),

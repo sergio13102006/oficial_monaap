@@ -222,6 +222,39 @@
         </div>
     </div>
 
+    {% if gestion.tratamiento_firmado %}
+    <div class="gestion-detail-section-card">
+        <h5><i class="bi bi-shield-check"></i> Tratamiento firmado y auditoría</h5>
+        <div class="gestion-detail-grid">
+            <div class="gestion-detail-item"><span class="detail-label">Estado</span><span class="detail-value">{{ gestion.tratamiento_firmado.get_estado_display }}</span></div>
+            <div class="gestion-detail-item"><span class="detail-label">Fecha de firma</span><span class="detail-value">{% if gestion.tratamiento_firmado.fecha_hora_firma %}{{ gestion.tratamiento_firmado.fecha_hora_firma|date:"d/m/Y H:i" }}{% else %}Sin firma{% endif %}</span></div>
+            <div class="gestion-detail-item"><span class="detail-label">Version</span><span class="detail-value">{{ gestion.tratamiento_firmado.version_tratamiento }}</span></div>
+            <div class="gestion-detail-item"><span class="detail-label">Sede</span><span class="detail-value">{{ gestion.tratamiento_firmado.sede|default:"No registrada" }}</span></div>
+            <div class="gestion-detail-item"><span class="detail-label">Tablet</span><span class="detail-value">{{ gestion.tratamiento_firmado.tablet_utilizada|default:"No registrada" }}</span></div>
+            <div class="gestion-detail-item"><span class="detail-label">Usuario inicio</span><span class="detail-value">{{ gestion.tratamiento_firmado.usuario_inicio_proceso|default:"No registrado" }}</span></div>
+            <div class="gestion-detail-item"><span class="detail-label">Usuario cierre</span><span class="detail-value">{{ gestion.tratamiento_firmado.usuario_cierre_proceso|default:"No registrado" }}</span></div>
+            <div class="gestion-detail-item gestion-detail-full"><span class="detail-label">Hash</span><span class="detail-value">{{ gestion.tratamiento_firmado.hash_integridad|default:"No disponible" }}</span></div>
+            <div class="gestion-detail-item gestion-detail-full">
+                <span class="detail-label">Texto del tratamiento firmado</span>
+                <span class="detail-value">{{ gestion.tratamiento_firmado.texto_tratamiento }}</span>
+            </div>
+            {% if gestion.tratamiento_firmado.snapshot_cliente %}
+            <div class="gestion-detail-item gestion-detail-full">
+                <span class="detail-label">Snapshot del cliente</span>
+                <span class="detail-value">
+                    Documento: {{ gestion.tratamiento_firmado.snapshot_cliente.tipo_documento }} {{ gestion.tratamiento_firmado.snapshot_cliente.numero_documento }}<br>
+                    Nombre: {{ gestion.tratamiento_firmado.snapshot_cliente.nombre }} {{ gestion.tratamiento_firmado.snapshot_cliente.apellido }}<br>
+                    Telefono: {{ gestion.tratamiento_firmado.snapshot_cliente.telefono|default:"No registrado" }}<br>
+                    Correo: {{ gestion.tratamiento_firmado.snapshot_cliente.correo|default:"No registrado" }}<br>
+                    Direccion: {{ gestion.tratamiento_firmado.snapshot_cliente.direccion|default:"No registrada" }}<br>
+                    Ciudad: {{ gestion.tratamiento_firmado.snapshot_cliente.ciudad|default:"No registrada" }}
+                </span>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
     {% if gestion.firma_consentimiento %}
     <div class="gestion-detail-section-card">
         <h5><i class="bi bi-pen"></i> Firma del consentimiento informado</h5>

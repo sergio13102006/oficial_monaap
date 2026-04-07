@@ -2,7 +2,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.http import JsonResponse, HttpResponse
-from django.db.models import Q
+from django.db.models import Q, Count
+from django.core.paginator import Paginator
 from django.urls import reverse
 from django.template.loader import render_to_string
 from django.utils import timezone
@@ -141,7 +142,16 @@ def abrir_tablet_gestion_alisado(request, cliente_id):
 
 
 def tablet_espera(request):
-    _tablet_kiosk_waiting()
+    kiosk_state = _tablet_kiosk_state()
+    token_obj = kiosk_state.token
+
+    if kiosk_state.listo and token_obj:
+        token_obj = sync_token_process_state(token_obj)
+        if not token_obj.esta_vigente() or kiosk_state.estado != TabletKioskState.ESTADO_LISTO:
+            _tablet_kiosk_waiting()
+    else:
+        _tablet_kiosk_waiting()
+
     context = build_tablet_waiting_payload(request)
     context["tablet_ws_url"] = build_tablet_websocket_url(request, "default-tablet")
     return render(request, 'gestion_alisados/tablet_espera.html', context)
@@ -240,35 +250,34 @@ def tablet_gestion_alisado(request, token):
 
 @login_required
 def lista_gestion_alisados(request):
-    gestiones = GestionAlisado.objects.all()
+    gestiones = GestionAlisado.objects.select_related('cliente', 'tratamiento_firmado').annotate(
+        historial_total=Count('cliente__tratamientos_datos', distinct=True)
+    )
 
-    buscar       = request.GET.get('buscar', '')
-    forma_natural = request.GET.get('forma_natural', '')
-    porosidad    = request.GET.get('porosidad', '')
-    textura      = request.GET.get('textura', '')
-    estado_pago  = request.GET.get('estado_pago', '')
+    buscar = request.GET.get('buscar', '').strip()
+    fecha_desde = request.GET.get('fecha_desde', '').strip()
+    fecha_hasta = request.GET.get('fecha_hasta', '').strip()
+    per_page = request.GET.get('per_page', '20').strip()
+    page_number = request.GET.get('page', '1').strip()
     current_sort = request.GET.get('sort', 'fecha').strip()
     current_dir = request.GET.get('dir', 'desc').strip().lower()
     if current_dir not in {'asc', 'desc'}:
         current_dir = 'desc'
+    if per_page not in {'10', '20', '50'}:
+        per_page = '20'
 
     if buscar:
         gestiones = gestiones.filter(
             Q(cliente__nombre__icontains=buscar) |
             Q(cliente__apellido__icontains=buscar) |
-            Q(procedimiento_realizado_por__icontains=buscar) |
+            Q(cliente__numero_documento__icontains=buscar) |
+            Q(cliente__telefono__icontains=buscar) |
             Q(tipo_alisado__icontains=buscar)
         )
-    if forma_natural:
-        gestiones = gestiones.filter(forma_natural=forma_natural)
-    if porosidad:
-        gestiones = gestiones.filter(porosidad=porosidad)
-    if textura:
-        gestiones = gestiones.filter(textura=textura)
-    if estado_pago == 'pagado':
-        gestiones = gestiones.filter(saldo_pendiente=0)
-    elif estado_pago == 'pendiente':
-        gestiones = gestiones.filter(saldo_pendiente__gt=0)
+    if fecha_desde:
+        gestiones = gestiones.filter(fecha_hora__date__gte=fecha_desde)
+    if fecha_hasta:
+        gestiones = gestiones.filter(fecha_hora__date__lte=fecha_hasta)
 
     sort_map = {
         'fecha': ('fecha_hora',),
@@ -277,6 +286,8 @@ def lista_gestion_alisados(request):
         'tipo': ('tipo_alisado',),
         'precio': ('precio_alisado',),
         'saldo': ('saldo_pendiente',),
+        'estado': ('tratamiento_firmado__estado', 'fecha_hora'),
+        'historial': ('historial_total', 'cliente__nombre'),
     }
 
     if current_sort in sort_map:
@@ -289,16 +300,40 @@ def lista_gestion_alisados(request):
         current_dir = 'desc'
         gestiones = gestiones.order_by('-fecha_hora')
 
+    total_resultados = gestiones.count()
+    paginator = Paginator(gestiones, int(per_page))
+    page_obj = paginator.get_page(page_number)
+    showing_from = ((page_obj.number - 1) * paginator.per_page) + 1 if total_resultados else 0
+    showing_to = min(page_obj.number * paginator.per_page, total_resultados) if total_resultados else 0
+    page_numbers = []
+    if paginator.num_pages <= 7:
+        page_numbers = list(paginator.page_range)
+    else:
+        current = page_obj.number
+        candidates = {1, paginator.num_pages, current - 1, current, current + 1}
+        candidates = sorted(num for num in candidates if 1 <= num <= paginator.num_pages)
+        last = None
+        for num in candidates:
+            if last is not None and num - last > 1:
+                page_numbers.append('ellipsis')
+            page_numbers.append(num)
+            last = num
+
     context = {
-        'gestiones'    : gestiones,
-        'buscar'       : buscar,        
-        'forma_natural': forma_natural,
-        'porosidad'    : porosidad,
-        'textura'      : textura,
-        'estado_pago'  : estado_pago,
-        'current_sort' : current_sort,
-        'current_dir'  : current_dir,
-        'admin_ws_url' : build_websocket_url(request, "/ws/gestion-alisados/admin/"),
+        'gestiones': page_obj.object_list,
+        'page_obj': page_obj,
+        'paginator': paginator,
+        'page_numbers': page_numbers,
+        'total_resultados': total_resultados,
+        'showing_from': showing_from,
+        'showing_to': showing_to,
+        'buscar': buscar,
+        'fecha_desde': fecha_desde,
+        'fecha_hasta': fecha_hasta,
+        'per_page': per_page,
+        'current_sort': current_sort,
+        'current_dir': current_dir,
+        'admin_ws_url': build_websocket_url(request, "/ws/gestion-alisados/admin/"),
     }
 
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -349,7 +384,7 @@ def crear_gestion_alisado(request):
         form = GestionAlisadoForm(request.POST, request.FILES)
 
         if form.is_valid():
-            gestion = save_gestion_form(form)
+            gestion = save_gestion_form(form, usuario=request.user)
             if is_modal or es_ajax:
                 return JsonResponse({
                     'success': True,
@@ -439,16 +474,38 @@ def ver_gestion_alisado_modal_content(request, pk):
 
 
 @login_required
+def ver_historial_cliente_modal(request, cliente_id):
+    cliente = get_object_or_404(Cliente, pk=cliente_id)
+    gestiones = GestionAlisado.objects.select_related('tratamiento_firmado').filter(cliente=cliente).order_by('-fecha_hora')
+    return render(
+        request,
+        'gestion_alisados/historial_cliente_modal_content.html',
+        {
+            'cliente': cliente,
+            'gestiones': gestiones,
+            'total_tratamientos': gestiones.count(),
+        },
+    )
+
+
+@login_required
 def editar_gestion_alisado(request, pk):
     """Edita una gestión de alisado existente"""
     gestion = get_object_or_404(GestionAlisado, pk=pk)
+    tratamiento = getattr(gestion, "tratamiento_firmado", None)
+    if tratamiento and tratamiento.esta_firmado:
+        mensaje = 'Este tratamiento ya fue firmado y no se puede editar.'
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': False, 'message': mensaje}, status=403)
+        messages.error(request, mensaje)
+        return redirect('gestion_alisados:ver_gestion_alisado', pk=gestion.pk)
     is_modal = request.GET.get('modal') == '1'
     es_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
 
     if request.method == 'POST':
         form = GestionAlisadoForm(request.POST, request.FILES, instance=gestion)
         if form.is_valid():
-            gestion = save_gestion_form(form)
+            gestion = save_gestion_form(form, usuario=request.user)
             messages.success(request, 'Gestión de alisado actualizada exitosamente.')
             if is_modal or es_ajax:
                 return JsonResponse({

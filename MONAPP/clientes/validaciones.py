@@ -49,66 +49,74 @@ def _correo_seguro(correo):
 def validar_datos_cliente(data, cliente_id=None):
     errores = {}
 
-    tipo_documento = data.get('tipo_documento', '').strip()
-    numero_documento = data.get('numero_documento', '').strip()
-    nombre = data.get('nombre', '').strip()
-    apellido = data.get('apellido', '').strip()
-    fecha_nacimiento_str = data.get('fecha_nacimiento', '').strip()
-    telefono = data.get('telefono', '').strip()
-    correo = data.get('correo', '').strip()
+    tipo_documento = data.get("tipo_documento", "").strip()
+    numero_documento = data.get("numero_documento", "").strip()
+    nombre = data.get("nombre", "").strip()
+    apellido = data.get("apellido", "").strip()
+    fecha_nacimiento_str = data.get("fecha_nacimiento", "").strip()
+    telefono = data.get("telefono", "").strip()
+    correo = data.get("correo", "").strip()
+    direccion = data.get("direccion", "").strip()
+    ciudad = data.get("ciudad", "").strip()
 
     if not tipo_documento:
-        errores['tipo_documento'] = 'El tipo de documento es obligatorio.'
+        errores["tipo_documento"] = "El tipo de documento es obligatorio."
 
     if not numero_documento:
-        errores['numero_documento'] = 'El número de documento es obligatorio.'
+        errores["numero_documento"] = "El numero de documento es obligatorio."
     elif not _sin_signos_peligrosos(numero_documento):
-        errores['numero_documento'] = 'El número de documento no puede contener signos especiales.'
+        errores["numero_documento"] = "El numero de documento no puede contener signos especiales."
     elif not _solo_numeros(numero_documento):
-        errores['numero_documento'] = 'Solo se permiten números.'
+        errores["numero_documento"] = "Solo se permiten numeros."
     elif not (6 <= len(numero_documento) <= 12):
-        errores['numero_documento'] = 'Debe tener entre 6 y 12 dígitos.'
+        errores["numero_documento"] = "Debe tener entre 6 y 12 digitos."
     else:
         qs = Cliente.objects.filter(numero_documento=numero_documento)
         if cliente_id:
             qs = qs.exclude(id=cliente_id)
         if qs.exists():
-            errores['numero_documento'] = 'Ya existe otro cliente con este documento.'
+            errores["numero_documento"] = "Ya existe otro cliente con este documento."
 
     if not nombre:
-        errores['nombre'] = 'El nombre es obligatorio.'
+        errores["nombre"] = "El nombre es obligatorio."
     elif not _sin_signos_peligrosos(nombre):
-        errores['nombre'] = 'El nombre no puede contener signos especiales.'
+        errores["nombre"] = "El nombre no puede contener signos especiales."
     elif not _solo_letras_y_espacios(nombre):
-        errores['nombre'] = 'El nombre solo puede contener letras y espacios.'
+        errores["nombre"] = "El nombre solo puede contener letras y espacios."
 
     if not apellido:
-        errores['apellido'] = 'El apellido es obligatorio.'
+        errores["apellido"] = "El apellido es obligatorio."
     elif not _sin_signos_peligrosos(apellido):
-        errores['apellido'] = 'El apellido no puede contener signos especiales.'
+        errores["apellido"] = "El apellido no puede contener signos especiales."
     elif not _solo_letras_y_espacios(apellido):
-        errores['apellido'] = 'El apellido solo puede contener letras y espacios.'
+        errores["apellido"] = "El apellido solo puede contener letras y espacios."
 
     if not fecha_nacimiento_str:
-        errores['fecha_nacimiento'] = 'La fecha de nacimiento es obligatoria.'
+        errores["fecha_nacimiento"] = "La fecha de nacimiento es obligatoria."
     else:
         try:
             fecha = date.fromisoformat(fecha_nacimiento_str)
             if fecha > date.today():
-                errores['fecha_nacimiento'] = 'La fecha no puede ser futura.'
+                errores["fecha_nacimiento"] = "La fecha no puede ser futura."
         except ValueError:
-            errores['fecha_nacimiento'] = 'Fecha inválida.'
+            errores["fecha_nacimiento"] = "Fecha invalida."
 
     if telefono:
         if not _sin_signos_peligrosos(telefono):
-            errores['telefono'] = 'El teléfono no puede contener signos especiales.'
+            errores["telefono"] = "El telefono no puede contener signos especiales."
         elif not _solo_numeros(telefono):
-            errores['telefono'] = 'El teléfono solo puede contener números.'
+            errores["telefono"] = "El telefono solo puede contener numeros."
         elif len(telefono) != 10:
-            errores['telefono'] = 'Debe tener exactamente 10 dígitos.'
+            errores["telefono"] = "Debe tener exactamente 10 digitos."
 
     if correo:
         if not _sin_signos_peligrosos(correo) or not _correo_seguro(correo):
-            errores['correo'] = 'Correo electrónico inválido.'
+            errores["correo"] = "Correo electronico invalido."
+
+    if direccion and not _sin_signos_peligrosos(direccion):
+        errores["direccion"] = "La direccion no puede contener signos HTML."
+
+    if ciudad and not _sin_signos_peligrosos(ciudad):
+        errores["ciudad"] = "La ciudad no puede contener signos HTML."
 
     return errores

@@ -137,7 +137,12 @@ def crear_cliente(request):
         fecha_nacimiento=datos['fecha_nacimiento'],
         telefono=datos.get('telefono', ''),
         correo=datos.get('correo', ''),
-        estado='activo'
+        direccion=datos.get('direccion', ''),
+        ciudad=datos.get('ciudad', ''),
+        observaciones_generales=datos.get('observaciones_generales', ''),
+        estado='activo',
+        usuario_creo=request.user,
+        usuario_actualizo=request.user,
     )
 
     if es_ajax:
@@ -209,7 +214,11 @@ def editar_cliente(request, cliente_id):
         cliente.fecha_nacimiento = datos['fecha_nacimiento']
         cliente.telefono = datos.get('telefono', '')
         cliente.correo = datos.get('correo', '')
+        cliente.direccion = datos.get('direccion', '')
+        cliente.ciudad = datos.get('ciudad', '')
+        cliente.observaciones_generales = datos.get('observaciones_generales', '')
         cliente.estado = datos['estado']
+        cliente.usuario_actualizo = request.user
         cliente.save()
 
         if es_ajax:
@@ -226,6 +235,9 @@ def editar_cliente(request, cliente_id):
             'fecha_nacimiento': cliente.fecha_nacimiento.isoformat() if cliente.fecha_nacimiento else '',
             'telefono': cliente.telefono or '',
             'correo': cliente.correo or '',
+            'direccion': cliente.direccion or '',
+            'ciudad': cliente.ciudad or '',
+            'observaciones_generales': cliente.observaciones_generales or '',
             'estado': cliente.estado,
         })
 

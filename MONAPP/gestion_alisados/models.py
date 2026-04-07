@@ -96,6 +96,22 @@ class GestionAlisado(models.Model):
         null=True,
         blank=True
     )
+    atencion = models.OneToOneField(
+        'AtencionServicio',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='gestion_alisado_detalle',
+        verbose_name='Atencion relacionada'
+    )
+    tratamiento_firmado = models.OneToOneField(
+        'TratamientoDatosFirmado',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='gestion_alisado_detalle',
+        verbose_name='Tratamiento firmado relacionado'
+    )
     
     # Información del servicio y pago
     precio_alisado = models.IntegerField(
@@ -325,6 +341,165 @@ class GestionAlisado(models.Model):
 
     def __str__(self):
         return f"Alisado - {self.procedimiento_realizado_por} - {self.fecha_hora.strftime('%d/%m/%Y %H:%M')}"
+
+
+class AtencionServicio(models.Model):
+    ESTADO_PENDIENTE = 'pendiente'
+    ESTADO_EN_PROCESO = 'en_proceso'
+    ESTADO_COMPLETADA = 'completada'
+    ESTADO_CANCELADA = 'cancelada'
+    ESTADOS_ATENCION = [
+        (ESTADO_PENDIENTE, 'Pendiente'),
+        (ESTADO_EN_PROCESO, 'En proceso'),
+        (ESTADO_COMPLETADA, 'Completada'),
+        (ESTADO_CANCELADA, 'Cancelada'),
+    ]
+
+    id_atencion = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    cliente = models.ForeignKey(
+        Cliente,
+        on_delete=models.PROTECT,
+        related_name='atenciones_servicio',
+        verbose_name='Cliente relacionado',
+    )
+    fecha_atencion = models.DateTimeField(default=timezone.now, verbose_name='Fecha de la atencion')
+    sede = models.CharField(max_length=150, blank=True, default='', verbose_name='Sede')
+    profesional_o_asesor = models.CharField(max_length=200, verbose_name='Profesional o asesor')
+    tipo_servicio = models.CharField(max_length=200, verbose_name='Tipo de servicio')
+    estado_atencion = models.CharField(
+        max_length=20,
+        choices=ESTADOS_ATENCION,
+        default=ESTADO_PENDIENTE,
+        verbose_name='Estado de la atencion',
+    )
+    observaciones_atencion = models.TextField(blank=True, default='', verbose_name='Observaciones de la atencion')
+    usuario_registro = models.ForeignKey(
+        'auth.User',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='atenciones_registradas',
+        verbose_name='Usuario que registro',
+    )
+    tratamiento_completado = models.BooleanField(default=False, verbose_name='Tratamiento completado')
+    creado_en = models.DateTimeField(auto_now_add=True)
+    actualizado_en = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-fecha_atencion']
+        verbose_name = 'Atencion o servicio'
+        verbose_name_plural = 'Atenciones o servicios'
+
+    def __str__(self):
+        return f"{self.tipo_servicio} - {self.cliente} - {self.fecha_atencion:%d/%m/%Y %H:%M}"
+
+
+class TratamientoDatosFirmado(models.Model):
+    ESTADO_PENDIENTE = 'pendiente'
+    ESTADO_ENVIADA = 'enviada_a_tablet'
+    ESTADO_ABIERTA = 'abierta_en_tablet'
+    ESTADO_FIRMADA = 'firmada'
+    ESTADO_CANCELADA = 'cancelada'
+    ESTADO_EXPIRADA = 'expirada'
+    ESTADO_ERROR = 'error'
+    ESTADOS_TRATAMIENTO = [
+        (ESTADO_PENDIENTE, 'Pendiente'),
+        (ESTADO_ENVIADA, 'Enviada a tablet'),
+        (ESTADO_ABIERTA, 'Abierta en tablet'),
+        (ESTADO_FIRMADA, 'Firmada'),
+        (ESTADO_CANCELADA, 'Cancelada'),
+        (ESTADO_EXPIRADA, 'Expirada'),
+        (ESTADO_ERROR, 'Error'),
+    ]
+
+    id_tratamiento = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    cliente = models.ForeignKey(
+        Cliente,
+        on_delete=models.PROTECT,
+        related_name='tratamientos_datos',
+        verbose_name='Cliente relacionado',
+    )
+    atencion = models.OneToOneField(
+        AtencionServicio,
+        on_delete=models.PROTECT,
+        related_name='tratamiento_datos',
+        verbose_name='Atencion o servicio relacionado',
+    )
+    fecha_hora_firma = models.DateTimeField(null=True, blank=True, verbose_name='Fecha y hora de firma')
+    estado = models.CharField(
+        max_length=30,
+        choices=ESTADOS_TRATAMIENTO,
+        default=ESTADO_PENDIENTE,
+        db_index=True,
+        verbose_name='Estado',
+    )
+    texto_tratamiento = models.TextField(verbose_name='Texto exacto del tratamiento firmado')
+    version_tratamiento = models.CharField(max_length=50, default='v1', verbose_name='Version del tratamiento')
+    ruta_archivo_firma = models.CharField(max_length=255, blank=True, default='', verbose_name='Ruta del archivo de la firma')
+    hash_integridad = models.CharField(max_length=128, blank=True, default='', verbose_name='Hash de integridad')
+    sede = models.CharField(max_length=150, blank=True, default='', verbose_name='Sede')
+    tablet_utilizada = models.CharField(max_length=120, blank=True, default='', verbose_name='Tablet utilizada')
+    usuario_inicio_proceso = models.ForeignKey(
+        'auth.User',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='tratamientos_iniciados',
+        verbose_name='Usuario que inicio el proceso',
+    )
+    usuario_cierre_proceso = models.ForeignKey(
+        'auth.User',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='tratamientos_cerrados',
+        verbose_name='Usuario que cerro el proceso',
+    )
+    snapshot_cliente = models.JSONField(default=dict, verbose_name='Snapshot de datos del cliente')
+    creado_en = models.DateTimeField(auto_now_add=True)
+    actualizado_en = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-creado_en']
+        verbose_name = 'Tratamiento de datos firmado'
+        verbose_name_plural = 'Tratamientos de datos firmados'
+
+    @property
+    def esta_firmado(self):
+        return self.estado == self.ESTADO_FIRMADA and self.fecha_hora_firma is not None
+
+    def marcar_estado(self, estado, *, fecha_hora_firma=None, usuario_cierre=None):
+        self.estado = estado
+        update_fields = ['estado', 'actualizado_en']
+        if fecha_hora_firma is not None:
+            self.fecha_hora_firma = fecha_hora_firma
+            update_fields.append('fecha_hora_firma')
+        if usuario_cierre is not None:
+            self.usuario_cierre_proceso = usuario_cierre
+            update_fields.append('usuario_cierre_proceso')
+        self.save(update_fields=update_fields)
+
+    def clean(self):
+        super().clean()
+        if self.pk and TratamientoDatosFirmado.objects.filter(pk=self.pk, estado=self.ESTADO_FIRMADA).exists():
+            previous = TratamientoDatosFirmado.objects.get(pk=self.pk)
+            immutable_fields = [
+                'cliente_id',
+                'atencion_id',
+                'texto_tratamiento',
+                'version_tratamiento',
+                'ruta_archivo_firma',
+                'hash_integridad',
+                'sede',
+                'tablet_utilizada',
+                'snapshot_cliente',
+            ]
+            for field_name in immutable_fields:
+                if getattr(previous, field_name) != getattr(self, field_name):
+                    raise ValidationError('Un tratamiento firmado no se puede editar.')
+
+    def __str__(self):
+        return f"Tratamiento {self.id_tratamiento} - {self.cliente}"
 
 
 class TabletConsentToken(models.Model):

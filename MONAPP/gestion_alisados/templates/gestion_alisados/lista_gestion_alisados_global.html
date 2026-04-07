@@ -1,5 +1,20 @@
-﻿{% load humanize %}
+{% load humanize %}
 {% load sort_tags %}
+
+<div class="gestion-results-bar">
+    <div class="gestion-results-meta">
+        <span class="gestion-results-chip"><strong>{{ total_resultados }}</strong> resultados encontrados</span>
+        <span class="gestion-results-chip">Mostrando <strong>{{ showing_from }}-{{ showing_to }}</strong> de <strong>{{ total_resultados }}</strong></span>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+        <label for="gestionPerPageTop" class="small text-muted mb-0">Por pagina</label>
+        <select id="gestionPerPageTop" name="per_page" class="form-select form-select-sm" form="filtrosForm" style="width: auto;">
+            <option value="10" {% if per_page == '10' %}selected{% endif %}>10</option>
+            <option value="20" {% if per_page == '20' %}selected{% endif %}>20</option>
+            <option value="50" {% if per_page == '50' %}selected{% endif %}>50</option>
+        </select>
+    </div>
+</div>
 
 {% if gestiones %}
 <div class="table-responsive">
@@ -7,33 +22,43 @@
         <thead>
             <tr>
                 <th>
-                    <a href="{% sort_url 'fecha' %}">Fecha y Hora
+                    <a href="{% sort_url 'fecha' %}" class="js-gestion-nav-link">Fecha y hora
                         {% if current_sort == 'fecha' %}<i class="bi bi-caret-{% if current_dir == 'asc' %}up{% else %}down{% endif %}-fill ms-1" aria-hidden="true"></i>{% endif %}
                     </a>
                 </th>
                 <th>
-                    <a href="{% sort_url 'cliente' %}">Cliente
+                    <a href="{% sort_url 'cliente' %}" class="js-gestion-nav-link">Cliente
                         {% if current_sort == 'cliente' %}<i class="bi bi-caret-{% if current_dir == 'asc' %}up{% else %}down{% endif %}-fill ms-1" aria-hidden="true"></i>{% endif %}
                     </a>
                 </th>
                 <th>
-                    <a href="{% sort_url 'profesional' %}">Profesional
+                    <a href="{% sort_url 'profesional' %}" class="js-gestion-nav-link">Profesional
                         {% if current_sort == 'profesional' %}<i class="bi bi-caret-{% if current_dir == 'asc' %}up{% else %}down{% endif %}-fill ms-1" aria-hidden="true"></i>{% endif %}
                     </a>
                 </th>
                 <th>
-                    <a href="{% sort_url 'tipo' %}">Tipo de Alisado
+                    <a href="{% sort_url 'tipo' %}" class="js-gestion-nav-link">Tipo de alisado
                         {% if current_sort == 'tipo' %}<i class="bi bi-caret-{% if current_dir == 'asc' %}up{% else %}down{% endif %}-fill ms-1" aria-hidden="true"></i>{% endif %}
                     </a>
                 </th>
                 <th>
-                    <a href="{% sort_url 'precio' %}">Precio
+                    <a href="{% sort_url 'precio' %}" class="js-gestion-nav-link">Precio
                         {% if current_sort == 'precio' %}<i class="bi bi-caret-{% if current_dir == 'asc' %}up{% else %}down{% endif %}-fill ms-1" aria-hidden="true"></i>{% endif %}
                     </a>
                 </th>
                 <th>
-                    <a href="{% sort_url 'saldo' %}">Saldo Pendiente
+                    <a href="{% sort_url 'saldo' %}" class="js-gestion-nav-link">Saldo pendiente
                         {% if current_sort == 'saldo' %}<i class="bi bi-caret-{% if current_dir == 'asc' %}up{% else %}down{% endif %}-fill ms-1" aria-hidden="true"></i>{% endif %}
+                    </a>
+                </th>
+                <th>
+                    <a href="{% sort_url 'estado' %}" class="js-gestion-nav-link">Estado
+                        {% if current_sort == 'estado' %}<i class="bi bi-caret-{% if current_dir == 'asc' %}up{% else %}down{% endif %}-fill ms-1" aria-hidden="true"></i>{% endif %}
+                    </a>
+                </th>
+                <th>
+                    <a href="{% sort_url 'historial' %}" class="js-gestion-nav-link">Historial
+                        {% if current_sort == 'historial' %}<i class="bi bi-caret-{% if current_dir == 'asc' %}up{% else %}down{% endif %}-fill ms-1" aria-hidden="true"></i>{% endif %}
                     </a>
                 </th>
                 <th>Acciones</th>
@@ -41,9 +66,16 @@
         </thead>
         <tbody>
             {% for gestion in gestiones %}
+            {% with tratamiento=gestion.tratamiento_firmado %}
             <tr>
                 <td>{{ gestion.fecha_hora|date:"d/m/Y H:i" }}</td>
-                <td>{% if gestion.cliente %}{{ gestion.cliente.nombre }} {{ gestion.cliente.apellido }}{% else %}<span class="text-muted">Sin cliente</span>{% endif %}</td>
+                <td>
+                    {% if gestion.cliente %}
+                        {{ gestion.cliente.nombre }} {{ gestion.cliente.apellido }}
+                    {% else %}
+                        <span class="text-muted">Sin cliente</span>
+                    {% endif %}
+                </td>
                 <td>{{ gestion.procedimiento_realizado_por }}</td>
                 <td>{{ gestion.tipo_alisado }}</td>
                 <td>${{ gestion.precio_alisado|intcomma }} COP</td>
@@ -55,16 +87,60 @@
                     {% endif %}
                 </td>
                 <td>
+                    {% if tratamiento %}
+                        {% if tratamiento.estado == 'firmada' %}
+                            <span class="badge bg-success">Firmado</span>
+                        {% elif tratamiento.estado == 'cancelada' %}
+                            <span class="badge bg-danger">Cancelado</span>
+                        {% elif tratamiento.estado == 'error' %}
+                            <span class="badge bg-danger-subtle text-danger">Error</span>
+                        {% elif tratamiento.estado == 'expirada' %}
+                            <span class="badge bg-secondary">Expirado</span>
+                        {% elif tratamiento.estado == 'abierta_en_tablet' %}
+                            <span class="badge bg-info text-dark">Abierto en tablet</span>
+                        {% elif tratamiento.estado == 'enviada_a_tablet' %}
+                            <span class="badge bg-primary">Enviado a tablet</span>
+                        {% else %}
+                            <span class="badge bg-warning text-dark">Pendiente</span>
+                        {% endif %}
+                    {% else %}
+                        <span class="badge bg-warning text-dark">Pendiente</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if gestion.cliente %}
+                    <div class="d-flex flex-column gap-1">
+                        <span class="small text-muted">{{ gestion.historial_total|default:0 }} tratamientos</span>
+                        <a href="{% url 'gestion_alisados:ver_historial_cliente_modal' gestion.cliente.id %}" class="btn btn-sm btn-outline-secondary js-open-gestion-info-modal" data-modal-title="Historial del cliente">
+                            Ver historial
+                        </a>
+                    </div>
+                    {% else %}
+                    <span class="text-muted small">Sin historial</span>
+                    {% endif %}
+                </td>
+                <td>
                     <div class="table-action-group">
                         {% if request.user.is_staff %}
-                        <a href="{% url 'gestion_alisados:ver_gestion_alisado_modal_content' gestion.pk %}" class="table-action-btn js-open-gestion-info-modal" data-modal-title="Detalle de gestion de datos" title="Ver detalles" aria-label="Ver detalles de la gestion {{ gestion.pk }}">
+                        <a href="{% url 'gestion_alisados:ver_gestion_alisado_modal_content' gestion.pk %}" class="table-action-btn js-open-gestion-info-modal" data-modal-title="Detalle de gestion de datos" title="Ver detalle" aria-label="Ver detalle de la gestion {{ gestion.pk }}">
                             <i class="bi bi-eye" aria-hidden="true"></i>
                         </a>
                         {% endif %}
+                        {% if not tratamiento or not tratamiento.esta_firmado %}
                         <a href="{% url 'gestion_alisados:editar_gestion_alisado' gestion.pk %}?modal=1" class="table-action-btn js-open-gestion-form-modal" data-form-title="Editar gestion de datos" data-form-url="{% url 'gestion_alisados:editar_gestion_alisado' gestion.pk %}?modal=1" title="Editar" aria-label="Editar gestion {{ gestion.pk }}">
                             <i class="bi bi-pencil" aria-hidden="true"></i>
                         </a>
-                        {% if permisos.roles.es_admin %}    
+                        {% else %}
+                        <a href="{% url 'gestion_alisados:crear_gestion_alisado' %}?modal=1&cliente={% if gestion.cliente %}{{ gestion.cliente.id }}{% endif %}" class="table-action-btn js-open-gestion-form-modal" data-form-title="Nueva gestion para cliente existente" data-form-url="{% url 'gestion_alisados:crear_gestion_alisado' %}?modal=1&cliente={% if gestion.cliente %}{{ gestion.cliente.id }}{% endif %}" title="Generar nueva" aria-label="Generar nueva gestion para {{ gestion.pk }}">
+                            <i class="bi bi-files" aria-hidden="true"></i>
+                        </a>
+                        {% endif %}
+                        {% if gestion.firma_consentimiento %}
+                        <a href="{{ gestion.firma_consentimiento.url }}" class="table-action-btn" target="_blank" rel="noopener noreferrer" title="Descargar soporte" aria-label="Descargar soporte de la gestion {{ gestion.pk }}">
+                            <i class="bi bi-download" aria-hidden="true"></i>
+                        </a>
+                        {% endif %}
+                        {% if permisos.roles.es_admin %}
                         <a href="#" class="table-action-btn table-action-btn--danger js-delete-gestion-swal" data-delete-url="{% url 'gestion_alisados:eliminar_gestion_alisado' gestion.pk %}" data-gestion-label="{% if gestion.cliente %}{{ gestion.cliente.nombre }} {{ gestion.cliente.apellido }}{% else %}Sin cliente{% endif %} - {{ gestion.fecha_hora|date:'d/m/Y H:i' }}" title="Eliminar" aria-label="Eliminar gestion {{ gestion.pk }}">
                             <i class="bi bi-trash" aria-hidden="true"></i>
                         </a>
@@ -72,16 +148,51 @@
                     </div>
                 </td>
             </tr>
+            {% endwith %}
             {% endfor %}
         </tbody>
     </table>
 </div>
 {% else %}
-    {% if request.GET %}
-    <div class="table-empty-state">
-        <i class="bi bi-exclamation-triangle"></i>
-        <p>No se encontraron registros con los filtros aplicados.</p>
-    </div>
-    {% endif %}
+<div class="table-empty-state">
+    <i class="bi bi-exclamation-triangle"></i>
+    <p>No se encontraron registros con los filtros aplicados.</p>
+</div>
 {% endif %}
 
+<div class="gestion-table-footer">
+    <div class="d-flex align-items-center gap-2">
+        <label for="gestionPerPageBottom" class="small text-muted mb-0">Por pagina</label>
+        <select id="gestionPerPageBottom" name="per_page" class="form-select form-select-sm" form="filtrosForm" style="width: auto;">
+            <option value="10" {% if per_page == '10' %}selected{% endif %}>10</option>
+            <option value="20" {% if per_page == '20' %}selected{% endif %}>20</option>
+            <option value="50" {% if per_page == '50' %}selected{% endif %}>50</option>
+        </select>
+    </div>
+
+    {% if page_obj.paginator.num_pages > 1 %}
+    <nav class="gestion-pagination" aria-label="Paginacion de gestion de datos">
+        {% if page_obj.has_previous %}
+        <a href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value|urlencode }}&{% endif %}{% endfor %}page={{ page_obj.previous_page_number }}" class="js-gestion-nav-link">Anterior</a>
+        {% else %}
+        <span>Anterior</span>
+        {% endif %}
+
+        {% for item in page_numbers %}
+            {% if item == 'ellipsis' %}
+            <span>...</span>
+            {% elif item == page_obj.number %}
+            <span class="is-active">{{ item }}</span>
+            {% else %}
+            <a href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value|urlencode }}&{% endif %}{% endfor %}page={{ item }}" class="js-gestion-nav-link">{{ item }}</a>
+            {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+        <a href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value|urlencode }}&{% endif %}{% endfor %}page={{ page_obj.next_page_number }}" class="js-gestion-nav-link">Siguiente</a>
+        {% else %}
+        <span>Siguiente</span>
+        {% endif %}
+    </nav>
+    {% endif %}
+</div>

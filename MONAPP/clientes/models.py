@@ -24,8 +24,27 @@ class Cliente(models.Model):
     fecha_nacimiento = models.DateField()
     telefono = models.CharField(max_length=20, blank=True, null=True)
     correo = models.EmailField(blank=True, null=True)
+    direccion = models.CharField(max_length=255, blank=True, default="")
+    ciudad = models.CharField(max_length=120, blank=True, default="")
+    observaciones_generales = models.TextField(blank=True, default="")
     estado = models.CharField(max_length=10, choices=ESTADO_CHOICES, default="activo")
     fecha_registro = models.DateTimeField(default=now)
+    fecha_creacion = models.DateTimeField(default=now)
+    fecha_actualizacion = models.DateTimeField(default=now)
+    usuario_creo = models.ForeignKey(
+        "auth.User",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="clientes_creados",
+    )
+    usuario_actualizo = models.ForeignKey(
+        "auth.User",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="clientes_actualizados",
+    )
 
     @staticmethod
     def _solo_letras_y_espacios(valor):
@@ -78,6 +97,16 @@ class Cliente(models.Model):
             if not self._sin_signos_peligrosos(self.correo):
                 errores["correo"] = "El correo no puede contener signos HTML."
 
+        if self.direccion:
+            self.direccion = self.direccion.strip()
+            if not self._sin_signos_peligrosos(self.direccion):
+                errores["direccion"] = "La direccion no puede contener signos HTML."
+
+        if self.ciudad:
+            self.ciudad = self.ciudad.strip().title()
+            if not self._sin_signos_peligrosos(self.ciudad):
+                errores["ciudad"] = "La ciudad no puede contener signos HTML."
+
         if self.fecha_nacimiento:
             from datetime import date
             if self.fecha_nacimiento > date.today():
@@ -94,6 +123,10 @@ class Cliente(models.Model):
             else:
                 numero = 1
             self.codigo_cliente = f"CL{numero:04d}"
+
+        if not self.fecha_creacion:
+            self.fecha_creacion = now()
+        self.fecha_actualizacion = now()
 
         self.full_clean()
         super().save(*args, **kwargs)

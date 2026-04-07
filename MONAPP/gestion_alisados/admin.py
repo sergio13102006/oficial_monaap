@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import GestionAlisado
+from .models import AtencionServicio, GestionAlisado, TratamientoDatosFirmado
 
 
 @admin.register(GestionAlisado)
@@ -50,3 +50,19 @@ class GestionAlisadoAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
     )
+
+
+@admin.register(AtencionServicio)
+class AtencionServicioAdmin(admin.ModelAdmin):
+    list_display = ['fecha_atencion', 'cliente', 'tipo_servicio', 'profesional_o_asesor', 'estado_atencion', 'tratamiento_completado']
+    list_filter = ['estado_atencion', 'tipo_servicio', 'sede', 'fecha_atencion']
+    search_fields = ['cliente__nombre', 'cliente__apellido', 'cliente__numero_documento', 'profesional_o_asesor', 'tipo_servicio']
+    readonly_fields = ['id_atencion', 'creado_en', 'actualizado_en']
+
+
+@admin.register(TratamientoDatosFirmado)
+class TratamientoDatosFirmadoAdmin(admin.ModelAdmin):
+    list_display = ['creado_en', 'cliente', 'atencion', 'estado', 'version_tratamiento', 'tablet_utilizada']
+    list_filter = ['estado', 'version_tratamiento', 'sede', 'creado_en']
+    search_fields = ['cliente__nombre', 'cliente__apellido', 'cliente__numero_documento', 'hash_integridad']
+    readonly_fields = ['id_tratamiento', 'hash_integridad', 'creado_en', 'actualizado_en', 'fecha_hora_firma']

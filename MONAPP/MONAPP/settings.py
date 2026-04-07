@@ -24,7 +24,7 @@ if _debug_raw in {"release", "prod", "production"}:
 else:
     DEBUG = _debug_raw in {"1", "true", "yes", "y", "on", "debug"}
 
-ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="localhost,127.0.0.1,192.168.1.44", cast=Csv())
+ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="localhost,127.0.0.1,192.168.1.44,192.168.1.21", cast=Csv())
 CSRF_TRUSTED_ORIGINS = config("CSRF_TRUSTED_ORIGINS", default="", cast=Csv())
 
 # Application definition
