@@ -22,6 +22,7 @@
                         <th>Profesional</th>
                         <th>Estado</th>
                         <th>Saldo</th>
+                        <th>Ver</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -43,6 +44,11 @@
                             {% else %}
                                 Pagado
                             {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'gestion_alisados:ver_gestion_alisado_modal_content' gestion.pk %}" class="table-action-btn js-open-gestion-info-modal" data-modal-title="Tratamiento diligenciado" title="Ver tratamiento" aria-label="Ver tratamiento diligenciado de {{ gestion.fecha_hora|date:'d/m/Y H:i' }}">
+                                <i class="bi bi-eye" aria-hidden="true"></i>
+                            </a>
                         </td>
                     </tr>
                     {% endfor %}

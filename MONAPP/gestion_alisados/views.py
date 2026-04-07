@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.http import JsonResponse, HttpResponse
-from django.db.models import Q, Count
+from django.db.models import Q, Count, OuterRef, Subquery, F, Value, ExpressionWrapper, IntegerField
 from django.core.paginator import Paginator
 from django.urls import reverse
 from django.template.loader import render_to_string
@@ -69,6 +69,55 @@ def _datos_ultima_gestion(cliente_obj):
 
 def _cliente_nombre_gestion(gestion_obj):
     return get_cliente_nombre_gestion(gestion_obj)
+
+
+def _iniciales_desde_gestion(gestion_obj):
+    if not gestion_obj:
+        return {}
+    return {
+        "cliente": gestion_obj.cliente,
+        "precio_alisado": gestion_obj.precio_alisado,
+        "es_oferta_especial": gestion_obj.es_oferta_especial,
+        "descripcion_oferta": gestion_obj.descripcion_oferta or "",
+        "anticipo_cliente": gestion_obj.anticipo_cliente,
+        "medio_pago": gestion_obj.medio_pago,
+        "saldo_pendiente": gestion_obj.saldo_pendiente,
+        "procedimiento_realizado_por": gestion_obj.procedimiento_realizado_por,
+        "tipo_alisado": _servicio_alisado_valido(gestion_obj.tipo_alisado),
+        "requiere_resellado": gestion_obj.requiere_resellado,
+        "porcentaje_alisado": gestion_obj.porcentaje_alisado,
+        "porosidad": gestion_obj.porosidad,
+        "textura": gestion_obj.textura,
+        "forma_natural": gestion_obj.forma_natural,
+        "elasticidad": gestion_obj.elasticidad,
+        "longitud": gestion_obj.longitud,
+        "densidad": gestion_obj.densidad,
+        "piel_cabelludo": gestion_obj.piel_cabelludo,
+        "alopecia": gestion_obj.alopecia,
+        "caida_cabello": gestion_obj.caida_cabello,
+        "lactante": gestion_obj.lactante,
+        "gestante": gestion_obj.gestante,
+        "caspa": gestion_obj.caspa,
+        "procesos_tintura": gestion_obj.procesos_tintura,
+        "procesos_decoloracion": gestion_obj.procesos_decoloracion,
+        "procesos_ondulados": gestion_obj.procesos_ondulados,
+        "procesos_extracciones": gestion_obj.procesos_extracciones,
+        "procesos_alisados": gestion_obj.procesos_alisados,
+        "procesos_super_aclarante": gestion_obj.procesos_super_aclarante,
+        "procesos_otro": gestion_obj.procesos_otro or "",
+        "cuenta_con_secador": gestion_obj.cuenta_con_secador,
+        "frecuencia_recoge_cabello": gestion_obj.frecuencia_recoge_cabello,
+        "realiza_ejercicio": gestion_obj.realiza_ejercicio,
+        "frecuencia_ejercicio": gestion_obj.frecuencia_ejercicio or "",
+        "usa_casco": gestion_obj.usa_casco,
+        "productos_capilares": gestion_obj.productos_capilares,
+        "se_bana_agua_caliente": gestion_obj.se_bana_agua_caliente,
+        "requiere_refuerzo_15dias": gestion_obj.requiere_refuerzo_15dias,
+        "sufre_tiroides": gestion_obj.sufre_tiroides,
+        "medicamento_tiroides": gestion_obj.medicamento_tiroides or "",
+        "despunte_hoy": gestion_obj.despunte_hoy,
+        "recomendaciones_post_cuidados": gestion_obj.recomendaciones_post_cuidados,
+    }
 
 
 def _crear_token_tablet(cliente_obj, user=None, gestion=None, minutos_validos=120):
@@ -250,8 +299,19 @@ def tablet_gestion_alisado(request, token):
 
 @login_required
 def lista_gestion_alisados(request):
+    latest_gestion_per_cliente = GestionAlisado.objects.filter(
+        cliente=OuterRef('cliente')
+    ).order_by('-fecha_hora').values('pk')[:1]
+
     gestiones = GestionAlisado.objects.select_related('cliente', 'tratamiento_firmado').annotate(
-        historial_total=Count('cliente__tratamientos_datos', distinct=True)
+        total_gestiones_cliente=Count('cliente__gestiones_alisado', distinct=True)
+    ).annotate(
+        historial_total=ExpressionWrapper(
+            F('total_gestiones_cliente') - Value(1),
+            output_field=IntegerField(),
+        )
+    ).filter(
+        Q(cliente__isnull=True) | Q(pk=Subquery(latest_gestion_per_cliente))
     )
 
     buscar = request.GET.get('buscar', '').strip()
@@ -476,7 +536,11 @@ def ver_gestion_alisado_modal_content(request, pk):
 @login_required
 def ver_historial_cliente_modal(request, cliente_id):
     cliente = get_object_or_404(Cliente, pk=cliente_id)
-    gestiones = GestionAlisado.objects.select_related('tratamiento_firmado').filter(cliente=cliente).order_by('-fecha_hora')
+    latest_gestion = GestionAlisado.objects.filter(cliente=cliente).order_by('-fecha_hora').first()
+    gestiones = GestionAlisado.objects.select_related('tratamiento_firmado').filter(cliente=cliente)
+    if latest_gestion:
+        gestiones = gestiones.exclude(pk=latest_gestion.pk)
+    gestiones = gestiones.order_by('-fecha_hora')
     return render(
         request,
         'gestion_alisados/historial_cliente_modal_content.html',
@@ -490,27 +554,20 @@ def ver_historial_cliente_modal(request, cliente_id):
 
 @login_required
 def editar_gestion_alisado(request, pk):
-    """Edita una gestión de alisado existente"""
+    """Crea una nueva gestión tomando como base una gestión anterior."""
     gestion = get_object_or_404(GestionAlisado, pk=pk)
-    tratamiento = getattr(gestion, "tratamiento_firmado", None)
-    if tratamiento and tratamiento.esta_firmado:
-        mensaje = 'Este tratamiento ya fue firmado y no se puede editar.'
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return JsonResponse({'success': False, 'message': mensaje}, status=403)
-        messages.error(request, mensaje)
-        return redirect('gestion_alisados:ver_gestion_alisado', pk=gestion.pk)
     is_modal = request.GET.get('modal') == '1'
     es_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
 
     if request.method == 'POST':
-        form = GestionAlisadoForm(request.POST, request.FILES, instance=gestion)
+        form = GestionAlisadoForm(request.POST, request.FILES)
         if form.is_valid():
             gestion = save_gestion_form(form, usuario=request.user)
-            messages.success(request, 'Gestión de alisado actualizada exitosamente.')
+            messages.success(request, 'Nueva gestión de alisado creada correctamente.')
             if is_modal or es_ajax:
                 return JsonResponse({
                     'success': True,
-                    'message': 'GestiÃ³n de alisado actualizada exitosamente.',
+                    'message': 'Nueva gestión de alisado creada correctamente.',
                     'gestion_id': str(gestion.pk),
                 }, status=200)
             return redirect('gestion_alisados:ver_gestion_alisado', pk=gestion.pk)
@@ -521,11 +578,11 @@ def editar_gestion_alisado(request, pk):
                 'errors': form.errors
             }, status=400)
     else:
-        form = GestionAlisadoForm(instance=gestion)
+        form = GestionAlisadoForm(initial=_iniciales_desde_gestion(gestion))
 
     context = {
         'form': form,
-        'titulo': 'Editar Gestión de Alisado',
+        'titulo': 'Nueva gestión basada en registro previo',
         'gestion': gestion,
         'is_modal': is_modal,
         'action_url': request.get_full_path() if is_modal else request.path,

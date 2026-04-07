@@ -1,4 +1,4 @@
-{% load humanize %}
+﻿{% load humanize %}
 {% load sort_tags %}
 
 <div class="gestion-results-bar">
@@ -108,15 +108,15 @@
                     {% endif %}
                 </td>
                 <td>
-                    {% if gestion.cliente %}
-                    <div class="d-flex flex-column gap-1">
-                        <span class="small text-muted">{{ gestion.historial_total|default:0 }} tratamientos</span>
-                        <a href="{% url 'gestion_alisados:ver_historial_cliente_modal' gestion.cliente.id %}" class="btn btn-sm btn-outline-secondary js-open-gestion-info-modal" data-modal-title="Historial del cliente">
-                            Ver historial
+                    {% if gestion.cliente and gestion.historial_total|default:0 > 0 %}
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="small text-muted">{{ gestion.historial_total }} tratamientos</span>
+                        <a href="{% url 'gestion_alisados:ver_historial_cliente_modal' gestion.cliente.id %}" class="table-action-btn js-open-gestion-info-modal" data-modal-title="Historial del cliente" title="Ver historial" aria-label="Ver historial del cliente {{ gestion.cliente.nombre }} {{ gestion.cliente.apellido }}">
+                            <i class="bi bi-eye" aria-hidden="true"></i>
                         </a>
                     </div>
                     {% else %}
-                    <span class="text-muted small">Sin historial</span>
+                    <span class="text-muted small">-</span>
                     {% endif %}
                 </td>
                 <td>
@@ -127,14 +127,10 @@
                         </a>
                         {% endif %}
                         {% if not tratamiento or not tratamiento.esta_firmado %}
-                        <a href="{% url 'gestion_alisados:editar_gestion_alisado' gestion.pk %}?modal=1" class="table-action-btn js-open-gestion-form-modal" data-form-title="Editar gestion de datos" data-form-url="{% url 'gestion_alisados:editar_gestion_alisado' gestion.pk %}?modal=1" title="Editar" aria-label="Editar gestion {{ gestion.pk }}">
+                        <a href="{% url 'gestion_alisados:editar_gestion_alisado' gestion.pk %}?modal=1" class="table-action-btn js-open-gestion-form-modal" data-form-title="Nueva gestion basada en este registro" data-form-url="{% url 'gestion_alisados:editar_gestion_alisado' gestion.pk %}?modal=1" title="Crear nueva basada en esta" aria-label="Crear nueva gestion basada en {{ gestion.pk }}">
                             <i class="bi bi-pencil" aria-hidden="true"></i>
                         </a>
-                        {% else %}
-                        <a href="{% url 'gestion_alisados:crear_gestion_alisado' %}?modal=1&cliente={% if gestion.cliente %}{{ gestion.cliente.id }}{% endif %}" class="table-action-btn js-open-gestion-form-modal" data-form-title="Nueva gestion para cliente existente" data-form-url="{% url 'gestion_alisados:crear_gestion_alisado' %}?modal=1&cliente={% if gestion.cliente %}{{ gestion.cliente.id }}{% endif %}" title="Generar nueva" aria-label="Generar nueva gestion para {{ gestion.pk }}">
-                            <i class="bi bi-files" aria-hidden="true"></i>
-                        </a>
-                        {% endif %}
+
                         {% if gestion.firma_consentimiento %}
                         <a href="{{ gestion.firma_consentimiento.url }}" class="table-action-btn" target="_blank" rel="noopener noreferrer" title="Descargar soporte" aria-label="Descargar soporte de la gestion {{ gestion.pk }}">
                             <i class="bi bi-download" aria-hidden="true"></i>

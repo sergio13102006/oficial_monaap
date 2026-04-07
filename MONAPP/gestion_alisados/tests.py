@@ -215,6 +215,25 @@ class GestionAlisadoViewRegressionTest(GestionAlisadoBaseTestCase):
             HTTP_X_REQUESTED_WITH="XMLHttpRequest",
         )
         self.assertEqual(response.status_code, 200)
+
+        payload = response.json()
+        self.assertTrue(payload["success"])
+        self.assertNotEqual(payload["gestion_id"], str(self.gestion.pk))
+        self.gestion.refresh_from_db()
+        self.assertEqual(self.gestion.precio_alisado, 50000)
+        self.assertEqual(self.gestion.anticipo_cliente, 20000)
+        nueva_gestion = GestionAlisado.objects.get(pk=payload["gestion_id"])
+        self.assertEqual(nueva_gestion.precio_alisado, 80000)
+        self.assertEqual(nueva_gestion.anticipo_cliente, 30000)
+        return
+
+        self.client.force_login(self.staff_user)
+        response = self.client.post(
+            reverse("gestion_alisados:editar_gestion_alisado", args=[self.gestion.pk]) + "?modal=1",
+            data=self.gestion_form_payload(precio_alisado=80000, anticipo_cliente=30000, saldo_pendiente=50000),
+            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+        )
+        self.assertEqual(response.status_code, 200)
         self.assertJSONEqual(
             response.content,
             {
@@ -247,7 +266,7 @@ class GestionAlisadoViewRegressionTest(GestionAlisadoBaseTestCase):
             self.cliente.numero_documento,
         )
 
-    def test_signed_treatment_cannot_be_edited(self):
+    def test_signed_treatment_creates_new_record_when_reopened(self):
         self.client.force_login(self.staff_user)
         response = self.client.post(
             reverse("gestion_alisados:crear_gestion_alisado") + "?modal=1",
@@ -262,10 +281,48 @@ class GestionAlisadoViewRegressionTest(GestionAlisadoBaseTestCase):
             data=self.gestion_form_payload(precio_alisado=90000, anticipo_cliente=10000, saldo_pendiente=80000),
             HTTP_X_REQUESTED_WITH="XMLHttpRequest",
         )
-        self.assertEqual(edit_response.status_code, 403)
+        self.assertEqual(edit_response.status_code, 200)
         gestion.refresh_from_db()
         self.assertEqual(gestion.precio_alisado, 50000)
         self.assertEqual(gestion.saldo_pendiente, 30000)
+        payload = edit_response.json()
+        self.assertNotEqual(payload["gestion_id"], str(gestion.pk))
+        nueva_gestion = GestionAlisado.objects.get(pk=payload["gestion_id"])
+        self.assertEqual(nueva_gestion.precio_alisado, 90000)
+        self.assertEqual(nueva_gestion.anticipo_cliente, 10000)
+
+    def test_lista_muestra_historial_completo_de_gestiones_del_cliente(self):
+        self.client.force_login(self.staff_user)
+        response = self.client.post(
+            reverse("gestion_alisados:editar_gestion_alisado", args=[self.gestion.pk]) + "?modal=1",
+            data=self.gestion_form_payload(precio_alisado=90000, anticipo_cliente=10000, saldo_pendiente=80000),
+            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+        )
+        self.assertEqual(response.status_code, 200)
+
+        list_response = self.client.get(reverse("gestion_alisados:lista_gestion_alisados"))
+        self.assertEqual(list_response.status_code, 200)
+        self.assertContains(list_response, "1 tratamientos")
+        self.assertEqual(list_response.context["gestiones"][0].historial_total, 1)
+
+    def test_historial_modal_excluye_la_gestion_mas_reciente_mostrada_en_tabla(self):
+        self.client.force_login(self.staff_user)
+        response = self.client.post(
+            reverse("gestion_alisados:editar_gestion_alisado", args=[self.gestion.pk]) + "?modal=1",
+            data=self.gestion_form_payload(precio_alisado=90000, anticipo_cliente=10000, saldo_pendiente=80000),
+            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+        )
+        self.assertEqual(response.status_code, 200)
+
+        nueva_gestion = GestionAlisado.objects.get(pk=response.json()["gestion_id"])
+        historial_response = self.client.get(
+            reverse("gestion_alisados:ver_historial_cliente_modal", args=[self.cliente.pk])
+        )
+
+        self.assertEqual(historial_response.status_code, 200)
+        self.assertContains(historial_response, "1 tratamientos")
+        self.assertContains(historial_response, self.gestion.tipo_alisado)
+        self.assertNotContains(historial_response, str(nueva_gestion.precio_alisado))
 
     def test_exports_do_not_break_when_cliente_is_null(self):
         GestionAlisado.objects.create(**self.gestion_kwargs(cliente=None))
