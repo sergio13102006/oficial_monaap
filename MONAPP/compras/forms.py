@@ -1,4 +1,5 @@
 import re
+import uuid
 
 from django import forms
 from django.forms import BaseInlineFormSet, inlineformset_factory
@@ -10,6 +11,7 @@ from .models import (
     DevolucionCompra,
     DetalleDevolucionCompra,
 )
+from control_fondos.models import CuentaFinanciera
 from Proveedores.models import Proveedor
 from Productos.models import Producto
 
@@ -46,15 +48,19 @@ def validar_texto_seguro(valor, nombre_campo):
 
 
 class CompraForm(forms.ModelForm):
+    request_uid = forms.CharField(required=False, widget=forms.HiddenInput())
+
     class Meta:
         model = Compra
-        fields = ["proveedor"]
+        fields = ["proveedor", "cuenta_financiera"]
         widgets = {
             "proveedor": forms.Select(attrs={"class": "form-select"}),
+            "cuenta_financiera": forms.Select(attrs={"class": "form-select"}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields["request_uid"].initial = self.initial.get("request_uid") or str(uuid.uuid4())
         qs_activos = Proveedor.objects.filter(estado="activo")
         proveedor_actual = None
 
@@ -76,6 +82,22 @@ class CompraForm(forms.ModelForm):
         if proveedor_actual and proveedor_actual.estado != "activo":
             self.fields["proveedor"].disabled = True
             self.fields["proveedor"].help_text = "El proveedor actual está inactivo, pero se mantiene por historial de la compra."
+
+        cuentas_qs = CuentaFinanciera.objects.filter(activa=True)
+        cuenta_actual = None
+        if self.instance and getattr(self.instance, "cuenta_financiera_id", None):
+            cuenta_actual = CuentaFinanciera.objects.filter(pk=self.instance.cuenta_financiera_id).first()
+        if cuenta_actual:
+            cuentas_qs = (cuentas_qs | CuentaFinanciera.objects.filter(pk=cuenta_actual.pk)).distinct()
+        self.fields["cuenta_financiera"].queryset = cuentas_qs.order_by("orden_visual", "nombre")
+        self.fields["cuenta_financiera"].empty_label = "Selecciona caja o banco"
+        self.fields["cuenta_financiera"].label_from_instance = lambda obj: (
+            f"{obj.nombre} ({obj.get_tipo_display()})"
+        )
+        if cuentas_qs.exists():
+            self.fields["cuenta_financiera"].help_text = "Elige desde que cuenta salio el dinero, por ejemplo Caja o Bancolombia."
+        else:
+            self.fields["cuenta_financiera"].help_text = "Primero debes crear una cuenta financiera en Caja y Bancos."
 
     def clean_proveedor(self):
         proveedor = self.cleaned_data.get("proveedor")
@@ -106,6 +128,14 @@ class CompraForm(forms.ModelForm):
 
         return proveedor
 
+
+    def clean_cuenta_financiera(self):
+        cuenta = self.cleaned_data.get("cuenta_financiera")
+        if not cuenta:
+            raise forms.ValidationError("Selecciona la cuenta desde la cual salió el dinero.")
+        if not cuenta.activa:
+            raise forms.ValidationError("La cuenta financiera seleccionada no está activa.")
+        return cuenta
 
 class DetalleCompraForm(forms.ModelForm):
     class Meta:

@@ -1,5 +1,6 @@
 <form method="post" action="{% url 'compras:editar_compra' compra.id %}" id="formCompra" data-modo="editar">
   {% csrf_token %}
+  {{ form.request_uid }}
 
   <div id="compraErroresGenerales" class="alert alert-danger d-none mb-3"></div>
 
@@ -25,6 +26,17 @@
         </div>
       {% endif %}
       {% for e in form.proveedor.errors %}
+        <div class="text-danger small">{{ e }}</div>
+      {% endfor %}
+    </div>
+
+    <div class="col-md-3">
+      <label class="form-label">Cuenta financiera</label>
+      {{ form.cuenta_financiera }}
+      {% if form.cuenta_financiera.help_text %}
+        <div class="form-text">{{ form.cuenta_financiera.help_text }}</div>
+      {% endif %}
+      {% for e in form.cuenta_financiera.errors %}
         <div class="text-danger small">{{ e }}</div>
       {% endfor %}
     </div>

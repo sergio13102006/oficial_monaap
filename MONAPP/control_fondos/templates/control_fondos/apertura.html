@@ -1,0 +1,48 @@
+{% extends "core/panel_admin_base.html" %}
+{% load humanize %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item"><a href="{% url 'control_fondos:dashboard' %}">Control de fondos</a></li>
+<li class="breadcrumb-item active" aria-current="page">Apertura</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3">
+  <div class="row g-4">
+    <div class="col-lg-4">
+      <div class="card shadow-sm border-0"><div class="card-body">
+        <h4 class="mb-3">Base diaria</h4>
+        {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+        <form method="post">
+          {% csrf_token %}
+          <div class="mb-3"><label class="form-label">Fecha</label>{{ form.fecha }}</div>
+          <div class="mb-3"><label class="form-label">Cuenta</label>{{ form.cuenta }}{% for e in form.cuenta.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}</div>
+          <div class="mb-3"><label class="form-label">Base inicial</label>{{ form.base_inicial }}{% for e in form.base_inicial.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}</div>
+          <div class="mb-3"><label class="form-label">Observación</label>{{ form.observacion }}</div>
+          <button type="submit" class="btn btn-dark w-100">Guardar base</button>
+        </form>
+      </div></div>
+    </div>
+    <div class="col-lg-8">
+      <div class="card shadow-sm border-0"><div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <div><h4 class="mb-1">Resumen de {{ fecha_consulta|date:"d/m/Y" }}</h4><p class="text-muted mb-0">Solo puedes editar la base si aún no hay movimientos activos en la cuenta.</p></div>
+          <a href="{% url 'control_fondos:dashboard' %}?fecha={{ fecha_consulta|date:'Y-m-d' }}" class="btn btn-outline-secondary">Ir al dashboard</a>
+        </div>
+        <div class="table-responsive">
+          <table class="table align-middle">
+            <thead><tr><th>Cuenta</th><th>Base</th><th>Entradas</th><th>Salidas</th><th>Saldo</th></tr></thead>
+            <tbody>
+              {% for item in resumen %}
+              <tr><td>{{ item.cuenta.nombre }}</td><td>${{ item.base_inicial|floatformat:0|intcomma }}</td><td class="text-success">${{ item.entradas|floatformat:0|intcomma }}</td><td class="text-danger">${{ item.salidas|floatformat:0|intcomma }}</td><td><strong>${{ item.saldo_actual|floatformat:0|intcomma }}</strong></td></tr>
+              {% empty %}
+              <tr><td colspan="5" class="text-center text-muted py-4">No hay cuentas activas configuradas.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div></div>
+    </div>
+  </div>
+</div>
+{% endblock %}

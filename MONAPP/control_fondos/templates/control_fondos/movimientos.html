@@ -1,0 +1,151 @@
+{% extends "core/panel_admin_base.html" %}
+{% load humanize %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item"><a href="{% url 'control_fondos:dashboard' %}">Control de fondos</a></li>
+<li class="breadcrumb-item active" aria-current="page">Movimientos</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <h3 class="mb-1">Libro de movimientos</h3>
+      <p class="text-muted mb-0">Consulta entradas, salidas, transferencias, reversas y anulaciones del dia.</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a class="btn btn-outline-secondary" href="{% url 'control_fondos:transferencias' %}?fecha={{ fecha_consulta|date:'Y-m-d' }}">Nueva transferencia</a>
+      <a class="btn btn-outline-secondary" href="{% url 'control_fondos:historico' %}?fecha={{ fecha_consulta|date:'Y-m-d' }}">Ir al historico</a>
+    </div>
+  </div>
+
+  <form method="get" class="row g-3 align-items-end mb-4">
+    <div class="col-md-2">
+      <label class="form-label">Fecha</label>
+      <input type="date" name="fecha" class="form-control" value="{{ fecha_consulta|date:'Y-m-d' }}">
+    </div>
+    <div class="col-md-2">
+      <label class="form-label">Cuenta</label>
+      <select name="cuenta" class="form-select">
+        <option value="">Todas</option>
+        {% for cuenta in cuentas %}
+          <option value="{{ cuenta.id }}" {% if cuenta_actual == cuenta.id|stringformat:"s" %}selected{% endif %}>{{ cuenta.nombre }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2">
+      <label class="form-label">Tipo</label>
+      <select name="tipo" class="form-select">
+        <option value="">Todos</option>
+        {% for value, label in tipos %}
+          <option value="{{ value }}" {% if tipo_actual == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2">
+      <label class="form-label">Origen</label>
+      <select name="clase" class="form-select">
+        <option value="">Todos</option>
+        {% for value, label in clases %}
+          <option value="{{ value }}" {% if clase_actual == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2">
+      <label class="form-label">Estado</label>
+      <select name="estado" class="form-select">
+        <option value="">Todos</option>
+        {% for value, label in estados %}
+          <option value="{{ value }}" {% if estado_actual == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2">
+      <label class="form-label">Buscar</label>
+      <input type="text" name="q" class="form-control" value="{{ q_actual }}" placeholder="Concepto o referencia">
+    </div>
+    <div class="col-md-3">
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" id="solo_correcciones" name="solo_correcciones" value="1" {% if solo_correcciones %}checked{% endif %}>
+        <label class="form-check-label" for="solo_correcciones">Solo correcciones y reversas</label>
+      </div>
+    </div>
+    <div class="col-md-2">
+      <button type="submit" class="btn btn-dark w-100">Filtrar</button>
+    </div>
+  </form>
+
+  <div class="row g-3 mb-4">
+    <div class="col-md-2">
+      <div class="card shadow-sm border-0"><div class="card-body"><small class="text-muted d-block">Entradas</small><strong class="text-success">${{ resumen_movimientos.entradas|floatformat:0|intcomma }}</strong></div></div>
+    </div>
+    <div class="col-md-2">
+      <div class="card shadow-sm border-0"><div class="card-body"><small class="text-muted d-block">Salidas</small><strong class="text-danger">${{ resumen_movimientos.salidas|floatformat:0|intcomma }}</strong></div></div>
+    </div>
+    <div class="col-md-2">
+      <div class="card shadow-sm border-0"><div class="card-body"><small class="text-muted d-block">Movimientos</small><strong>{{ resumen_movimientos.total_movimientos }}</strong></div></div>
+    </div>
+    <div class="col-md-2">
+      <div class="card shadow-sm border-0"><div class="card-body"><small class="text-muted d-block">Reversas</small><strong class="text-danger">{{ resumen_movimientos.reversas_anulaciones }}</strong></div></div>
+    </div>
+    <div class="col-md-2">
+      <div class="card shadow-sm border-0"><div class="card-body"><small class="text-muted d-block">Saldo neto</small><strong class="{% if resumen_movimientos.saldo_neto > 0 %}text-success{% elif resumen_movimientos.saldo_neto < 0 %}text-danger{% endif %}">${{ resumen_movimientos.saldo_neto|floatformat:0|intcomma }}</strong></div></div>
+    </div>
+  </div>
+
+  <div class="card shadow-sm border-0">
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table align-middle">
+          <thead>
+            <tr>
+              <th>Hora</th>
+              <th>Cuenta</th>
+              <th>Tipo</th>
+              <th>Origen</th>
+              <th class="text-end">Valor</th>
+              <th>Concepto</th>
+              <th>Referencia</th>
+              <th>Usuario</th>
+              <th>Estado</th>
+              <th>Correccion</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for movimiento in movimientos %}
+              <tr>
+                <td>{{ movimiento.fecha_hora|date:"H:i" }}</td>
+                <td><a href="{% url 'control_fondos:detalle_cuenta' movimiento.cuenta.id %}?fecha={{ fecha_consulta|date:'Y-m-d' }}">{{ movimiento.cuenta.nombre }}</a></td>
+                <td>{% if movimiento.tipo == 'ENTRADA' %}<span class="badge text-bg-success">Entrada</span>{% else %}<span class="badge text-bg-danger">Salida</span>{% endif %}</td>
+                <td>{{ movimiento.get_clase_display }}</td>
+                <td class="text-end {% if movimiento.tipo == 'ENTRADA' %}text-success{% else %}text-danger{% endif %}">${{ movimiento.valor|floatformat:0|intcomma }}</td>
+                <td>{{ movimiento.concepto }}</td>
+                <td>{{ movimiento.referencia|default:"-" }}</td>
+                <td>{{ movimiento.usuario|default:"Sistema" }}</td>
+                <td>{% if movimiento.estado == 'ACTIVO' %}<span class="badge text-bg-success">Activo</span>{% else %}<span class="badge text-bg-secondary">Anulado</span>{% endif %}</td>
+                <td>{% if movimiento.movimiento_origen %}Reversa de #{{ movimiento.movimiento_origen_id }}{% elif movimiento.movimientos_reversa.exists %}Tiene reversa{% else %}-{% endif %}</td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="10" class="text-center text-muted py-4">No hay movimientos registrados para esta fecha o filtro.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {% if page_obj.paginator.num_pages > 1 %}
+        <nav class="mt-3">
+          <ul class="pagination mb-0">
+            {% if page_obj.has_previous %}
+              <li class="page-item"><a class="page-link" href="?fecha={{ fecha_consulta|date:'Y-m-d' }}&cuenta={{ cuenta_actual }}&tipo={{ tipo_actual }}&clase={{ clase_actual }}&estado={{ estado_actual }}&q={{ q_actual }}{% if solo_correcciones %}&solo_correcciones=1{% endif %}&page={{ page_obj.previous_page_number }}">Anterior</a></li>
+            {% endif %}
+            <li class="page-item disabled"><span class="page-link">Pagina {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span></li>
+            {% if page_obj.has_next %}
+              <li class="page-item"><a class="page-link" href="?fecha={{ fecha_consulta|date:'Y-m-d' }}&cuenta={{ cuenta_actual }}&tipo={{ tipo_actual }}&clase={{ clase_actual }}&estado={{ estado_actual }}&q={{ q_actual }}{% if solo_correcciones %}&solo_correcciones=1{% endif %}&page={{ page_obj.next_page_number }}">Siguiente</a></li>
+            {% endif %}
+          </ul>
+        </nav>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

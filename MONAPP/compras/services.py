@@ -4,6 +4,13 @@ from django.db.models import Sum
 from django.utils import timezone
 
 from Productos.models import Producto
+from control_fondos.models import MovimientoCuenta
+from control_fondos.services import (
+    ControlFondosError,
+    anular_movimientos_compra,
+    registrar_salida_por_compra,
+    sincronizar_movimientos_compra,
+)
 from compras.models import Compra, DetalleCompra, DevolucionCompra
 from inventario.services import aplicar_movimiento_stock
 
@@ -252,7 +259,18 @@ def validar_compra_editable(compra):
         raise CompraServiceError("No se puede editar una compra anulada.")
 
 
-def registrar_compra(*, form, formset, usuario):
+def registrar_compra(*, form, formset, usuario, request_uid=None):
+    request_uid = request_uid or form.cleaned_data.get("request_uid")
+    if request_uid:
+        movimiento_existente = (
+            MovimientoCuenta.objects
+            .select_related("compra")
+            .filter(request_uid=request_uid, compra__isnull=False)
+            .first()
+        )
+        if movimiento_existente and movimiento_existente.compra:
+            return movimiento_existente.compra
+
     with transaction.atomic():
         compra = form.save(commit=False)
         compra.proveedor = _validar_proveedor_activo(compra.proveedor)
@@ -285,10 +303,30 @@ def registrar_compra(*, form, formset, usuario):
                 observacion=f"Registro de compra #{compra.id}"
             )
 
+        try:
+            registrar_salida_por_compra(
+                compra=compra,
+                request_uid=request_uid,
+                user=usuario,
+            )
+        except ControlFondosError as exc:
+            raise CompraServiceError(str(exc)) from exc
+
     return compra
 
 
-def editar_compra(*, compra, form, formset, usuario):
+def editar_compra(*, compra, form, formset, usuario, request_uid=None):
+    request_uid = request_uid or form.cleaned_data.get("request_uid")
+    if request_uid:
+        movimiento_existente = (
+            MovimientoCuenta.objects
+            .select_related("compra")
+            .filter(request_uid=f"{request_uid}:nuevo", compra__isnull=False)
+            .first()
+        )
+        if movimiento_existente and movimiento_existente.compra:
+            return movimiento_existente.compra
+
     with transaction.atomic():
         compra = Compra.objects.select_for_update().get(pk=compra.pk)
         validar_compra_editable(compra)
@@ -361,11 +399,19 @@ def editar_compra(*, compra, form, formset, usuario):
                 compra=compra_editada,
                 observacion=f"Edición de compra #{compra_editada.id}"
             )
+        try:
+            sincronizar_movimientos_compra(
+                compra=compra_editada,
+                request_uid=request_uid,
+                user=usuario,
+            )
+        except ControlFondosError as exc:
+            raise CompraServiceError(str(exc)) from exc
 
     return compra_editada
 
 
-def anular_compra(*, compra, usuario):
+def anular_compra(*, compra, usuario, request_uid=None):
     with transaction.atomic():
         compra = Compra.objects.select_for_update().get(pk=compra.pk)
 
@@ -405,6 +451,15 @@ def anular_compra(*, compra, usuario):
         compra.anulada_en = timezone.now()
         compra.anulada = True
         compra.save(update_fields=["anulada", "fecha_anulada", "anulada_en"])
+
+        try:
+            anular_movimientos_compra(
+                compra=compra,
+                request_uid=request_uid or f"compra-anular-{compra.pk}-{timezone.now().timestamp()}",
+                user=usuario,
+            )
+        except ControlFondosError as exc:
+            raise CompraServiceError(str(exc)) from exc
 
     return compra
 

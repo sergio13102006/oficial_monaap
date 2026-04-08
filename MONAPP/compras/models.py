@@ -15,6 +15,13 @@ class Compra(models.Model):
         on_delete=models.PROTECT,
         related_name="compras",
     )
+    cuenta_financiera = models.ForeignKey(
+        "control_fondos.CuentaFinanciera",
+        on_delete=models.PROTECT,
+        related_name="compras",
+        null=True,
+        blank=True,
+    )
     precio_total = models.DecimalField(max_digits=18, decimal_places=0)
 
     usuario = models.ForeignKey(

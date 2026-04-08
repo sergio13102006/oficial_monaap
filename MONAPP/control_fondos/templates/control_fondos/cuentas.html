@@ -1,0 +1,106 @@
+{% extends "core/panel_admin_base.html" %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item"><a href="{% url 'control_fondos:dashboard' %}">Control de fondos</a></li>
+<li class="breadcrumb-item active" aria-current="page">Cuentas financieras</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h3 class="mb-1">Cuentas financieras</h3>
+      <p class="text-muted mb-0">Crea cuentas como Caja, Bancolombia, Nequi o cualquier otra entidad para usarlas en compras y servicios.</p>
+    </div>
+    <a class="btn btn-outline-secondary" href="{% url 'control_fondos:dashboard' %}">Volver al dashboard</a>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-lg-5">
+      <div class="card shadow-sm border-0">
+        <div class="card-body">
+          <h5 class="mb-3">Nueva cuenta</h5>
+          <form method="post">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+              <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+            {% endif %}
+
+            <div class="mb-3">
+              <label class="form-label">Nombre</label>
+              {{ form.nombre }}
+              {% for error in form.nombre.errors %}
+                <div class="text-danger small">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Tipo</label>
+              {{ form.tipo }}
+              {% for error in form.tipo.errors %}
+                <div class="text-danger small">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Orden visual</label>
+              {{ form.orden_visual }}
+              {% for error in form.orden_visual.errors %}
+                <div class="text-danger small">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <div class="form-check mb-3">
+              {{ form.activa }}
+              <label class="form-check-label" for="{{ form.activa.id_for_label }}">Cuenta activa</label>
+            </div>
+
+            <button type="submit" class="btn btn-dark">Guardar cuenta</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-7">
+      <div class="card shadow-sm border-0">
+        <div class="card-body">
+          <h5 class="mb-3">Cuentas registradas</h5>
+          <div class="table-responsive">
+            <table class="table align-middle">
+              <thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th>Tipo</th>
+                  <th>Estado</th>
+                  <th>Orden</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for cuenta in cuentas %}
+                  <tr>
+                    <td>{{ cuenta.nombre }}</td>
+                    <td>{{ cuenta.get_tipo_display }}</td>
+                    <td>
+                      {% if cuenta.activa %}
+                        <span class="badge text-bg-success">Activa</span>
+                      {% else %}
+                        <span class="badge text-bg-secondary">Inactiva</span>
+                      {% endif %}
+                    </td>
+                    <td>{{ cuenta.orden_visual }}</td>
+                  </tr>
+                {% empty %}
+                  <tr>
+                    <td colspan="4" class="text-center text-muted py-4">Todavia no hay cuentas creadas.</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

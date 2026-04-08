@@ -1,0 +1,112 @@
+{% extends "core/panel_admin_base.html" %}
+{% load humanize %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item"><a href="{% url 'control_fondos:dashboard' %}">Control de fondos</a></li>
+<li class="breadcrumb-item active" aria-current="page">Transferencias</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h3 class="mb-1">Transferencias entre cuentas</h3>
+      <p class="text-muted mb-0">Mueve dinero entre caja, bancos o billeteras creando salida y entrada enlazadas.</p>
+    </div>
+    <a class="btn btn-outline-secondary" href="{% url 'control_fondos:movimientos' %}?fecha={{ fecha_consulta|date:'Y-m-d' }}">Ver movimientos</a>
+  </div>
+
+  {% if ultima_transferencia %}
+    <div class="card shadow-sm border-0 mb-4">
+      <div class="card-body">
+        <h5 class="mb-3">Comprobante logico de la ultima transferencia</h5>
+        <div class="row g-3">
+          <div class="col-md-3"><small class="text-muted d-block">Origen</small><strong>{{ ultima_transferencia.salida.cuenta.nombre }}</strong></div>
+          <div class="col-md-3"><small class="text-muted d-block">Destino</small><strong>{{ ultima_transferencia.entrada.cuenta.nombre }}</strong></div>
+          <div class="col-md-2"><small class="text-muted d-block">Valor</small><strong>${{ ultima_transferencia.salida.valor|floatformat:0|intcomma }}</strong></div>
+          <div class="col-md-2"><small class="text-muted d-block">Hora</small><strong>{{ ultima_transferencia.salida.fecha_hora|date:"d/m/Y H:i" }}</strong></div>
+          <div class="col-md-2"><small class="text-muted d-block">Usuario</small><strong>{{ ultima_transferencia.salida.usuario|default:"Sistema" }}</strong></div>
+          <div class="col-md-6"><small class="text-muted d-block">Movimiento salida</small><strong>#{{ ultima_transferencia.salida.id }} · {{ ultima_transferencia.salida.referencia }}</strong></div>
+          <div class="col-md-6"><small class="text-muted d-block">Movimiento entrada</small><strong>#{{ ultima_transferencia.entrada.id }} · {{ ultima_transferencia.entrada.referencia }}</strong></div>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
+  <div class="row g-4">
+    <div class="col-lg-5">
+      <div class="card shadow-sm border-0">
+        <div class="card-body">
+          <h5 class="mb-3">Nueva transferencia</h5>
+          <form method="post">
+            {% csrf_token %}
+            {{ form.request_uid }}
+
+            {% if form.non_field_errors %}
+              <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+            {% endif %}
+
+            <div class="mb-3">
+              <label class="form-label">Fecha</label>
+              {{ form.fecha }}
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Cuenta origen</label>
+              {{ form.cuenta_origen }}
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Cuenta destino</label>
+              {{ form.cuenta_destino }}
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Valor</label>
+              {{ form.valor }}
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Observacion</label>
+              {{ form.observacion }}
+            </div>
+            <button type="submit" class="btn btn-dark">Guardar transferencia</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-7">
+      <div class="card shadow-sm border-0">
+        <div class="card-body">
+          <h5 class="mb-3">Transferencias del dia</h5>
+          <div class="table-responsive">
+            <table class="table align-middle">
+              <thead>
+                <tr>
+                  <th>Hora</th>
+                  <th>Cuenta</th>
+                  <th>Tipo</th>
+                  <th class="text-end">Valor</th>
+                  <th>Concepto</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for movimiento in movimientos %}
+                  <tr>
+                    <td>{{ movimiento.fecha_hora|date:"H:i" }}</td>
+                    <td>{{ movimiento.cuenta.nombre }}</td>
+                    <td>{{ movimiento.get_tipo_display }}</td>
+                    <td class="text-end {% if movimiento.tipo == 'ENTRADA' %}text-success{% else %}text-danger{% endif %}">${{ movimiento.valor|floatformat:0|intcomma }}</td>
+                    <td>{{ movimiento.concepto }}</td>
+                    <td>{{ movimiento.get_estado_display }}</td>
+                  </tr>
+                {% empty %}
+                  <tr><td colspan="6" class="text-center text-muted py-4">Todavia no hay transferencias registradas para esta fecha.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

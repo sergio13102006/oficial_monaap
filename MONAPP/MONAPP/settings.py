@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'personal',
     'inventario',
     'gestion_alisados',
+    'control_fondos.apps.ControlFondosConfig',
     'productos_web',
     'compras.apps.ComprasConfig',
     'django_bootstrap5',  

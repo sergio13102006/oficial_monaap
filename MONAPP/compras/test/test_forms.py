@@ -20,6 +20,7 @@ from compras.models import (
     DevolucionCompra,
     DetalleDevolucionCompra,
 )
+from control_fondos.models import CuentaFinanciera
 
 
 class CompraFormsTest(TestCase):
@@ -62,6 +63,12 @@ class CompraFormsTest(TestCase):
 
         self.compra_activa = Compra.objects.create(
             proveedor=self.proveedor_activo,
+            cuenta_financiera=CuentaFinanciera.objects.create(
+                nombre="Caja Test",
+                tipo=CuentaFinanciera.TIPO_EFECTIVO,
+                activa=True,
+                orden_visual=1,
+            ),
             precio_total=Decimal("10000"),
             usuario=None,
             anulada=False,
@@ -75,6 +82,7 @@ class CompraFormsTest(TestCase):
 
         self.compra_anulada = Compra.objects.create(
             proveedor=self.proveedor_activo,
+            cuenta_financiera=self.compra_activa.cuenta_financiera,
             precio_total=Decimal("5000"),
             usuario=None,
             anulada=True,
@@ -141,7 +149,11 @@ class CompraFormsTest(TestCase):
         self.assertNotIn(self.proveedor_inactivo, qs)
 
     def test_compra_form_es_valido_con_proveedor_activo(self):
-        form = CompraForm(data={"proveedor": self.proveedor_activo.pk})
+        form = CompraForm(data={
+            "proveedor": self.proveedor_activo.pk,
+            "cuenta_financiera": self.compra_activa.cuenta_financiera.pk,
+            "request_uid": "req-form-1",
+        })
         self.assertTrue(form.is_valid(), form.errors)
 
     # =========================
@@ -158,6 +170,7 @@ class CompraFormsTest(TestCase):
     def test_detalle_compra_form_edicion_incluye_producto_inactivo_actual(self):
         compra = Compra.objects.create(
             proveedor=self.proveedor_activo,
+            cuenta_financiera=self.compra_activa.cuenta_financiera,
             precio_total=Decimal("4000"),
             usuario=None,
             anulada=False,
@@ -179,6 +192,7 @@ class CompraFormsTest(TestCase):
     def test_detalle_compra_form_si_manipulan_post_con_producto_inactivo_conserva_el_original(self):
         compra = Compra.objects.create(
             proveedor=self.proveedor_activo,
+            cuenta_financiera=self.compra_activa.cuenta_financiera,
             precio_total=Decimal("4000"),
             usuario=None,
             anulada=False,

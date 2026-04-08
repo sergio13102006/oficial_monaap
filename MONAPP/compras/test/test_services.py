@@ -10,13 +10,21 @@ from Productos.models import Producto
 from inventario.models import Stock
 
 from compras import services
+from control_fondos.services import (
+    ControlFondosError,
+    registrar_base_diaria,
+    registrar_ingreso_por_servicio,
+    registrar_transferencia,
+)
 from compras.forms import (
     CompraForm,
     DetalleCompraFormSet,
     DevolucionCompraForm,
     DetalleDevolucionCompraFormSet,
 )
-from compras.models import Compra, DetalleCompra, DevolucionCompra, DetalleDevolucionCompra
+from compras.models import Compra, DetalleCompra, DetalleDevolucionCompra, DevolucionCompra
+from control_fondos.models import BaseDiariaCuenta, CuentaFinanciera, JornadaDiaria, MovimientoCuenta, TransferenciaCuenta
+from gestion_alisados.models import GestionAlisado
 
 
 class CompraServicesTest(TestCase):
@@ -50,6 +58,32 @@ class CompraServicesTest(TestCase):
         # y aquí no hace falta autenticar. Así evitamos dependencias
         # laterales de perfiles o señales del módulo usuarios.
         self.usuario = None
+        self.cuenta_caja = CuentaFinanciera.objects.create(
+            nombre="Caja Principal",
+            tipo=CuentaFinanciera.TIPO_EFECTIVO,
+            activa=True,
+            orden_visual=1,
+        )
+        self.cuenta_banco = CuentaFinanciera.objects.create(
+            nombre="Bancolombia",
+            tipo=CuentaFinanciera.TIPO_BANCO,
+            activa=True,
+            orden_visual=2,
+        )
+        registrar_base_diaria(
+            cuenta=self.cuenta_caja,
+            base_inicial=Decimal("100000"),
+            usuario=self.usuario,
+            fecha=timezone.localdate(),
+            observacion="Base de prueba",
+        )
+        registrar_base_diaria(
+            cuenta=self.cuenta_banco,
+            base_inicial=Decimal("200000"),
+            usuario=self.usuario,
+            fecha=timezone.localdate(),
+            observacion="Base banco",
+        )
 
     # =========================
     # Helpers
@@ -90,6 +124,7 @@ class CompraServicesTest(TestCase):
 
         compra = Compra.objects.create(
             proveedor=self.proveedor,
+            cuenta_financiera=self.cuenta_caja,
             precio_total=total,
             usuario=self.usuario,
         )
@@ -128,7 +163,11 @@ class CompraServicesTest(TestCase):
 
     def _compra_form_valido(self, *, proveedor=None, instance=None):
         form = CompraForm(
-            data={"proveedor": (proveedor or self.proveedor).pk},
+            data={
+                "proveedor": (proveedor or self.proveedor).pk,
+                "cuenta_financiera": getattr(instance, "cuenta_financiera_id", None) or self.cuenta_caja.pk,
+                "request_uid": "req-compra-test",
+            },
             instance=instance,
         )
         self.assertTrue(form.is_valid(), form.errors)
@@ -700,3 +739,231 @@ def _test_registrar_devolucion_compra_rechaza_detalle_repetido(self):
 CompraServicesTest.test_registrar_devolucion_compra_rechaza_detalle_repetido = (
     _test_registrar_devolucion_compra_rechaza_detalle_repetido
 )
+
+
+class ControlFondosServicesTest(CompraServicesTest):
+    @patch("compras.services.aplicar_movimiento_stock")
+    def test_registrar_compra_crea_movimiento_financiero_de_salida(self, mock_mov_stock):
+        form = self._compra_form_valido()
+        formset = self._detalle_compra_formset_creacion_valido([
+            {"producto": self.producto_1, "cantidad": 2, "precio_unitario": 1000},
+        ])
+
+        compra = services.registrar_compra(
+            form=form,
+            formset=formset,
+            usuario=self.usuario,
+            request_uid="req-fondos-compra-1",
+        )
+
+        movimiento = MovimientoCuenta.objects.get(compra=compra, clase=MovimientoCuenta.CLASE_COMPRA)
+        self.assertEqual(movimiento.cuenta, self.cuenta_caja)
+        self.assertEqual(movimiento.tipo, MovimientoCuenta.TIPO_SALIDA)
+        self.assertEqual(movimiento.valor, Decimal("2000"))
+        self.assertEqual(movimiento.estado, MovimientoCuenta.ESTADO_ACTIVO)
+        self.assertEqual(mock_mov_stock.call_count, 1)
+
+    @patch("compras.services.aplicar_movimiento_stock")
+    def test_editar_compra_genera_reversa_y_nuevo_movimiento(self, mock_mov_stock):
+        form = self._compra_form_valido()
+        formset = self._detalle_compra_formset_creacion_valido([
+            {"producto": self.producto_1, "cantidad": 2, "precio_unitario": 1000},
+        ])
+        compra = services.registrar_compra(
+            form=form,
+            formset=formset,
+            usuario=self.usuario,
+            request_uid="req-fondos-compra-2",
+        )
+
+        detalle = compra.detalles.get(producto=self.producto_1)
+        form_editar = CompraForm(
+            data={
+                "proveedor": self.proveedor.pk,
+                "cuenta_financiera": self.cuenta_banco.pk,
+                "request_uid": "req-fondos-editar-1",
+            },
+            instance=compra,
+        )
+        self.assertTrue(form_editar.is_valid(), form_editar.errors)
+        formset_editar = self._detalle_compra_formset_edicion_valido(
+            compra=compra,
+            filas_existentes=[
+                {"detalle": detalle, "cantidad": 3, "precio_unitario": 1000},
+            ],
+        )
+
+        compra_editada = services.editar_compra(
+            compra=compra,
+            form=form_editar,
+            formset=formset_editar,
+            usuario=self.usuario,
+            request_uid="req-fondos-editar-1",
+        )
+
+        movimientos = MovimientoCuenta.objects.filter(compra=compra_editada).order_by("id")
+        self.assertEqual(movimientos.count(), 3)
+        original = movimientos.filter(clase=MovimientoCuenta.CLASE_COMPRA).first()
+        reversa = movimientos.get(clase=MovimientoCuenta.CLASE_REVERSA)
+        nuevo = movimientos.filter(clase=MovimientoCuenta.CLASE_COMPRA, estado=MovimientoCuenta.ESTADO_ACTIVO).last()
+        self.assertEqual(original.estado, MovimientoCuenta.ESTADO_ANULADO)
+        self.assertEqual(reversa.tipo, MovimientoCuenta.TIPO_ENTRADA)
+        self.assertEqual(reversa.valor, Decimal("2000"))
+        self.assertEqual(nuevo.cuenta, self.cuenta_banco)
+        self.assertEqual(nuevo.valor, Decimal("3000"))
+
+    @patch("compras.services.aplicar_movimiento_stock")
+    def test_anular_compra_deja_reversa_financiera_correcta(self, mock_mov_stock):
+        form = self._compra_form_valido()
+        formset = self._detalle_compra_formset_creacion_valido([
+            {"producto": self.producto_1, "cantidad": 2, "precio_unitario": 1000},
+        ])
+        compra = services.registrar_compra(
+            form=form,
+            formset=formset,
+            usuario=self.usuario,
+            request_uid="req-fondos-compra-3",
+        )
+
+        services.anular_compra(compra=compra, usuario=self.usuario, request_uid="req-fondos-anular-1")
+
+        original = MovimientoCuenta.objects.get(compra=compra, clase=MovimientoCuenta.CLASE_COMPRA)
+        anulacion = MovimientoCuenta.objects.get(compra=compra, clase=MovimientoCuenta.CLASE_ANULACION)
+        self.assertEqual(original.estado, MovimientoCuenta.ESTADO_ANULADO)
+        self.assertEqual(anulacion.tipo, MovimientoCuenta.TIPO_ENTRADA)
+        self.assertEqual(anulacion.valor, Decimal("2000"))
+
+    def test_transferencia_crea_salida_y_entrada_enlazadas(self):
+        transferencia = registrar_transferencia(
+            cuenta_origen=self.cuenta_caja,
+            cuenta_destino=self.cuenta_banco,
+            valor=Decimal("25000"),
+            usuario=self.usuario,
+            request_uid="req-transfer-1",
+        )
+
+        self.assertIsInstance(transferencia, TransferenciaCuenta)
+        self.assertEqual(transferencia.movimiento_salida.tipo, MovimientoCuenta.TIPO_SALIDA)
+        self.assertEqual(transferencia.movimiento_entrada.tipo, MovimientoCuenta.TIPO_ENTRADA)
+        self.assertEqual(transferencia.movimiento_salida.valor, Decimal("25000"))
+        self.assertEqual(transferencia.movimiento_entrada.valor, Decimal("25000"))
+
+    def test_no_permite_movimiento_sin_base_del_dia(self):
+        cuenta_sin_base = CuentaFinanciera.objects.create(
+            nombre="Nequi",
+            tipo=CuentaFinanciera.TIPO_BILLETERA,
+            activa=True,
+            orden_visual=3,
+        )
+        gestion = GestionAlisado.objects.create(
+            cliente=None,
+            precio_alisado=50000,
+            es_oferta_especial="no",
+            descripcion_oferta="",
+            anticipo_cliente=50000,
+            medio_pago="efectivo",
+            saldo_pendiente=0,
+            procedimiento_realizado_por="Laura",
+            tipo_alisado="Alisado Premium",
+            requiere_resellado="no",
+            porcentaje_alisado=80,
+            porosidad="media",
+            textura="normal",
+            forma_natural="ondulado",
+            elasticidad="media",
+            longitud="largo",
+            densidad="media",
+            piel_cabelludo="normal",
+            alopecia="no_presenta",
+            caida_cabello="baja",
+            lactante="no",
+            gestante="no",
+            caspa="no_presenta",
+            procesos_tintura=False,
+            procesos_decoloracion=False,
+            procesos_ondulados=False,
+            procesos_extracciones=False,
+            procesos_alisados=False,
+            procesos_super_aclarante=False,
+            procesos_otro="",
+            cuenta_con_secador="si",
+            frecuencia_recoge_cabello="Diario",
+            realiza_ejercicio="no",
+            frecuencia_ejercicio="",
+            usa_casco="no",
+            productos_capilares="Shampoo",
+            se_bana_agua_caliente="no",
+            requiere_refuerzo_15dias="no",
+            sufre_tiroides="no",
+            medicamento_tiroides="",
+            despunte_hoy="no",
+            recomendaciones_post_cuidados="Sin novedad",
+        )
+
+        with self.assertRaises(ControlFondosError):
+            registrar_ingreso_por_servicio(
+                servicio=gestion,
+                cuenta=cuenta_sin_base,
+                user=self.usuario,
+                request_uid="req-servicio-sin-base",
+            )
+
+    def test_no_duplica_base_del_mismo_dia_por_cuenta(self):
+        base = registrar_base_diaria(
+            cuenta=self.cuenta_caja,
+            base_inicial=Decimal("100000"),
+            usuario=self.usuario,
+            fecha=timezone.localdate(),
+            observacion="Misma base",
+        )
+        self.assertIsInstance(base, BaseDiariaCuenta)
+        self.assertEqual(
+            BaseDiariaCuenta.objects.filter(
+                jornada__fecha=timezone.localdate(),
+                cuenta=self.cuenta_caja,
+            ).count(),
+            1,
+        )
+
+    @patch("compras.services.aplicar_movimiento_stock")
+    def test_doble_submit_no_duplica_movimiento_ni_compra(self, mock_mov_stock):
+        form1 = CompraForm(
+            data={
+                "proveedor": self.proveedor.pk,
+                "cuenta_financiera": self.cuenta_caja.pk,
+                "request_uid": "req-idempotente-1",
+            }
+        )
+        self.assertTrue(form1.is_valid(), form1.errors)
+        formset1 = self._detalle_compra_formset_creacion_valido([
+            {"producto": self.producto_1, "cantidad": 2, "precio_unitario": 1000},
+        ])
+
+        compra_1 = services.registrar_compra(
+            form=form1,
+            formset=formset1,
+            usuario=self.usuario,
+            request_uid="req-idempotente-1",
+        )
+
+        form2 = CompraForm(
+            data={
+                "proveedor": self.proveedor.pk,
+                "cuenta_financiera": self.cuenta_caja.pk,
+                "request_uid": "req-idempotente-1",
+            }
+        )
+        self.assertTrue(form2.is_valid(), form2.errors)
+        formset2 = self._detalle_compra_formset_creacion_valido([
+            {"producto": self.producto_1, "cantidad": 2, "precio_unitario": 1000},
+        ])
+        compra_2 = services.registrar_compra(
+            form=form2,
+            formset=formset2,
+            usuario=self.usuario,
+            request_uid="req-idempotente-1",
+        )
+
+        self.assertEqual(compra_1.pk, compra_2.pk)
+        self.assertEqual(Compra.objects.count(), 1)
+        self.assertEqual(MovimientoCuenta.objects.filter(compra=compra_1).count(), 1)

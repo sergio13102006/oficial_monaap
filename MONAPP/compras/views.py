@@ -314,6 +314,7 @@ def crear_compra(request):
                     form=form,
                     formset=formset,
                     usuario=request.user,
+                    request_uid=form.cleaned_data.get("request_uid"),
                 )
             except services.CompraServiceError as exc:
                 form.add_error(None, str(exc))
@@ -398,6 +399,7 @@ def editar_compra(request, pk):
                     form=form,
                     formset=formset,
                     usuario=request.user,
+                    request_uid=form.cleaned_data.get("request_uid"),
                 )
             except services.CompraServiceError as exc:
                 form.add_error(None, str(exc))
@@ -464,6 +466,7 @@ def anular_compra(request, pk):
         services.anular_compra(
             compra=compra,
             usuario=request.user,
+            request_uid=request.POST.get("request_uid"),
         )
     except services.CompraServiceError as exc:
         if str(exc) == "La compra ya estaba anulada.":
@@ -659,4 +662,6 @@ def comprobante_devolucion_compra_preview(request, pk):
         request=request
     )
     return JsonResponse({"success": True, "html": html})
+
+
 

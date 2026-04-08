@@ -1,0 +1,144 @@
+{% extends "core/panel_admin_base.html" %}
+{% load humanize %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item"><a href="{% url 'control_fondos:dashboard' %}">Control de fondos</a></li>
+<li class="breadcrumb-item active" aria-current="page">Historico</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <h3 class="mb-1">Historico por fecha</h3>
+      <p class="text-muted mb-0">Consulta el resumen y la auditoria de un dia puntual sin mezclarlo con la jornada actual.</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="{% url 'control_fondos:dashboard' %}?fecha={{ fecha_consulta|date:'Y-m-d' }}" class="btn btn-outline-secondary">Volver al dashboard</a>
+      <a href="{% url 'control_fondos:movimientos' %}?fecha={{ fecha_consulta|date:'Y-m-d' }}" class="btn btn-outline-secondary">Ver detalle</a>
+      <a href="{% url 'control_fondos:transferencias' %}?fecha={{ fecha_consulta|date:'Y-m-d' }}" class="btn btn-outline-secondary">Ver transferencias</a>
+    </div>
+  </div>
+
+  <form method="get" class="row g-3 align-items-end mb-4">
+    <div class="col-md-3">
+      <label class="form-label">Fecha</label>
+      <input type="date" name="fecha" class="form-control" value="{{ fecha_consulta|date:'Y-m-d' }}">
+    </div>
+    <div class="col-md-2">
+      <button type="submit" class="btn btn-dark w-100">Consultar</button>
+    </div>
+  </form>
+
+  <div class="card shadow-sm border-0 mb-4">
+    <div class="card-body">
+      <h4 class="mb-3">Jornada {{ jornada.fecha|date:"d/m/Y" }}</h4>
+      <div class="table-responsive">
+        <table class="table align-middle">
+          <thead>
+            <tr>
+              <th>Cuenta</th>
+              <th class="text-end">Base</th>
+              <th class="text-end">Entradas</th>
+              <th class="text-end">Salidas</th>
+              <th class="text-end">Saldo final</th>
+              <th>Base cargada</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in resumen %}
+              <tr>
+                <td>{{ item.cuenta.nombre }}</td>
+                <td class="text-end">${{ item.base_inicial|floatformat:0|intcomma }}</td>
+                <td class="text-end {% if item.entradas > 0 %}text-success{% endif %}">${{ item.entradas|floatformat:0|intcomma }}</td>
+                <td class="text-end {% if item.salidas > 0 %}text-danger{% endif %}">${{ item.salidas|floatformat:0|intcomma }}</td>
+                <td class="text-end"><strong>${{ item.saldo_actual|floatformat:0|intcomma }}</strong></td>
+                <td>
+                  {% if item.tiene_base %}
+                    <span class="badge text-bg-success">Si</span>
+                  {% else %}
+                    <span class="badge text-bg-secondary">No</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="6" class="text-center text-muted py-4">No hay informacion para la fecha consultada.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="card shadow-sm border-0">
+    <div class="card-body">
+      <div class="row g-3 mb-3">
+        {% for total in totales_por_clase %}
+          <div class="col-md-3">
+            <div class="border rounded p-3 h-100">
+              <small class="text-muted d-block">{{ total.clase }}</small>
+              <strong>${{ total.total|floatformat:0|intcomma }}</strong>
+            </div>
+          </div>
+        {% empty %}
+          <div class="col-12">
+            <div class="alert alert-light border mb-0">No hay movimientos para esta fecha.</div>
+          </div>
+        {% endfor %}
+      </div>
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0">Auditoria del dia</h5>
+        <span class="text-muted small">{{ movimientos|length }} movimiento(s)</span>
+      </div>
+      <div class="table-responsive">
+        <table class="table align-middle">
+          <thead>
+            <tr>
+              <th>Hora</th>
+              <th>Cuenta</th>
+              <th>Tipo</th>
+              <th>Origen</th>
+              <th class="text-end">Valor</th>
+              <th>Concepto</th>
+              <th>Usuario</th>
+              <th>Estado</th>
+              <th>Correccion</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for movimiento in movimientos %}
+              <tr>
+                <td>{{ movimiento.fecha_hora|date:"H:i" }}</td>
+                <td>{{ movimiento.cuenta.nombre }}</td>
+                <td>{{ movimiento.get_tipo_display }}</td>
+                <td>{{ movimiento.get_clase_display }}</td>
+                <td class="text-end {% if movimiento.tipo == 'ENTRADA' %}text-success{% elif movimiento.tipo == 'SALIDA' %}text-danger{% endif %}">${{ movimiento.valor|floatformat:0|intcomma }}</td>
+                <td>{{ movimiento.concepto }}</td>
+                <td>{{ movimiento.usuario|default:"Sistema" }}</td>
+                <td>
+                  {% if movimiento.estado == 'ACTIVO' %}
+                    <span class="badge text-bg-success">Activo</span>
+                  {% else %}
+                    <span class="badge text-bg-secondary">Anulado</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if movimiento.movimiento_origen %}
+                    Reversa de #{{ movimiento.movimiento_origen_id }}
+                  {% elif movimiento.movimientos_reversa.exists %}
+                    Corregido
+                  {% else %}
+                    -
+                  {% endif %}
+                </td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="9" class="text-center text-muted py-4">No hay movimientos registrados para esta fecha.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

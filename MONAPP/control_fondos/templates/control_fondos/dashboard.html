@@ -1,0 +1,181 @@
+{% extends "core/panel_admin_base.html" %}
+{% load humanize %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item active" aria-current="page">Control de fondos</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <h3 class="mb-1">Control de fondos</h3>
+      <p class="text-muted mb-0">Resumen diario por cuenta con base, entradas, salidas y saldo actual.</p>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+      <a class="btn btn-dark" href="{% url 'control_fondos:cuentas' %}">Nueva cuenta</a>
+      <a class="btn btn-outline-secondary" href="{% url 'control_fondos:apertura' %}?fecha={{ fecha_consulta|date:'Y-m-d' }}">Abrir dia</a>
+      <a class="btn btn-outline-secondary" href="{% url 'control_fondos:movimientos' %}?fecha={{ fecha_consulta|date:'Y-m-d' }}">Ver movimientos</a>
+      <a class="btn btn-outline-secondary" href="{% url 'control_fondos:transferencias' %}?fecha={{ fecha_consulta|date:'Y-m-d' }}">Transferir</a>
+      <a class="btn btn-outline-secondary" href="{% url 'control_fondos:historico' %}?fecha={{ fecha_consulta|date:'Y-m-d' }}">Ver historico</a>
+    </div>
+  </div>
+
+  <form method="get" class="row g-3 align-items-end mb-4">
+    <div class="col-md-3">
+      <label class="form-label">Fecha</label>
+      <input type="date" name="fecha" class="form-control" value="{{ fecha_consulta|date:'Y-m-d' }}">
+    </div>
+    <div class="col-md-2">
+      <button type="submit" class="btn btn-dark w-100">Consultar</button>
+    </div>
+  </form>
+
+  <div class="row g-3 mb-4">
+    <div class="col-md-3">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-body">
+          <small class="text-muted d-block">Caja efectivo</small>
+          <strong class="{% if caja_principal and caja_principal.saldo_actual > 0 %}text-success{% endif %}">
+            {% if caja_principal %}${{ caja_principal.saldo_actual|floatformat:0|intcomma }}{% else %}Sin cuenta{% endif %}
+          </strong>
+          <div class="small text-muted mt-2">
+            {% if caja_principal %}
+              <a href="{% url 'control_fondos:detalle_cuenta' caja_principal.cuenta.id %}?fecha={{ fecha_consulta|date:'Y-m-d' }}">Ver detalle</a>
+            {% else %}
+              Caja principal se creo como cuenta base. Solo falta cargar su apertura del dia.
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-body">
+          <small class="text-muted d-block">Bancos</small>
+          <strong class="{% if banco_principal and banco_principal.saldo_actual > 0 %}text-success{% endif %}">
+            {% if banco_principal %}${{ banco_principal.saldo_actual|floatformat:0|intcomma }}{% else %}Sin cuenta{% endif %}
+          </strong>
+          <div class="small text-muted mt-2">
+            {% if banco_principal %}
+              <a href="{% url 'control_fondos:detalle_cuenta' banco_principal.cuenta.id %}?fecha={{ fecha_consulta|date:'Y-m-d' }}">Ver detalle</a>
+            {% else %}
+              Bancolombia se creo como cuenta base. Solo falta cargar su apertura del dia.
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-body">
+          <small class="text-muted d-block">Total disponible</small>
+          <strong class="{% if total_disponible > 0 %}text-success{% endif %}">${{ total_disponible|floatformat:0|intcomma }}</strong>
+          <div class="small text-muted mt-2">Saldo consolidado del dia.</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-body">
+          <small class="text-muted d-block">Pendientes por abrir</small>
+          <strong class="{% if cuentas_pendientes_base %}text-warning{% endif %}">{{ cuentas_pendientes_base }}</strong>
+          <div class="small text-muted mt-2">
+            {% if cuentas_pendientes_base %}
+              Hay cuentas activas sin base cargada hoy.
+            {% else %}
+              Todas las cuentas activas tienen apertura del dia.
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4">
+    <div class="col-md-3">
+      <div class="card shadow-sm border-0">
+        <div class="card-body">
+          <small class="text-muted d-block">Estado de jornada</small>
+          <strong>{{ jornada.get_estado_display }}</strong>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card shadow-sm border-0">
+        <div class="card-body">
+          <small class="text-muted d-block">Fecha operativa</small>
+          <strong>{{ jornada.fecha|date:"d/m/Y" }}</strong>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card shadow-sm border-0">
+        <div class="card-body">
+          <small class="text-muted d-block">Cuentas abiertas hoy</small>
+          <strong>{{ cuentas_abiertas_hoy }} / {{ total_cuentas_activas }}</strong>
+          <div class="small text-muted mt-2">Cuentas con base cargada para la fecha consultada.</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card shadow-sm border-0">
+        <div class="card-body">
+          <small class="text-muted d-block">Usuario de apertura</small>
+          <strong>{{ jornada.creada_por|default:"Sistema" }}</strong>
+          <div class="small text-muted mt-2">Ultima actualizacion {{ jornada.fecha_creacion|date:"d/m/Y H:i" }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card shadow-sm border-0">
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table align-middle">
+          <thead>
+            <tr>
+              <th>Cuenta</th>
+              <th class="text-end">Base inicial</th>
+              <th class="text-end">Entradas</th>
+              <th class="text-end">Salidas</th>
+              <th class="text-end">Saldo actual</th>
+              <th>Estado</th>
+              <th>Accion</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in resumen %}
+              <tr>
+                <td>{{ item.cuenta.nombre }}</td>
+                <td class="text-end">${{ item.base_inicial|floatformat:0|intcomma }}</td>
+                <td class="text-end {% if item.entradas > 0 %}text-success{% endif %}">${{ item.entradas|floatformat:0|intcomma }}</td>
+                <td class="text-end {% if item.salidas > 0 %}text-danger{% endif %}">${{ item.salidas|floatformat:0|intcomma }}</td>
+                <td class="text-end">
+                  <strong class="{% if item.saldo_actual > 0 %}text-success{% elif item.saldo_actual < 0 %}text-danger{% endif %}">
+                    ${{ item.saldo_actual|floatformat:0|intcomma }}
+                  </strong>
+                </td>
+                <td>
+                  {% if item.tiene_base %}
+                    <span class="badge text-bg-success">Base registrada</span>
+                  {% else %}
+                    <span class="badge text-bg-secondary">Sin base</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <a href="{% url 'control_fondos:detalle_cuenta' item.cuenta.id %}?fecha={{ fecha_consulta|date:'Y-m-d' }}" class="btn btn-sm btn-outline-secondary">Detalle</a>
+                </td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="7" class="text-center text-muted py-4">No hay cuentas financieras activas. Crea o activa una cuenta para empezar a operar.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

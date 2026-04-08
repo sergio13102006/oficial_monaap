@@ -34,6 +34,7 @@ urlpatterns = [
     path('inventario/', include('inventario.urls')),
     path('servicios/', include('servicios.urls')),
     path('gestion-alisados/', include('gestion_alisados.urls')),
+    path('control-fondos/', include('control_fondos.urls')),
     path('productos-web/', include('productos_web.urls')),
     path("compras/", include("compras.urls")),
     path('promociones/', include('promociones.urls')),
