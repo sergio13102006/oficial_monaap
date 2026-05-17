@@ -1,0 +1,109 @@
+{% load static %}
+
+<div style="padding: 0;">
+
+    <!-- Foto de perfil -->
+    {% if usuario.perfil.foto_perfil %}
+    <div style="text-align: center; margin-bottom: 20px;">
+        <img src="{{ usuario.perfil.foto_perfil.url }}"
+             alt="Foto de perfil"
+             style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid #4b2f2a;">
+    </div>
+    {% endif %}
+
+    <!-- Fila 1: ID | Estado | Usuario | Nombre Completo -->
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; padding: 16px 0;">
+        <div>
+            <span style="font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: #8b7355;">ID</span>
+            <p style="margin: 5px 0 0; font-size: 1rem; color: #2d2d2d;"><strong>{{ usuario.id }}</strong></p>
+        </div>
+        <div>
+            <span style="font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: #8b7355;">Estado</span>
+            <p style="margin: 5px 0 0;">
+                {% if usuario.is_active %}
+                    <span style="background: #d1fae5; color: #065f46; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600;">Activo</span>
+                {% else %}
+                    <span style="background: #fee2e2; color: #991b1b; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600;">Inactivo</span>
+                {% endif %}
+            </p>
+        </div>
+        <div>
+            <span style="font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: #8b7355;">Usuario</span>
+            <p style="margin: 5px 0 0; font-size: 1rem; color: #2d2d2d;"><strong>{{ usuario.username }}</strong></p>
+        </div>
+        <div>
+            <span style="font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: #8b7355;">Nombre Completo</span>
+            <p style="margin: 5px 0 0; font-size: 1rem; color: #2d2d2d;">{{ usuario.get_full_name|default:"—" }}</p>
+        </div>
+    </div>
+
+    <hr style="border: none; height: 1px; background: rgba(17,17,17,0.08); margin: 12px 0;">
+
+    <!-- Fila 2: Correo | Grupos/Rol | Documento | Teléfono -->
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px;">
+        <div>
+            <span style="font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: #8b7355;">Correo Electrónico</span>
+            <p style="margin: 5px 0 0; font-size: 0.95rem; color: #2d2d2d; word-break: break-all;">
+                {% if usuario.email %}
+                    <a href="mailto:{{ usuario.email }}" style="color: #4b2f2a; text-decoration: none;">
+                        <i class="bi bi-envelope"></i> {{ usuario.email }}
+                    </a>
+                {% else %}—{% endif %}
+            </p>
+        </div>
+        <div>
+            <span style="font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: #8b7355;">Grupos / Rol</span>
+            <p style="margin: 5px 0 0;">
+                {% if usuario.is_superuser %}
+                    <span style="background: #4b2f2a; color: #ffffff; padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 600;">Superusuario</span>
+                {% else %}
+                    {% for grupo in usuario.groups.all %}
+                        <span style="background: #4b2f2a; color: #ffffff; padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; margin-right: 4px;">{{ grupo.name }}</span>
+                    {% empty %}
+                        <span style="color: #aaa;">Sin grupos</span>
+                    {% endfor %}
+                {% endif %}
+            </p>
+        </div>
+        <div>
+            <span style="font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: #8b7355;">Documento</span>
+            <p style="margin: 5px 0 0; font-size: 0.95rem; color: #2d2d2d;">
+                {% if usuario.perfil.documento %}
+                    {{ usuario.perfil.get_tipo_documento_display }}: {{ usuario.perfil.documento }}
+                {% else %}—{% endif %}
+            </p>
+        </div>
+        <div>
+            <span style="font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: #8b7355;">Teléfono</span>
+            <p style="margin: 5px 0 0; font-size: 0.95rem; color: #2d2d2d;">
+                {% if usuario.perfil.telefono %}
+                    <a href="tel:{{ usuario.perfil.telefono }}" style="color: #4b2f2a; text-decoration: none;">
+                        <i class="bi bi-telephone"></i> {{ usuario.perfil.telefono }}
+                    </a>
+                {% else %}—{% endif %}
+            </p>
+        </div>
+    </div>
+
+    <hr style="border: none; height: 1px; background: rgba(17,17,17,0.08); margin: 12px 0;">
+
+    <!-- Fila 3: Fecha de Registro | Último Acceso -->
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px;">
+        <div>
+            <span style="font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: #8b7355;">Fecha de Registro</span>
+            <p style="margin: 5px 0 0; font-size: 0.95rem; color: #2d2d2d;">
+                <i class="bi bi-calendar-alt" style="color: #4b2f2a; margin-right: 4px;"></i>
+                {{ usuario.date_joined|date:"d/m/Y H:i" }}
+            </p>
+        </div>
+        <div>
+            <span style="font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: #8b7355;">Último Acceso</span>
+            <p style="margin: 5px 0 0; font-size: 0.95rem; color: #2d2d2d;">
+                {% if usuario.last_login %}
+                    <i class="bi bi-clock" style="color: #4b2f2a; margin-right: 4px;"></i>
+                    {{ usuario.last_login|date:"d/m/Y H:i" }}
+                {% else %}—{% endif %}
+            </p>
+        </div>
+    </div>
+</div>

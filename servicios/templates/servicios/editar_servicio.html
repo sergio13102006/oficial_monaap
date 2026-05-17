@@ -1,0 +1,114 @@
+{% extends 'core/panel_admin_base.html' %}
+{% load static %}
+
+{% block title %}{{ titulo|default:"Editar Servicio" }}{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item"><a href="{% url 'servicios:lista_servicios' %}">Servicios</a></li>
+<li class="breadcrumb-item active" aria-current="page">{{ titulo|default:"Editar Servicio" }}</li>
+{% endblock %}
+
+{% block page_icon %}<i class="bi bi-pencil-square page-icon"></i>{% endblock %}
+{% block page_title %}{{ titulo|default:"Editar Servicio" }}{% endblock %}
+{% block page_subtitle %}Actualiza la información del servicio{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'servicios/css/estilos.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header" style="background-color:#634c40;color:#fff;">
+                    <h4 class="mb-0">{{ titulo|default:"Editar Servicio" }}</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data" id="formServicioPage" data-servicio-form="1" data-servicio-id="{{ servicio.pk|default:'' }}" data-servicio-validar-url="{% url 'servicios:validar_nombre_servicio' %}" action="{% url 'servicios:editar_servicio' servicio.pk %}" novalidate>
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            {{ form.nombre.label_tag }}
+                            {{ form.nombre }}
+                            {% if form.nombre.errors %}
+                                <div class="text-danger">{{ form.nombre.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.precio.label_tag }}
+                            {{ form.precio }}
+                            {% if form.precio.errors %}
+                                <div class="text-danger">{{ form.precio.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.descripcion.label_tag }}
+                            {{ form.descripcion }}
+                            {% if form.descripcion.errors %}
+                                <div class="text-danger">{{ form.descripcion.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.imagen.label_tag }}
+                            {{ form.imagen }}
+                            {% if form.imagen.errors %}
+                                <div class="text-danger">{{ form.imagen.errors }}</div>
+                            {% endif %}
+                            {% if servicio.imagen %}
+                                <div class="mt-2">
+                                    <img src="{{ servicio.imagen.url }}" alt="{{ servicio.nombre }}" class="img-thumbnail" style="max-width: 200px;">
+                                    <p class="text-muted small">Imagen actual</p>
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.video.label_tag }}
+                            {{ form.video }}
+                            {% if form.video.errors %}
+                                <div class="text-danger">{{ form.video.errors }}</div>
+                            {% endif %}
+                            {% if servicio.video %}
+                                <div class="mt-2">
+                                    <video width="200" controls>
+                                        <source src="{{ servicio.video.url }}" type="video/mp4">
+                                        Tu navegador no soporta el tag de video.
+                                    </video>
+                                    <p class="text-muted small">Video actual</p>
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check">
+                                {{ form.activo }}
+                                {{ form.activo.label_tag }}
+                            </div>
+                            {% if form.activo.errors %}
+                                <div class="text-danger">{{ form.activo.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-flex gap-2 justify-content-end">
+                            <a href="{% url 'servicios:lista_servicios' %}" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn text-white" style="background-color: #634c40; border-color: #634c40;">
+                                <i class="bi bi-check-circle"></i> Actualizar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'servicios/js/servicios.js' %}"></script>
+{% endblock %}

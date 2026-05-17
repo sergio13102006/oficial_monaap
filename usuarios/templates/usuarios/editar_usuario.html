@@ -1,0 +1,111 @@
+{% extends 'core/panel_admin_base.html' %}
+{% load static %}
+
+{% block title %}{{ titulo }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'usuarios/css/usuarios.css' %}">
+{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item"><a href="{% url 'usuarios:lista_usuarios' %}">Usuarios</a></li>
+<li class="breadcrumb-item active" aria-current="page">{{ titulo }}</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+	<div class="mb-4">
+		<h1 class="display-6 fw-bold"><i class="bi bi-pencil-square"></i> {{ titulo }}</h1>
+	</div>
+
+	<div class="card shadow">
+		<div class="card-body">
+			<form method="post" id="form-editar-usuario" enctype="multipart/form-data" novalidate data-user-id="{{ usuario.id }}">
+				{% csrf_token %}
+				
+				<!-- Campo oculto con el ID del usuario para validaciones -->
+				<input type="hidden" id="user_id_editar" value="{{ usuario.id }}">
+				
+				{% if form_usuario.non_field_errors %}
+					<div class="alert alert-danger">
+						<i class="bi bi-exclamation-triangle-fill me-2"></i>
+						<strong>Errores:</strong>
+						<ul style="margin: 8px 0 0 0; padding-left: 20px;">
+							{% for error in form_usuario.non_field_errors %}
+								<li>{{ error }}</li>
+							{% endfor %}
+						</ul>
+					</div>
+				{% endif %}
+				
+				{% if form_perfil.non_field_errors %}
+					<div class="alert alert-danger">
+						<i class="bi bi-exclamation-triangle-fill me-2"></i>
+						<strong>Errores:</strong>
+						<ul style="margin: 8px 0 0 0; padding-left: 20px;">
+							{% for error in form_perfil.non_field_errors %}
+								<li>{{ error }}</li>
+							{% endfor %}
+						</ul>
+					</div>
+				{% endif %}
+				<div class="row">
+					<div class="col-md-6">
+						<h5 class="mb-3" style="color: #4b2f2a; border-bottom: 2px solid #d4a574; padding-bottom: 8px;">
+							<i class="bi bi-person-fill"></i> Datos de usuario
+						</h5>
+						<div class="row g-3">
+							{% for field in form_usuario %}
+								<div class="col-12">
+									<label class="form-label">{{ field.label }} {% if field.field.required %}<span class="text-danger">*</span>{% endif %}</label>
+									{{ field }}
+									<div class="invalid-feedback"></div>
+									{% if field.errors %}
+										<div class="text-danger small mt-1">{{ field.errors|join:", " }}</div>
+									{% endif %}
+								</div>
+							{% endfor %}
+						</div>
+					</div>
+
+					<div class="col-md-6">
+						<h5 class="mb-3" style="color: #4b2f2a; border-bottom: 2px solid #d4a574; padding-bottom: 8px;">
+							<i class="bi bi-card-text"></i> Información de Perfil
+						</h5>
+						<div class="row g-3">
+							{% for field in form_perfil %}
+								{% if field.name != 'whatsapp_key' %}
+								<div class="col-12">
+									<label class="form-label">{{ field.label }} {% if field.field.required %}<span class="text-danger">*</span>{% endif %}</label>
+									{{ field }}
+									{% if field.help_text %}
+										<small class="text-muted d-block mt-1">{{ field.help_text }}</small>
+									{% endif %}
+									<div class="invalid-feedback"></div>
+									{% if field.errors %}
+										<div class="text-danger small mt-1">{{ field.errors|join:", " }}</div>
+									{% endif %}
+								</div>
+								{% endif %}
+							{% endfor %}
+						</div>
+					</div>
+				</div>
+
+				<div class="mt-4 text-end">
+					<a href="{% url 'usuarios:lista_usuarios' %}" class="btn btn-outline-secondary me-2">
+						<i class="bi bi-x-circle"></i> Cancelar
+					</a>
+					<button type="submit" id="btnGuardarUsuarioEdit" class="btn btn-primary">
+						<i class="bi bi-save"></i> {{ accion|default:'Actualizar' }}
+					</button>
+				</div>
+			</form>
+		</div>
+	</div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'usuarios/js/usuarios.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,49 @@
+{% load static %}
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>404 | Página no encontrada</title>
+    <link rel="stylesheet" href="{% static 'core/css/404.css' %}">
+</head>
+<body>
+    <main class="sq-404">
+        <div class="sq-404-clouds" aria-hidden="true">
+            <span class="sq-cloud sq-cloud--1"></span>
+            <span class="sq-cloud sq-cloud--2"></span>
+            <span class="sq-cloud sq-cloud--3"></span>
+            <span class="sq-cloud sq-cloud--4"></span>
+            <span class="sq-cloud sq-cloud--5"></span>
+        </div>
+
+        <section class="sq-404-content" aria-label="Página no encontrada">
+            <h1 class="sq-404-title" aria-label="Error 404">404</h1>
+
+            <div class="info" aria-label="Información del error">
+                <h2>No encontramos esa página</h2>
+                <p>
+                    Es muy probable que esta página haya cambiado de lugar o ya no exista.
+                    Puedes volver al inicio y continuar desde allí.
+                </p>
+                <a href="{% url 'core:index' %}">Inicio</a>
+            </div>
+        </section>
+
+        <aside class="sq-404-side" aria-hidden="true">
+            <video class="sq-404-video" autoplay muted loop playsinline>
+                <source src="{% static 'core/mp4/404.mp4' %}" type="video/mp4">
+            </video>
+            <div class="sq-404-video-shade" aria-hidden="true"></div>
+        </aside>
+
+        <div class="cloak__wrapper" aria-hidden="true">
+            <div class="cloak__container">
+                <div class="cloak"></div>
+            </div>
+        </div>
+    </main>
+
+    <script src="{% static 'core/js/404.js' %}"></script>
+</body>
+</html>

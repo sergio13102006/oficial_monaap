@@ -1,0 +1,145 @@
+{% extends 'core/panel_admin_base.html' %}
+{% load static %}
+
+{% block title %}Lista de Servicios{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item active" aria-current="page">Servicios</li>
+{% endblock %}
+
+{% block page_icon %}<i class="bi bi-scissors page-icon"></i>{% endblock %}
+{% block page_title %}Servicios{% endblock %}
+{% block page_subtitle %}Gestion de servicios registrados{% endblock %}
+{% block page_actions %}
+<button
+    type="button"
+    class="btn-pill-dark"
+    data-bs-toggle="modal"
+    data-bs-target="#modalFormServicio">
+    <i class="fas fa-plus"></i>
+    Nuevo servicio
+</button>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'servicios/css/estilos.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid" id="servicios-page"
+     data-crear-servicio-url="{% url 'servicios:crear_servicio' %}"
+     data-lista-servicios-url="{% url 'servicios:lista_servicios' %}">
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="module-filters-card">
+        <form id="filtrosServicios"
+                  class="js-ajax-search-form module-filters-form"
+                  method="get"
+                  data-ajax-url="{% url 'servicios:lista_servicios' %}"
+                  data-ajax-target="#lista-servicios-resultados"
+                  data-ajax-debounce="300">
+
+                <div class="module-filter-field module-filter-field--wide">
+                    <label class="module-filter-label">Busqueda</label>
+                    {% include 'core/componentes/busqueda_global.html' with placeholder='Buscar servicio...' search_value=q name='q' modo='inline' %}
+                </div>
+
+                <div class="module-filter-field module-filter-field--small">
+                    <label class="module-filter-label">Estado</label>
+                    <select name="estado" id="estadoInput" class="form-select">
+                        <option value="">Todos</option>
+                        <option value="activo" {% if estado == 'activo' %}selected{% endif %}>Activa</option>
+                        <option value="inactivo" {% if estado == 'inactivo' %}selected{% endif %}>Inactiva</option>
+                    </select>
+                </div>
+
+                <div class="module-filter-actions">
+                    <a href="{% url 'servicios:lista_servicios' %}" class="module-filter-btn module-filter-btn--secondary">
+                        <i class="bi bi-arrow-clockwise"></i> Limpiar
+                    </a>
+                </div>
+            </form>
+    </div>
+
+    <div class="lib-toolbar">
+        <div class="lib-toolbar__left">
+            <span class="lib-count" id="libCount"></span>
+        </div>
+
+        <div class="lib-toolbar__right">
+            <div class="view-toggle">
+                <button class="view-btn active" id="btnGrid" title="Cuadricula" data-hover-label="Cuadricula">
+                    <i class="bi bi-grid-3x3-gap-fill"></i>
+                </button>
+                <button class="view-btn" id="btnList" title="Lista" data-hover-label="Lista">
+                    <i class="bi bi-list-ul"></i>
+                </button>
+            </div>
+            <div class="grid-size-select" id="gridSizeWrap">
+                Cuadricula:
+                <select id="gridSize">
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4" selected>4</option>
+                    <option value="5">5</option>
+                    <option value="6">6</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+   
+    <div id="lista-servicios-resultados">
+        {% include 'servicios/lista_servicios_global.html' %}
+    </div>
+
+</div>
+
+
+<!-- Modal Crear -->
+<div class="modal fade" id="modalFormServicio" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header text-white" style="background-color:#634c40;">
+                <h5 class="modal-title"><i class="fas fa-plus me-2"></i> Nuevo servicio</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="modalFormContent" style="max-height:70vh;overflow-y:auto;">
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p class="mt-3">Cargando formulario...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalEditarServicio" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header text-white" style="background-color:#634c40;">
+                <h5 class="modal-title"><i class="bi bi-pencil-fill"></i> Editar Servicio</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="modalEditarContent" style="max-height:70vh;overflow-y:auto;">
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p class="mt-3">Cargando formulario...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'servicios/js/servicios.js' %}"></script>
+{% endblock %}

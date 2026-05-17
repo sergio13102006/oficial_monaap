@@ -1,0 +1,156 @@
+{% extends 'core/panel_admin_base.html' %}
+{% load static %}
+
+{% block title %}{{ titulo }} - Monapp{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'personal/css/personal.css' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="personal-wrapper">
+    <div class="personal-container" style="max-width: 900px;">
+        <div class="personal-card">
+            <div class="personal-card-header">
+                <h4>
+                    <i class="fas fa-{% if form.instance.pk %}edit{% else %}plus{% endif %}"></i> {{ titulo }}
+                </h4>
+            </div>
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                    <div class="personal-alert danger">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <div>
+                            <strong>Errores:</strong>
+                            <ul style="margin: 8px 0 0 0; padding-left: 20px;">
+                                {% for error in form.non_field_errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                {% endif %}
+
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
+                    <div class="personal-form-group">
+                        <label class="personal-form-label">Tipo de Documento <span style="color: #c7412b;">*</span></label>
+                        <div class="personal-input-wrap">
+                            {{ form.tipo_documento }}
+                            <span class="personal-valid-icon"><i class="fas fa-check"></i></span>
+                            <span class="personal-invalid-icon"><i class="fas fa-exclamation-circle"></i></span>
+                        </div>
+                        {% if form.tipo_documento.errors %}
+                            <div class="personal-field-error is-visible">{{ form.tipo_documento.errors|join:", " }}</div>
+                        {% else %}
+                            <div class="personal-field-error"></div>
+                        {% endif %}
+                    </div>
+
+                    <div class="personal-form-group">
+                        <label class="personal-form-label">Numero de Documento <span style="color: #c7412b;">*</span></label>
+                        <div class="personal-input-wrap">
+                            {{ form.numero_documento }}
+                            <span class="personal-valid-icon"><i class="fas fa-check"></i></span>
+                            <span class="personal-invalid-icon"><i class="fas fa-exclamation-circle"></i></span>
+                        </div>
+                        <small style="color: #6c757d; font-size: 0.8rem; margin-top: 4px; display: block;">Aqui solo se pueden ingresar numeros</small>
+                        {% if form.numero_documento.errors %}
+                            <div class="personal-field-error is-visible">{{ form.numero_documento.errors|join:", " }}</div>
+                        {% else %}
+                            <div class="personal-field-error"></div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
+                    <div class="personal-form-group">
+                        <label class="personal-form-label">Nombres <span style="color: #c7412b;">*</span></label>
+                        <div class="personal-input-wrap">
+                            {{ form.nombres }}
+                            <span class="personal-valid-icon"><i class="fas fa-check"></i></span>
+                            <span class="personal-invalid-icon"><i class="fas fa-exclamation-circle"></i></span>
+                        </div>
+                        <small style="color: #6c757d; font-size: 0.8rem; margin-top: 4px; display: block;">Aqui no se pueden ingresar numeros</small>
+                        {% if form.nombres.errors %}
+                            <div class="personal-field-error is-visible">{{ form.nombres.errors|join:", " }}</div>
+                        {% else %}
+                            <div class="personal-field-error"></div>
+                        {% endif %}
+                    </div>
+
+                    <div class="personal-form-group">
+                        <label class="personal-form-label">Apellidos <span style="color: #c7412b;">*</span></label>
+                        <div class="personal-input-wrap">
+                            {{ form.apellidos }}
+                            <span class="personal-valid-icon"><i class="fas fa-check"></i></span>
+                            <span class="personal-invalid-icon"><i class="fas fa-exclamation-circle"></i></span>
+                        </div>
+                        <small style="color: #6c757d; font-size: 0.8rem; margin-top: 4px; display: block;">Aqui no se pueden ingresar numeros</small>
+                        {% if form.apellidos.errors %}
+                            <div class="personal-field-error is-visible">{{ form.apellidos.errors|join:", " }}</div>
+                        {% else %}
+                            <div class="personal-field-error"></div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
+                    <div class="personal-form-group">
+                        <label class="personal-form-label">Telefono <span style="color: #c7412b;">*</span></label>
+                        <div class="personal-input-wrap">
+                            {{ form.telefono }}
+                            <span class="personal-valid-icon"><i class="fas fa-check"></i></span>
+                            <span class="personal-invalid-icon"><i class="fas fa-exclamation-circle"></i></span>
+                        </div>
+                        <small style="color: #6c757d; font-size: 0.8rem; margin-top: 4px; display: block;">Aqui solo se pueden ingresar numeros</small>
+                        {% if form.telefono.errors %}
+                            <div class="personal-field-error is-visible">{{ form.telefono.errors|join:", " }}</div>
+                        {% else %}
+                            <div class="personal-field-error"></div>
+                        {% endif %}
+                    </div>
+
+                    <div class="personal-form-group">
+                        <label class="personal-form-label">Correo <span style="color: #c7412b;">*</span></label>
+                        <div class="personal-input-wrap">
+                            {{ form.correo }}
+                            <span class="personal-valid-icon"><i class="fas fa-check"></i></span>
+                            <span class="personal-invalid-icon"><i class="fas fa-exclamation-circle"></i></span>
+                        </div>
+                        <small style="color: #6c757d; font-size: 0.8rem; margin-top: 4px; display: block;">Ingresa un correo valido</small>
+                        {% if form.correo.errors %}
+                            <div class="personal-field-error is-visible">{{ form.correo.errors|join:", " }}</div>
+                        {% else %}
+                            <div class="personal-field-error"></div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
+                    <div class="personal-form-group">
+                        <label class="personal-form-label">Rol <span style="color: #c7412b;">*</span></label>
+                        <div class="personal-input-wrap">
+                            {{ form.rol }}
+                            <span class="personal-valid-icon"><i class="fas fa-check"></i></span>
+                            <span class="personal-invalid-icon"><i class="fas fa-exclamation-circle"></i></span>
+                        </div>
+                        {% if form.rol.errors %}
+                            <div class="personal-field-error is-visible">{{ form.rol.errors|join:", " }}</div>
+                        {% else %}
+                            <div class="personal-field-error"></div>
+                        {% endif %}
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'personal/js/personal.js' %}"></script>
+{% endblock %}

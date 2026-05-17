@@ -1,0 +1,85 @@
+{% extends "core/panel_admin_base.html" %}
+{% load static %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item"><a href="{% url 'proveedores:lista_proveedor' %}">Proveedores</a></li>
+<li class="breadcrumb-item active" aria-current="page">Editar proveedor</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <h3 class="mb-3">Editar proveedor</h3>
+
+  {% include "proveedores/editar_proveedor.html" %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'proveedor/js/proveedor.js' %}"></script>
+<script>
+document.addEventListener('click', async function (e) {
+  const btn = e.target.closest('.js-reactivar-proveedor-editar');
+  if (!btn) return;
+
+  e.preventDefault();
+
+  const url = btn.dataset.reactivarUrl;
+  const nombre = btn.dataset.proveedorNombre || 'este proveedor';
+  if (!url || typeof Swal === 'undefined') return;
+
+  const confirm = await Swal.fire({
+    title: '¿Estás seguro que deseas activar al proveedor?',
+    text: `Se activará ${nombre}.`,
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonText: 'Sí, activar',
+    cancelButtonText: 'Cancelar',
+    confirmButtonColor: '#4b2f2a',
+    cancelButtonColor: '#6c757d',
+  });
+
+  if (!confirm.isConfirmed) return;
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest',
+        'X-CSRFToken': document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/)?.[1] ? decodeURIComponent(document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/)[1]) : '',
+      },
+    });
+
+    const data = await response.json().catch(() => ({}));
+
+    if (response.ok && data.success) {
+      await Swal.fire({
+        title: 'Proveedor activado',
+        text: data.message || `${nombre} fue activado correctamente.`,
+        icon: 'success',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#4b2f2a',
+      });
+      window.location.reload();
+      return;
+    }
+
+    await Swal.fire({
+      title: 'Error',
+      text: data.message || 'No se pudo activar el proveedor.',
+      icon: 'error',
+      confirmButtonText: 'OK',
+      confirmButtonColor: '#d33',
+    });
+  } catch (err) {
+    console.error('Error activando proveedor desde editar:', err);
+    await Swal.fire({
+      title: 'Error',
+      text: 'Ocurrió un error al activar el proveedor.',
+      icon: 'error',
+      confirmButtonText: 'OK',
+      confirmButtonColor: '#d33',
+    });
+  }
+});
+</script>
+{% endblock %}

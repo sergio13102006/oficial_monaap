@@ -1,0 +1,784 @@
+﻿{% extends 'core/panel_admin_base.html' %}
+{% load static %}
+
+{% block title %}{{ titulo }}{% endblock %}
+
+{% block page_title %}
+    <i class="bi bi-file-earmark-text"></i> {{ titulo }}
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'servicios/css/estilos.css' %}">
+<link rel="stylesheet" href="{% static 'gestion_alisados/css/gestion_alisados.css' %}">
+{% endblock %}
+
+{% block content %}
+<!-- Contenedor de notificaciones toast -->
+<div class="toast-container position-fixed top-0 end-0 p-3 gestion-toast-layer">
+    <div id="notificacionToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="true" data-bs-delay="4000">
+        <div class="toast-header gestion-toast-header">
+            <i class="bi bi-check-circle-fill me-2" id="toastIcon"></i>
+            <strong class="me-auto" id="toastTitle">Notificación</strong>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body" id="toastMessage">
+            Mensaje de notificación
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-12 col-xl-10">
+            <div class="card shadow">
+                <div class="card-header text-white gestion-toast-header">
+                    <h4 class="mb-0">{{ titulo }}</h4>
+                </div>
+                <div class="card-body">
+                    <!-- Indicador de progreso -->
+                    <div class="progress-steps">
+                        <div class="step-item active" data-step="1">
+                            <div class="step-circle">1</div>
+                            <div class="step-label">Información General</div>
+                        </div>
+                        <div class="step-item" data-step="2">
+                            <div class="step-circle">2</div>
+                            <div class="step-label">Características y Cuidados</div>
+                        </div>
+                    </div>
+                    
+                    <form method="post" enctype="multipart/form-data" id="gestionAlisadoForm" data-es-edicion="{% if gestion %}1{% else %}0{% endif %}" data-ultima-gestion-url="{% url 'gestion_alisados:ultima_gestion_cliente' %}">
+                        {% csrf_token %}
+                        
+                        <!-- PASO 1: Información General -->
+                        <div class="form-step active" id="step1">
+                        
+                        <!-- Sección: Selección de Cliente -->
+                        <div class="section-title">Selección de Cliente</div>
+                        
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label for="{{ form.cliente.id_for_label }}" class="form-label">{{ form.cliente.label }} *</label>
+                                <select name="cliente" id="selectCliente" class="form-select" required>
+                                    <option value="">Seleccione un cliente...</option>
+                                    {% for cliente in form.fields.cliente.queryset %}
+                                        <option value="{{ cliente.id }}" data-nombre="{{ cliente.nombre }} {{ cliente.apellido }}" data-documento="{{ cliente.numero_documento }}">
+                                            {{ cliente.nombre }} {{ cliente.apellido }} - {{ cliente.numero_documento }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                <input type="hidden" id="clienteNombreImpresion" name="cliente_nombre_impresion" value="">
+                                <input type="hidden" id="clienteDocumentoImpresion" name="cliente_documento_impresion" value="">
+                                {% if form.cliente.errors %}
+                                    <div class="text-danger">{{ form.cliente.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Sección: Información del Servicio y Pago -->
+                        <div class="section-title">Información del Servicio y Pago</div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.precio_alisado.id_for_label }}" class="form-label">{{ form.precio_alisado.label }}</label>
+                                {{ form.precio_alisado }}
+                                {% if form.precio_alisado.errors %}
+                                    <div class="text-danger">{{ form.precio_alisado.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.es_oferta_especial.id_for_label }}" class="form-label">{{ form.es_oferta_especial.label }}</label>
+                                {{ form.es_oferta_especial }}
+                                {% if form.es_oferta_especial.errors %}
+                                    <div class="text-danger">{{ form.es_oferta_especial.errors }}</div>
+                                {% endif %}
+                                
+                                <div id="descripcion_oferta_container" class="conditional-field">
+                                    <label for="{{ form.descripcion_oferta.id_for_label }}" class="form-label">{{ form.descripcion_oferta.label }}</label>
+                                    {{ form.descripcion_oferta }}
+                                </div>
+
+                                <div id="promocion_oferta_container" class="conditional-field mt-3">
+                                    <label for="promocion_oferta_select" class="form-label">Promocion activa</label>
+                                    <select id="promocion_oferta_select" class="form-select">
+                                        <option value="">Seleccione una promocion...</option>
+                                        {% for promocion in promociones_activas %}
+                                            <option value="{{ promocion.nombre }}"
+                                                    data-descripcion="{{ promocion.descripcion|default_if_none:'' }}"
+                                                    data-descuento="{{ promocion.porcentaje_descuento }}">
+                                                {{ promocion.nombre }} - {{ promocion.porcentaje_descuento }}%
+                                            </option>
+                                        {% empty %}
+                                            <option value="" disabled>No hay promociones activas</option>
+                                        {% endfor %}
+                                    </select>
+                                    <small class="form-text text-muted">Selecciona una promocion para cargarla en la descripcion.</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.anticipo_cliente.id_for_label }}" class="form-label">{{ form.anticipo_cliente.label }}</label>
+                                {{ form.anticipo_cliente }}
+                                {% if form.anticipo_cliente.errors %}
+                                    <div class="text-danger">{{ form.anticipo_cliente.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.medio_pago.id_for_label }}" class="form-label">{{ form.medio_pago.label }}</label>
+                                {{ form.medio_pago }}
+                                {% if form.medio_pago.errors %}
+                                    <div class="text-danger">{{ form.medio_pago.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.saldo_pendiente.id_for_label }}" class="form-label">{{ form.saldo_pendiente.label }}</label>
+                                {{ form.saldo_pendiente }}
+                                {% if form.saldo_pendiente.errors %}
+                                    <div class="text-danger">{{ form.saldo_pendiente.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Sección: Información del Procedimiento -->
+                        <div class="section-title">Información del Procedimiento</div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.procedimiento_realizado_por.id_for_label }}" class="form-label">{{ form.procedimiento_realizado_por.label }}</label>
+                                {{ form.procedimiento_realizado_por }}
+                                {% if form.procedimiento_realizado_por.errors %}
+                                    <div class="text-danger">{{ form.procedimiento_realizado_por.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.tipo_alisado.id_for_label }}" class="form-label">{{ form.tipo_alisado.label }}</label>
+                                {{ form.tipo_alisado }}
+                                {% if form.tipo_alisado.errors %}
+                                    <div class="text-danger">{{ form.tipo_alisado.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.requiere_resellado.id_for_label }}" class="form-label">{{ form.requiere_resellado.label }}</label>
+                                {{ form.requiere_resellado }}
+                                {% if form.requiere_resellado.errors %}
+                                    <div class="text-danger">{{ form.requiere_resellado.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.porcentaje_alisado.id_for_label }}" class="form-label">{{ form.porcentaje_alisado.label }}</label>
+                                <div class="input-group">
+                                    {{ form.porcentaje_alisado }}
+                                    <span class="input-group-text">%</span>
+                                </div>
+                                {% if form.porcentaje_alisado.errors %}
+                                    <div class="text-danger">{{ form.porcentaje_alisado.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Sección: Características del Cabello -->
+                        <div class="section-title">Características del Cabello</div>
+                        
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.porosidad.id_for_label }}" class="form-label">{{ form.porosidad.label }}</label>
+                                {{ form.porosidad }}
+                                {% if form.porosidad.errors %}
+                                    <div class="text-danger">{{ form.porosidad.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.textura.id_for_label }}" class="form-label">{{ form.textura.label }}</label>
+                                {{ form.textura }}
+                                {% if form.textura.errors %}
+                                    <div class="text-danger">{{ form.textura.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.forma_natural.id_for_label }}" class="form-label">{{ form.forma_natural.label }}</label>
+                                {{ form.forma_natural }}
+                                {% if form.forma_natural.errors %}
+                                    <div class="text-danger">{{ form.forma_natural.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-3 mb-3">
+                                <label for="{{ form.elasticidad.id_for_label }}" class="form-label">{{ form.elasticidad.label }}</label>
+                                {{ form.elasticidad }}
+                                {% if form.elasticidad.errors %}
+                                    <div class="text-danger">{{ form.elasticidad.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-3 mb-3">
+                                <label for="{{ form.longitud.id_for_label }}" class="form-label">{{ form.longitud.label }}</label>
+                                {{ form.longitud }}
+                                {% if form.longitud.errors %}
+                                    <div class="text-danger">{{ form.longitud.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-3 mb-3">
+                                <label for="{{ form.densidad.id_for_label }}" class="form-label">{{ form.densidad.label }}</label>
+                                {{ form.densidad }}
+                                {% if form.densidad.errors %}
+                                    <div class="text-danger">{{ form.densidad.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-3 mb-3">
+                                <label for="{{ form.piel_cabelludo.id_for_label }}" class="form-label">{{ form.piel_cabelludo.label }}</label>
+                                {{ form.piel_cabelludo }}
+                                {% if form.piel_cabelludo.errors %}
+                                    <div class="text-danger">{{ form.piel_cabelludo.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.alopecia.id_for_label }}" class="form-label">{{ form.alopecia.label }}</label>
+                                {{ form.alopecia }}
+                                {% if form.alopecia.errors %}
+                                    <div class="text-danger">{{ form.alopecia.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.caida_cabello.id_for_label }}" class="form-label">{{ form.caida_cabello.label }}</label>
+                                {{ form.caida_cabello }}
+                                {% if form.caida_cabello.errors %}
+                                    <div class="text-danger">{{ form.caida_cabello.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <label for="{{ form.caspa.id_for_label }}" class="form-label">{{ form.caspa.label }}</label>
+                                {{ form.caspa }}
+                                {% if form.caspa.errors %}
+                                    <div class="text-danger">{{ form.caspa.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        </div><!-- Fin del Paso 1 -->
+                        
+                        <!-- PASO 2: Características y Cuidados -->
+                        <div class="form-step" id="step2">
+                        
+                        <!-- Sección: Estado de Salud -->
+                        <div class="section-title">Estado de Salud y Condiciones Especiales</div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.lactante.id_for_label }}" class="form-label">{{ form.lactante.label }}</label>
+                                {{ form.lactante }}
+                                {% if form.lactante.errors %}
+                                    <div class="text-danger">{{ form.lactante.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.gestante.id_for_label }}" class="form-label">{{ form.gestante.label }}</label>
+                                {{ form.gestante }}
+                                {% if form.gestante.errors %}
+                                    <div class="text-danger">{{ form.gestante.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.sufre_tiroides.id_for_label }}" class="form-label">{{ form.sufre_tiroides.label }}</label>
+                                {{ form.sufre_tiroides }}
+                                {% if form.sufre_tiroides.errors %}
+                                    <div class="text-danger">{{ form.sufre_tiroides.errors }}</div>
+                                {% endif %}
+                                
+                                <div id="medicamento_tiroides_container" class="conditional-field">
+                                    <label for="{{ form.medicamento_tiroides.id_for_label }}" class="form-label">{{ form.medicamento_tiroides.label }}</label>
+                                    {{ form.medicamento_tiroides }}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.despunte_hoy.id_for_label }}" class="form-label">{{ form.despunte_hoy.label }}</label>
+                                {{ form.despunte_hoy }}
+                                {% if form.despunte_hoy.errors %}
+                                    <div class="text-danger">{{ form.despunte_hoy.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Sección: Procesos Químicos -->
+                        <div class="section-title">Procesos Químicos Previos</div>
+                        
+                        <div class="checkbox-group mb-3">
+                            <div class="form-check">
+                                {{ form.procesos_tintura }}
+                                <label class="form-check-label" for="{{ form.procesos_tintura.id_for_label }}">
+                                    {{ form.procesos_tintura.label }}
+                                </label>
+                            </div>
+                            
+                            <div class="form-check">
+                                {{ form.procesos_decoloracion }}
+                                <label class="form-check-label" for="{{ form.procesos_decoloracion.id_for_label }}">
+                                    {{ form.procesos_decoloracion.label }}
+                                </label>
+                            </div>
+                            
+                            <div class="form-check">
+                                {{ form.procesos_ondulados }}
+                                <label class="form-check-label" for="{{ form.procesos_ondulados.id_for_label }}">
+                                    {{ form.procesos_ondulados.label }}
+                                </label>
+                            </div>
+                            
+                            <div class="form-check">
+                                {{ form.procesos_extracciones }}
+                                <label class="form-check-label" for="{{ form.procesos_extracciones.id_for_label }}">
+                                    {{ form.procesos_extracciones.label }}
+                                </label>
+                            </div>
+                            
+                            <div class="form-check">
+                                {{ form.procesos_alisados }}
+                                <label class="form-check-label" for="{{ form.procesos_alisados.id_for_label }}">
+                                    {{ form.procesos_alisados.label }}
+                                </label>
+                            </div>
+                            
+                            <div class="form-check">
+                                {{ form.procesos_super_aclarante }}
+                                <label class="form-check-label" for="{{ form.procesos_super_aclarante.id_for_label }}">
+                                    {{ form.procesos_super_aclarante.label }}
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.procesos_otro.id_for_label }}" class="form-label">{{ form.procesos_otro.label }}</label>
+                            {{ form.procesos_otro }}
+                            {% if form.procesos_otro.errors %}
+                                <div class="text-danger">{{ form.procesos_otro.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Sección: Hábitos y Cuidados -->
+                        <div class="section-title">Hábitos y Cuidados</div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.cuenta_con_secador.id_for_label }}" class="form-label">{{ form.cuenta_con_secador.label }}</label>
+                                {{ form.cuenta_con_secador }}
+                                {% if form.cuenta_con_secador.errors %}
+                                    <div class="text-danger">{{ form.cuenta_con_secador.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.usa_casco.id_for_label }}" class="form-label">{{ form.usa_casco.label }}</label>
+                                {{ form.usa_casco }}
+                                {% if form.usa_casco.errors %}
+                                    <div class="text-danger">{{ form.usa_casco.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.se_bana_agua_caliente.id_for_label }}" class="form-label">{{ form.se_bana_agua_caliente.label }}</label>
+                                {{ form.se_bana_agua_caliente }}
+                                {% if form.se_bana_agua_caliente.errors %}
+                                    <div class="text-danger">{{ form.se_bana_agua_caliente.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.requiere_refuerzo_15dias.id_for_label }}" class="form-label">{{ form.requiere_refuerzo_15dias.label }}</label>
+                                {{ form.requiere_refuerzo_15dias }}
+                                {% if form.requiere_refuerzo_15dias.errors %}
+                                    <div class="text-danger">{{ form.requiere_refuerzo_15dias.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.frecuencia_recoge_cabello.id_for_label }}" class="form-label">{{ form.frecuencia_recoge_cabello.label }}</label>
+                            {{ form.frecuencia_recoge_cabello }}
+                            {% if form.frecuencia_recoge_cabello.errors %}
+                                <div class="text-danger">{{ form.frecuencia_recoge_cabello.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.realiza_ejercicio.id_for_label }}" class="form-label">{{ form.realiza_ejercicio.label }}</label>
+                            {{ form.realiza_ejercicio }}
+                            {% if form.realiza_ejercicio.errors %}
+                                <div class="text-danger">{{ form.realiza_ejercicio.errors }}</div>
+                            {% endif %}
+                            
+                            <div id="frecuencia_ejercicio_container" class="conditional-field">
+                                <label for="{{ form.frecuencia_ejercicio.id_for_label }}" class="form-label">{{ form.frecuencia_ejercicio.label }}</label>
+                                {{ form.frecuencia_ejercicio }}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.productos_capilares.id_for_label }}" class="form-label">{{ form.productos_capilares.label }}</label>
+                            {{ form.productos_capilares }}
+                            {% if form.productos_capilares.errors %}
+                                <div class="text-danger">{{ form.productos_capilares.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Sección: Recomendaciones -->
+                        <div class="section-title">Recomendaciones y Anotaciones</div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.recomendaciones_post_cuidados.id_for_label }}" class="form-label">{{ form.recomendaciones_post_cuidados.label }}</label>
+                            {{ form.recomendaciones_post_cuidados }}
+                            {% if form.recomendaciones_post_cuidados.errors %}
+                                <div class="text-danger">{{ form.recomendaciones_post_cuidados.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        </div><!-- Fin del Paso 2 -->
+                        
+                        <!-- Botones de navegación -->
+                        <div class="d-flex justify-content-between mt-4 gestion-alisado-step-actions">
+                            <a href="{% url 'gestion_alisados:lista_gestion_alisados' %}" class="btn btn-secondary" id="btnCancelar">
+                                <i class="bi bi-arrow-left"></i> Cancelar
+                            </a>
+                            
+                            <div>
+                                <button type="button" class="btn btn-secondary gestion-btn-hidden gestion-btn-primary" id="btnAnterior">
+                                    <i class="bi bi-arrow-left"></i> Anterior
+                                </button>
+                                <button type="button" class="btn text-white gestion-btn-primary" id="btnSiguiente">
+                                    Siguiente <i class="bi bi-arrow-right"></i>
+                                </button>
+                                <button type="button" class="btn text-white gestion-btn-hidden gestion-btn-primary" id="btnGuardar">
+                                    <i class="bi bi-save"></i> Guardar
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Consentimiento Informado -->
+<div class="modal fade" id="modalConsentimiento" tabindex="-1" aria-labelledby="modalConsentimientoLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header text-white gestion-toast-header">
+                <h5 class="modal-title" id="modalConsentimientoLabel">
+                    <i class="bi bi-file-earmark-text"></i> Consentimiento Informado - Términos y Condiciones
+                </h5>
+            </div>
+            <div class="modal-body gestion-modal-shell">
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    <strong>Por favor leer primariamente la información de la página 02</strong>
+                </div>
+                
+                <h5 class="text-primary mt-4">SISTEMA ÚNICO DE HABILITACIÓN/SERVICIOS Y PÁGINA 02</h5>
+                <p>El procedimiento puede generar molestias, casos ocasionales y/o reacciones alérgicas.</p>
+                
+                <h5 class="text-primary mt-4">RECOMENDACIONES Y ADVERTENCIAS</h5>
+                <ol>
+                    <li>El tratamiento es un PROCEDIMIENTO que tiene limitada duración y en su estancia no reja necesariamente de manera permanente.</li>
+                    <li>El tratamiento puede producir daños si no se siguen las recomendaciones indicadas (uso de acondicionador, shampoo sin sal, etc.)</li>
+                    <li>El tratamiento puede generar enrojecimiento del cuero cabelludo, irritación, ardor de los ojos, sensación de quemazón, resequedad del cabello y otros efectos temporales.</li>
+                    <li>No existe garantía, excepción de nuestros términos y condiciones. En caso de no cumplir las recomendaciones no se acepta ningún reclamo.</li>
+                    <li>La sesión de retoque únicamente procede cuando el procedimiento se efectúa de manera adecuada.</li>
+                    <li>He sido informado adecuadamente sobre cómo actúa el tratamiento, los posibles efectos secundarios que se pueden presentar y los resultados esperados.</li>
+                    <li>Nuestros productos tienen lixivia.</li>
+                    <li>El anticipo no hace parte fundamental en el resultado del tratamiento realizado. El cliente es responsable.</li>
+                    <li>Algunos tratamientos tienen como contraindicación el alisado, en este caso, el cliente deberá asumir las consecuencias de su decisión.</li>
+                    <li>Entiendo que para obtener los mejores resultados posibles, las intervenciones necesarias pueden ser realizadas en diferentes etapas.</li>
+                    <li>También se han informado de las ventajas de no someterse al procedimiento.</li>
+                    <li><strong>ADVERTENCIA: ALGUNOS DE NUESTROS PROCEDIMIENTOS PUEDEN SUBIR DE TONO O ACLARAR DEL CABELLO SOBRE TODO EN CABELLOS CON DECOLORACIÓN.</strong></li>
+                </ol>
+                
+                <h5 class="text-primary mt-4">CUIDADOS</h5>
+                <ol>
+                    <li>Lavar el cabello con shampoo sin sal o cualquier producto capilar sin sal, el USO DE ACONDICIONADOR es obligatorio.</li>
+                    <li>SECAR EL CABELLO CON SECADOR INDICADO NO LO LAVES.</li>
+                    <li>SI TE ACUESTAS O VAS A DORMIR: AL LEVANTARTE DEBERÁS SECAR EL CABELLO, MARCAS MARCADAS O FRIZZ, ES TOTALMENTE NORMAL.</li>
+                    <li>Peinar justo después de aplicar el producto sobre el cabello mojado, no será conveniente que la persona realice peinados ajustados.</li>
+                    <li>Si el cabello se dejará secar al aire libre, peinar constantemente hasta que se encuentre completamente seco.</li>
+                    <li>No exponer cualquiera de nuestros tratamientos a componentes marinos del cloro.</li>
+                    <li>Mantener el tratamiento indicado por la persona que aplicó el tratamiento.</li>
+                    <li>Avisar oportunamente de cualquier cambio o reacción desfavorable que no haya sido explicada.</li>
+                    <li>Podrá aplicar tinte 15 días después del tratamiento. Después del procedimiento de reconexión molecular se podrá decolorar en 4 meses.</li>
+                    <li>Debes traer a la cita todas las indicaciones del asesor (shampoo, secador, plancha, etc.) para ser instruida en el uso correcto del tratamiento de alisado. En algunos casos, la clienta podrá venir nuevamente a nuestras instalaciones por segunda sesión sin cobro; otros casos el día del procedimiento incluyen un valor adicional.</li>
+                </ol>
+                
+                <h5 class="text-primary mt-4">COMPROMISOS DEL TRATAMIENTO - PORCENTAJES DE TRATADO O ELIMINACIÓN DE ONDA</h5>
+                <ol>
+                    <li>El resultado del procedimiento de alisado progresivo depende de los postis cuidados y sus respectivos:
+                        <ul>
+                            <li><strong>ALISADO FOTÓNICO:</strong> duración de 4 a 6 meses y elimina hasta 80% de la onda.</li>
+                            <li><strong>CIRUGIA CAPILAR:</strong> duración de hasta 3 meses y elimina el 70% de la onda.</li>
+                            <li><strong>RECONEXIÓN MOLECULAR:</strong> duración de hasta 6 meses y elimina hasta el 80% de la onda.</li>
+                            <li><strong>AMINOÁCIDOS CANNABIS:</strong> duración de 4 a 6 meses y elimina hasta el 85% de la onda.</li>
+                        </ul>
+                    </li>
+                    <li>El procedimiento de retoque puede requerir de sesiones adicionales para lograr el efecto deseado. Según el procedimiento aplicado (puede durar de 4 a 6 meses), en este caso, el cliente deberá asumir los gastos del refuerzo de alisado que se realizará de 10 a 15 días después de la primera copia con o sin medicamentos, exámenes médicos.</li>
+                    <li>Acepto que en caso de presentarse cualquier complicación, mantención y similares estarán en su totalidad a cargo del paciente.</li>
+                    <li>Tengo conocimiento que realizado el procedimiento NO HAY LUGAR a devolución de dinero.</li>
+                </ol>
+                
+                <div class="alert alert-info mt-4">
+                    <i class="bi bi-info-circle-fill"></i>
+                    <strong>¡PUEDES TOMARLE FOTO A ESTA INFORMACIÓN!</strong><br>
+                    Después de pagado y REALIZADO el procedimiento adicional. La línea de atención al cliente está para resolver cualquier inquietud o consulta relacionada con el servicio ofrecido.
+                </div>
+                
+                <div class="card bg-light mt-4 p-3">
+                    <h6 class="fw-bold">ACEPTO Y AUTORIZO:</h6>
+                    <p class="mb-2">He leído y comprendido toda la información anterior y acepto los términos y condiciones del tratamiento de alisado.</p>
+                    
+                    <div id="wrapperCheckboxAceptacion">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="checkboxAceptacion" required>
+                            <label class="form-check-label fw-bold" for="checkboxAceptacion">
+                                Acepto todos los términos, condiciones, recomendaciones y compromisos descritos anteriormente
+                            </label>
+                        </div>
+                        <div id="msgCheckboxError">
+                            <i class="bi bi-exclamation-triangle-fill"></i>
+                            Debes aceptar los términos y condiciones para continuar.
+                        </div>
+                    </div>
+                    
+                    <div class="signature-block">
+                        <div class="signature-block__head">
+                            <div>
+                                <label class="form-label fw-bold mb-1">
+                                    <i class="bi bi-pen"></i> Firma del cliente
+                                </label>
+                                <p class="signature-block__help mb-0">Firme con el dedo, lápiz o mouse dentro del recuadro.</p>
+                            </div>
+                            <div class="signature-block__actions">
+                                <button type="button" class="btn btn-outline-secondary btn-sm" id="btnLimpiarFirma">
+                                    <i class="bi bi-eraser"></i> Limpiar
+                                </button>
+                            </div>
+                        </div>
+
+                        <input type="hidden" name="firma_consentimiento_data" id="id_firma_consentimiento_data">
+                        {{ form.firma_consentimiento }}
+
+                        <div class="signature-canvas-wrap">
+                            <canvas id="firmaCanvas" class="signature-canvas" aria-label="Área para firmar"></canvas>
+                            <div class="signature-canvas-placeholder" id="firmaCanvasPlaceholder">
+                                <i class="bi bi-pencil-square"></i>
+                                <span>Firme aquí</span>
+                            </div>
+                        </div>
+
+                        <div class="signature-block__footer">
+                            <div id="firmaEstado" class="signature-status">
+                                <i class="bi bi-pencil"></i>
+                                <span>Sin firma registrada</span>
+                            </div>
+                            <div id="errorFirma" class="text-danger gestion-btn-hidden">
+                                <i class="bi bi-exclamation-triangle"></i> Debe registrar la firma para continuar
+                            </div>
+                        </div>
+                        {% if form.firma_consentimiento_data.errors %}
+                            <div class="text-danger mt-2">{{ form.firma_consentimiento_data.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle-fill"></i>
+                        <strong>Información del cliente seleccionado:</strong><br>
+                        <span id="infoClienteConsentimiento">Seleccione un cliente en el formulario</span>
+                    </div>
+                    
+                    <div class="text-muted small">
+                        <i class="bi bi-calendar"></i> Fecha: <span id="fechaConsentimiento"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer flex-wrap gap-2 gestion-alisado-actions">
+                <div class="me-auto d-flex gap-2 flex-wrap">
+                    <button type="button" class="btn btn-outline-danger" id="btnImprimirPDF" title="Descarga un PDF con todos los datos del formulario (opcional)">
+                        <i class="bi bi-file-earmark-pdf"></i> Imprimir PDF
+                    </button>
+                    <button type="button" class="btn btn-outline-primary" id="btnImprimirWord" title="Descarga un Word con todos los datos del formulario (opcional)">
+                        <i class="bi bi-file-earmark-word"></i> Imprimir Word
+                    </button>
+                </div>
+                <button type="button" class="btn btn-secondary" id="btnCerrarModal">
+                    <i class="bi bi-x-circle"></i> Cancelar
+                </button>
+                <button type="button" class="btn text-white gestion-btn-primary" id="btnConfirmarConsentimiento">
+                    <i class="bi bi-check-circle"></i> Aceptar y Guardar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+
+
+<!-- Modal Crear Cliente -->
+<div class="modal fade" id="modalCrearCliente" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+
+      <form method="post" id="formCrearCliente" autocomplete="off">
+        {% csrf_token %}
+
+        <div class="modal-header">
+          <h5 class="modal-title">
+            <i class="bi bi-person-plus me-2"></i> Nuevo cliente
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body">
+          <div id="alertaErroresCliente" class="alert alert-danger alert-dismissible fade show d-none" role="alert">
+            <strong><i class="bi bi-exclamation-triangle"></i> Por favor corrige los siguientes errores:</strong>
+            <ul id="listaErroresCliente" class="mb-0 mt-2 small"></ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+          
+          <div class="row g-3">
+            <!-- TIPO DOCUMENTO -->
+            <div class="col-md-6">
+              <label class="form-label">Tipo documento <span class="text-danger">*</span></label>
+              <select name="tipo_documento"
+                      id="tipo_documento_modal"
+                      class="form-select">
+                <option value="">Seleccione</option>
+                <option value="CC">Cédula</option>
+                <option value="TI">Tarjeta</option>
+                <option value="CE">Extranjería</option>
+                <option value="PP">Pasaporte</option>
+              </select>
+              <div class="invalid-feedback"></div>
+            </div>
+            
+            <!-- NÚMERO DOCUMENTO -->
+            <div class="col-md-6">
+              <label class="form-label">Número documento <span class="text-danger">*</span></label>
+              <input type="text"
+                     id="numero_documento_modal"
+                     name="numero_documento"
+                     class="form-control"
+                     maxlength="12"
+                     placeholder="Ej: 1234567890"
+                     autocomplete="off">
+              <div class="invalid-feedback"></div>
+            </div>
+
+            <!-- NOMBRE -->
+            <div class="col-md-6">
+              <label class="form-label">Nombre <span class="text-danger">*</span></label>
+              <input type="text"
+                     id="nombre_modal"
+                     name="nombre"
+                     class="form-control"
+                     placeholder="Ej: Juan"
+                     autocomplete="off">
+              <div class="invalid-feedback"></div>
+            </div>
+
+            <!-- APELLIDO -->
+            <div class="col-md-6">
+              <label class="form-label">Apellido <span class="text-danger">*</span></label>
+              <input type="text"
+                     id="apellido_modal"
+                     name="apellido"
+                     class="form-control"
+                     placeholder="Ej: Pérez"
+                     autocomplete="off">
+              <div class="invalid-feedback"></div>
+            </div>
+
+            <!-- FECHA NACIMIENTO -->
+            <div class="col-md-6">
+              <label class="form-label">Fecha nacimiento <span class="text-danger">*</span></label>
+              <input type="date"
+                     id="fecha_nacimiento_modal"
+                     name="fecha_nacimiento"
+                     class="form-control">
+              <div class="invalid-feedback"></div>
+            </div>
+
+            <!-- TELÉFONO -->
+            <div class="col-md-6">
+              <label class="form-label">Teléfono <small class="text-muted">(opcional)</small></label>
+              <input type="text"
+                     id="telefono_modal"
+                     name="telefono"
+                     class="form-control"
+                     maxlength="10"
+                     placeholder="Ej: 3001234567"
+                     autocomplete="off">
+              <div class="invalid-feedback"></div>
+            </div>
+
+            <!-- CORREO -->
+            <div class="col-12">
+              <label class="form-label">Correo electrónico <small class="text-muted">(opcional)</small></label>
+              <input type="email"
+                     id="correo_modal"
+                     name="correo"
+                     class="form-control"
+                     placeholder="ejemplo@correo.com"
+                     autocomplete="off">
+              <div class="invalid-feedback"></div>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+              Cancelar
+            </button>
+            <button type="submit" class="btn btn-secondary" id="btnGuardarClienteModal" disabled>
+              Guardar cliente
+            </button>
+          </div>
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+</div>
+
+<link rel="stylesheet" href="{% static 'gestion_alisados/css/gestion_alisados.css' %}">
+
+
+
+
+
+<script src="{% static 'gestion_alisados/js/form_gestion_alisado.js' %}?v={% now 'U' %}"></script>
+{% endblock %}

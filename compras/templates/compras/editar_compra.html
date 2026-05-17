@@ -1,0 +1,10 @@
+{% extends "core/panel_admin_base.html" %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item"><a href="{% url 'compras:lista_compras' %}">Compras</a></li>
+<li class="breadcrumb-item active" aria-current="page">Editar compra</li>
+{% endblock %}
+
+{% block content %}
+  {% include "compras/formulario_editar.html" %}
+{% endblock %}

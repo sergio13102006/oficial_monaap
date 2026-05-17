@@ -1,0 +1,694 @@
+{% extends "core/panel_admin_base.html" %}
+{% load static %}
+
+{% block title %}Clientes{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'clientes/css/cliente.css' %}">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+
+{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item active" aria-current="page">Clientes</li>
+{% endblock %}
+
+{% block page_icon %}
+<i class="bi bi-person-heart page-icon clientes-page-icon" style="font-size:28px;"></i>
+{% endblock %}
+
+{% block page_title %}<span class="clientes-title-text">Clientes</span>{% endblock %}
+
+{% block page_subtitle %}
+<span class="clientes-subtitle-anim">Gestión de clientes registrados</span>
+{% endblock %}
+
+{% block page_actions %}
+<div class="anim-from-top">
+  <button class="btn-pill-dark" data-bs-toggle="modal" data-bs-target="#modalCrearCliente">
+    <i class="fas fa-plus"></i> Nuevo cliente
+  </button>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-1">
+
+    <!-- Panel de filtros -->
+    <form method="get"
+          class="module-filters-card clientes-filters-card mb-4 js-ajax-search-form anim-from-bottom"
+          style="animation-delay:.10s"
+          data-ajax-url="{% url 'clientes:lista' %}"
+          data-ajax-target=".ajax-results-container"
+          data-ajax-debounce="300">
+
+        {% if current_sort %}
+            <input type="hidden" name="sort" value="{{ current_sort }}">
+        {% endif %}
+        {% if current_dir %}
+            <input type="hidden" name="dir" value="{{ current_dir }}">
+        {% endif %}
+
+        <div class="module-filters-form clientes-filters-form">
+            <div class="module-filter-field module-filter-field--wide clientes-search-field">
+                <label class="module-filter-label">Buscar</label>
+                <div class="clientes-busqueda-global">
+                    {% include 'core/componentes/busqueda_global.html' with placeholder='Buscar cliente...' search_value=q name='q' modo='inline' %}
+                </div>
+            </div>
+
+            <div class="module-filter-field module-filter-field--small">
+                <label class="module-filter-label">Estado</label>
+                <select name="estado" class="form-select">
+                    <option value="">Todos</option>
+                    <option value="activo" {% if estado == 'activo' %}selected{% endif %}>Activo</option>
+                    <option value="inactivo" {% if estado == 'inactivo' %}selected{% endif %}>Inactivo</option>
+                </select>
+            </div>
+
+            <div class="module-filter-field module-filter-field--small">
+                <label class="module-filter-label">Edad</label>
+                <select name="edad" class="form-select">
+                    <option value="">Todas</option>
+                    <option value="menor" {% if edad == 'menor' %}selected{% endif %}>Menores</option>
+                    <option value="mayor" {% if edad == 'mayor' %}selected{% endif %}>Mayores</option>
+                </select>
+            </div>
+
+            <div class="module-filter-field module-filter-field--medium">
+                <label class="module-filter-label">Ordenar</label>
+                <select name="orden" class="form-select">
+                    <option value="">Seleccionar</option>
+                    <option value="nombre_asc" {% if orden == 'nombre_asc' %}selected{% endif %}>Nombre A-Z</option>
+                    <option value="nombre_desc" {% if orden == 'nombre_desc' %}selected{% endif %}>Nombre Z-A</option>
+                    <option value="apellido_asc" {% if orden == 'apellido_asc' %}selected{% endif %}>Apellido A-Z</option>
+                    <option value="apellido_desc" {% if orden == 'apellido_desc' %}selected{% endif %}>Apellido Z-A</option>
+                    <option value="fecha_asc" {% if orden == 'fecha_asc' %}selected{% endif %}>Cumpleaños ↑</option>
+                    <option value="fecha_desc" {% if orden == 'fecha_desc' %}selected{% endif %}>Cumpleaños ↓</option>
+                </select>
+            </div>
+
+            <div class="module-filter-field module-filter-field--small clientes-actions-field">
+                <div class="clientes-acciones">
+                    {% if q or estado or edad or orden %}
+                    <a href="{% url 'clientes:lista' %}" class="btn btn-outline-danger">
+                        <i class="bi bi-x-lg"></i>
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </form>
+    <div class="card border-0 shadow-sm">
+    <div class="card-body p-0 ajax-results-container">
+        {% include 'clientes/lista_clientes_global.html' %}
+    </div>
+</div>
+
+<!-- Legacy client modal block removed because it duplicated ids with the active form.
+<div class="modal fade" id="modalLegacyCrearCliente" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <form method="post"
+                  id="formCrearClienteLegacy"
+                  action="{% url 'clientes:crear' %}"
+                  autocomplete="off">
+                {% csrf_token %}
+
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-plus me-2"></i> Nuevo cliente
+                    </h5>
+                    <button type="button"
+                            class="btn-close"
+                            data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Tipo de documento</label>
+                            <select id ="tipo_documento" name="tipo_documento" class="form-select" required>
+                                <option value="">Seleccionar</option>
+                                <option value="CC">Cédula de ciudadanía</option>
+                                <option value="TI">Tarjeta de identidad</option>
+                                <option value="CE">Cédula de extranjería</option>
+                                <option value="PP">Pasaporte</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Número de documento</label>
+                            <input id="numero_documento_legacy"
+                                   type="text"
+                                   name="numero_documento"
+                                   class="form-control"
+                                   required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Nombre</label>
+                            <input id="nombre_legacy"
+                                   type="text"
+                                   name="nombre"
+                                   class="form-control"
+                                   required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Apellido</label>
+                            <input id="apellido_legacy"
+                            type="text"
+                                   name="apellido"
+                                   class="form-control"
+                                   required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Fecha de nacimiento</label>
+                            <input id="fecha_nacimiento_legacy"
+                            type="date"
+                                   name="fecha_nacimiento"
+                                   class="form-control"
+                                   required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Teléfono</label>
+                            <input id
+                            type="text"
+                                   name="telefono"
+                                   class="form-control">
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">Correo</label>
+                            <input id="correo_legacy"
+                            type="email"
+                                   name="correo"
+                                   class="form-control">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button"
+                            class="btn btn-outline-secondary"
+                            data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+                    <button type="submit" id="btnGuardarClienteLegacy" class="btn-pill-dark">
+                        <i class="bi bi-save me-1"></i> Guardar cliente
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+  </div>
+
+  {% for cliente in clientes %}
+  <div class="modal fade" id="modalLegacyDetalleCliente{{ cliente.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content">
+        <div class="modal-header" style="background:linear-gradient(135deg,#1a0a0a 0%,#3a2117 60%,#4b2f2a 100%);border:none;padding:18px 24px;display:flex;align-items:center;justify-content:space-between;">
+          <h5 class="modal-title text-white"><i class="bi bi-person-badge me-2"></i>Detalles del cliente</h5>
+          <button type="button" class="btn-close-dev" data-bs-dismiss="modal" aria-label="Cerrar">
+            <span class="btn-close-dev__icon">✕</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="row g-3">
+            <div class="col-md-6"><strong>Código:</strong><br>{{ cliente.codigo_cliente }}</div>
+            <div class="col-md-6"><strong>Estado:</strong><br>{{ cliente.estado|capfirst }}</div>
+            <div class="col-md-6"><strong>Tipo documento:</strong><br>{{ cliente.tipo_documento }}</div>
+            <div class="col-md-6"><strong>Número documento:</strong><br>{{ cliente.numero_documento }}</div>
+            <div class="col-md-6"><strong>Nombre:</strong><br>{{ cliente.nombre }}</div>
+            <div class="col-md-6"><strong>Apellido:</strong><br>{{ cliente.apellido }}</div>
+            <div class="col-md-6"><strong>Fecha nacimiento:</strong><br>{{ cliente.fecha_nacimiento }}</div>
+            <div class="col-md-6"><strong>Teléfono:</strong><br>{{ cliente.telefono|default:"—" }}</div>
+            <div class="col-12"><strong>Correo:</strong><br>{{ cliente.correo|default:"—" }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% endfor %}
+
+-->
+
+  <div class="modal fade" id="modalCrearCliente" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content border-0 shadow">
+        <form id="formCrearCliente" method="post" action="{% url 'clientes:crear' %}" autocomplete="off" novalidate>
+          {% csrf_token %}
+          <div class="modal-header" style="background:linear-gradient(135deg,#1a0a0a 0%,#3a2117 60%,#4b2f2a 100%);border:none;padding:18px 24px;display:flex;align-items:center;justify-content:space-between;">
+            <h5 class="modal-title text-white"><i class="fas fa-plus me-2"></i>Nuevo cliente</h5>
+            <button type="button" class="btn-close-dev" data-bs-dismiss="modal" aria-label="Cerrar">
+              <span class="btn-close-dev__icon">✕</span>
+            </button>
+          </div>
+
+          <div class="modal-body">
+            <div id="alertaErroresCliente" class="alert alert-danger alert-dismissible fade show d-none mb-3" role="alert">
+              <strong><i class="bi bi-exclamation-triangle me-1"></i> Corrige los siguientes errores:</strong>
+              <ul id="listaErroresCliente" class="mb-0 mt-1 small"></ul>
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label for="tipo_documento" class="form-label">Tipo de documento <span class="text-danger">*</span></label>
+                <select id="tipo_documento" name="tipo_documento" class="form-select" required>
+                  <option value="">Seleccionar</option>
+                  <option value="CC">Cédula de ciudadanía</option>
+                  <option value="TI">Tarjeta de identidad</option>
+                  <option value="CE">Cédula de extranjería</option>
+                  <option value="PP">Pasaporte</option>
+                </select>
+                <div class="invalid-feedback"></div>
+              </div>
+
+              <div class="col-md-6">
+                <label for="numero_documento" class="form-label">Número de documento <span class="text-danger">*</span></label>
+                <input type="text" id="numero_documento" name="numero_documento" class="form-control" maxlength="12" required>
+                <div class="invalid-feedback"></div>
+              </div>
+
+              <div class="col-md-6">
+                <label for="nombre" class="form-label">Nombre <span class="text-danger">*</span></label>
+                <input type="text" id="nombre" name="nombre" class="form-control" required>
+                <div class="invalid-feedback"></div>
+              </div>
+
+              <div class="col-md-6">
+                <label for="apellido" class="form-label">Apellido <span class="text-danger">*</span></label>
+                <input type="text" id="apellido" name="apellido" class="form-control" required>
+                <div class="invalid-feedback"></div>
+              </div>
+
+              <div class="col-md-6">
+                <label for="fecha_nacimiento" class="form-label">Fecha de nacimiento <span class="text-danger">*</span></label>
+                <input type="date" id="fecha_nacimiento" name="fecha_nacimiento" class="form-control" required>
+                <div class="invalid-feedback"></div>
+              </div>
+
+              <div class="col-md-6">
+                <label for="telefono" class="form-label">Teléfono <small class="text-muted">(opcional)</small></label>
+                <input type="text" id="telefono" name="telefono" class="form-control" maxlength="10">
+                <div class="invalid-feedback"></div>
+              </div>
+
+              <div class="col-12">
+                <label for="correo" class="form-label">Correo <small class="text-muted">(opcional)</small></label>
+                <input type="email" id="correo" name="correo" class="form-control">
+                <div class="invalid-feedback"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn-modal-cancel" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" id="btnGuardarCliente" class="btn-modal-save btn-secondary" disabled>
+              <i class="bi bi-save me-1"></i> Guardar cliente
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="modalEditarCliente" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header" style="background:linear-gradient(135deg,#1a0a0a 0%,#3a2117 60%,#4b2f2a 100%);border:none;padding:18px 24px;display:flex;align-items:center;justify-content:space-between;">
+          <h5 class="modal-title text-white"><i class="bi bi-pencil-square me-2"></i>Editar cliente</h5>
+          <button type="button" class="btn-close-dev" data-bs-dismiss="modal" aria-label="Cerrar">
+            <span class="btn-close-dev__icon">✕</span>
+          </button>
+        </div>
+
+        <div class="modal-body">
+          <div id="alertaErroresEditar" class="alert alert-danger alert-dismissible fade show d-none" role="alert">
+            <strong><i class="bi bi-exclamation-triangle me-1"></i> Por favor corrige los siguientes errores:</strong>
+            <ul id="listaErroresEditar" class="mb-0 mt-2 small"></ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+
+          <form id="formEditarCliente" novalidate>
+            {% csrf_token %}
+            <input type="hidden" id="editarClienteUrl" value="">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label for="editar_tipo_documento" class="form-label">Tipo documento <span class="text-danger">*</span></label>
+                <select name="tipo_documento" id="editar_tipo_documento" class="form-select">
+                  <option value="CC">Cédula de ciudadanía</option>
+                  <option value="TI">Tarjeta de identidad</option>
+                  <option value="CE">Cédula de extranjería</option>
+                  <option value="PP">Pasaporte</option>
+                </select>
+                <div class="invalid-feedback"></div>
+              </div>
+
+              <div class="col-md-6">
+                <label for="editar_numero_documento" class="form-label">Número documento <span class="text-danger">*</span></label>
+                <input type="text" name="numero_documento" id="editar_numero_documento" class="form-control" maxlength="12">
+                <div class="invalid-feedback"></div>
+              </div>
+
+              <div class="col-md-6">
+                <label for="editar_nombre" class="form-label">Nombre <span class="text-danger">*</span></label>
+                <input type="text" name="nombre" id="editar_nombre" class="form-control">
+                <div class="invalid-feedback"></div>
+              </div>
+
+              <div class="col-md-6">
+                <label for="editar_apellido" class="form-label">Apellido <span class="text-danger">*</span></label>
+                <input type="text" name="apellido" id="editar_apellido" class="form-control">
+                <div class="invalid-feedback"></div>
+              </div>
+
+              <div class="col-md-6">
+                <label for="editar_fecha_nacimiento" class="form-label">Fecha nacimiento <span class="text-danger">*</span></label>
+                <input type="date" name="fecha_nacimiento" id="editar_fecha_nacimiento" class="form-control">
+                <div class="invalid-feedback"></div>
+              </div>
+
+              <div class="col-md-6">
+                <label for="editar_telefono" class="form-label">Teléfono <small class="text-muted">(opcional)</small></label>
+                <input type="text" name="telefono" id="editar_telefono" class="form-control" maxlength="10">
+                <div class="invalid-feedback"></div>
+              </div>
+
+              <div class="col-md-6">
+                <label for="editar_correo" class="form-label">Correo <small class="text-muted">(opcional)</small></label>
+                <input type="email" name="correo" id="editar_correo" class="form-control">
+                <div class="invalid-feedback"></div>
+              </div>
+
+              <div class="col-md-6">
+                <label for="editar_estado" class="form-label">Estado</label>
+                <select name="estado" id="editar_estado" class="form-select">
+                  <option value="activo">Activo</option>
+                  <option value="inactivo">Inactivo</option>
+                </select>
+                <div class="invalid-feedback"></div>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-modal-cancel" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn-modal-save" id="btnGuardarEditar">
+            <i class="bi bi-save me-1"></i> Guardar cambios
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="modalTratamientoDatos" tabindex="-1" data-bs-backdrop="static" aria-hidden="true">
+    <div class="modal-dialog modal-xl-custom">
+      <div class="modal-content">
+        <div class="modal-header" style="background:linear-gradient(135deg,#1a0a0a 0%,#3a2117 60%,#4b2f2a 100%);border:none;padding:18px 24px;display:flex;align-items:center;justify-content:space-between;">
+          <h5 class="modal-title text-white"><i class="bi bi-file-earmark-plus me-2"></i>Gestión de datos</h5>
+          <button type="button" class="btn-close-dev" data-bs-dismiss="modal" aria-label="Cerrar">
+            <span class="btn-close-dev__icon">✕</span>
+          </button>
+        </div>
+        <div class="modal-body" id="modalFormContentClientes" style="max-height:75vh;overflow-y:auto;">
+          <div class="text-center py-5">
+            <div class="spinner-border" style="color:#634c40;" role="status"></div>
+            <p class="mt-3 text-muted">Cargando formulario...</p>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-modal-cancel" data-bs-dismiss="modal"><i class="bi bi-x-circle"></i> Cancelar</button>
+          <button type="button" class="btn-modal-save" id="btnAnteriorTrat" style="display:none;"><i class="bi bi-arrow-left"></i> Anterior</button>
+          <button type="button" class="btn-modal-save" id="btnSiguienteTrat">Siguiente <i class="bi bi-arrow-right"></i></button>
+          <button type="button" class="btn-modal-save" id="btnGuardarTrat" style="display:none;"><i class="bi bi-save"></i> Guardar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="{% static 'clientes/js/clientes.js' %}"></script>
+
+<script>
+window.urlCrearGestionAlisado = "{% url 'gestion_alisados:crear_gestion_alisado' %}";
+
+document.addEventListener('DOMContentLoaded', function () {
+  [
+    '#modalCrearCliente',
+    '#modalEditarCliente',
+    '#modalTratamientoDatos',
+    '[id^="modalDetalleCliente"]',
+    '[id^="modalEliminarCliente"]'
+  ].forEach(function(selector) {
+    document.querySelectorAll(selector).forEach(function(modal) {
+      if (modal.parentElement !== document.body) {
+        document.body.appendChild(modal);
+      }
+    });
+  });
+
+  function limpiarErroresEditar() {
+    var form = document.getElementById('formEditarCliente');
+    if (!form) return;
+
+    form.querySelectorAll('.form-control, .form-select').forEach(function(campo) {
+      campo.classList.remove('is-invalid', 'is-valid');
+      var feedback = campo.parentElement.querySelector('.invalid-feedback');
+      if (feedback) feedback.textContent = '';
+    });
+
+    document.getElementById('listaErroresEditar').innerHTML = '';
+    document.getElementById('alertaErroresEditar').classList.add('d-none');
+  }
+
+  function marcarCampoError(idCampo, mensaje) {
+    var campo = document.getElementById(idCampo);
+    if (!campo) return;
+    campo.classList.add('is-invalid');
+    campo.classList.remove('is-valid');
+    var feedback = campo.parentElement.querySelector('.invalid-feedback');
+    if (feedback) feedback.textContent = mensaje || '';
+  }
+
+  function marcarCampoValido(idCampo) {
+    var campo = document.getElementById(idCampo);
+    if (!campo) return;
+    campo.classList.remove('is-invalid');
+    campo.classList.add('is-valid');
+    var feedback = campo.parentElement.querySelector('.invalid-feedback');
+    if (feedback) feedback.textContent = '';
+  }
+
+  function validarFormularioEditar() {
+    limpiarErroresEditar();
+
+    var errores = [];
+    var nombreRegex = /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/;
+    var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    var tipo = document.getElementById('editar_tipo_documento');
+    var numero = document.getElementById('editar_numero_documento');
+    var nombre = document.getElementById('editar_nombre');
+    var apellido = document.getElementById('editar_apellido');
+    var fecha = document.getElementById('editar_fecha_nacimiento');
+    var telefono = document.getElementById('editar_telefono');
+    var correo = document.getElementById('editar_correo');
+
+    if (!tipo.value.trim()) {
+      errores.push(['Tipo de documento', 'Campo obligatorio.']);
+      marcarCampoError('editar_tipo_documento', 'Campo obligatorio.');
+    } else {
+      marcarCampoValido('editar_tipo_documento');
+    }
+
+    if (!numero.value.trim()) {
+      errores.push(['Número de documento', 'Campo obligatorio.']);
+      marcarCampoError('editar_numero_documento', 'Campo obligatorio.');
+    } else if (!/^\d+$/.test(numero.value.trim())) {
+      errores.push(['Número de documento', 'Solo números.']);
+      marcarCampoError('editar_numero_documento', 'Solo números.');
+    } else if (numero.value.trim().length < 6 || numero.value.trim().length > 12) {
+      errores.push(['Número de documento', 'Debe tener entre 6 y 12 dígitos.']);
+      marcarCampoError('editar_numero_documento', 'Debe tener entre 6 y 12 dígitos.');
+    } else {
+      marcarCampoValido('editar_numero_documento');
+    }
+
+    if (!nombre.value.trim()) {
+      errores.push(['Nombre', 'Campo obligatorio.']);
+      marcarCampoError('editar_nombre', 'Campo obligatorio.');
+    } else if (!nombreRegex.test(nombre.value.trim())) {
+      errores.push(['Nombre', 'Solo letras.']);
+      marcarCampoError('editar_nombre', 'Solo letras.');
+    } else {
+      marcarCampoValido('editar_nombre');
+    }
+
+    if (!apellido.value.trim()) {
+      errores.push(['Apellido', 'Campo obligatorio.']);
+      marcarCampoError('editar_apellido', 'Campo obligatorio.');
+    } else if (!nombreRegex.test(apellido.value.trim())) {
+      errores.push(['Apellido', 'Solo letras.']);
+      marcarCampoError('editar_apellido', 'Solo letras.');
+    } else {
+      marcarCampoValido('editar_apellido');
+    }
+
+    if (!fecha.value) {
+      errores.push(['Fecha de nacimiento', 'Campo obligatorio.']);
+      marcarCampoError('editar_fecha_nacimiento', 'Campo obligatorio.');
+    } else {
+      var fechaSeleccionada = new Date(fecha.value + 'T00:00:00');
+      var hoy = new Date();
+      hoy.setHours(0, 0, 0, 0);
+
+      if (fechaSeleccionada > hoy) {
+        errores.push(['Fecha de nacimiento', 'No puede ser futura.']);
+        marcarCampoError('editar_fecha_nacimiento', 'No puede ser futura.');
+      } else {
+        marcarCampoValido('editar_fecha_nacimiento');
+      }
+    }
+
+    if (telefono.value.trim()) {
+      if (!/^\d+$/.test(telefono.value.trim())) {
+        errores.push(['Teléfono', 'Solo números.']);
+        marcarCampoError('editar_telefono', 'Solo números.');
+      } else if (telefono.value.trim().length !== 10) {
+        errores.push(['Teléfono', 'Debe tener 10 dígitos.']);
+        marcarCampoError('editar_telefono', 'Debe tener 10 dígitos.');
+      } else {
+        marcarCampoValido('editar_telefono');
+      }
+    } else {
+      telefono.classList.remove('is-invalid', 'is-valid');
+    }
+
+    if (correo.value.trim()) {
+      if (!emailRegex.test(correo.value.trim())) {
+        errores.push(['Correo', 'Correo inválido.']);
+        marcarCampoError('editar_correo', 'Correo inválido.');
+      } else {
+        marcarCampoValido('editar_correo');
+      }
+    } else {
+      correo.classList.remove('is-invalid', 'is-valid');
+    }
+
+    if (errores.length) {
+      var lista = document.getElementById('listaErroresEditar');
+      errores.forEach(function(item) {
+        var li = document.createElement('li');
+        li.innerHTML = '<strong>' + item[0] + ':</strong> ' + item[1];
+        lista.appendChild(li);
+      });
+      document.getElementById('alertaErroresEditar').classList.remove('d-none');
+      return false;
+    }
+
+    return true;
+  }
+
+  document.addEventListener('click', function(e) {
+    var btn = e.target.closest('.btn-editar-cliente');
+    if (!btn) return;
+
+    e.preventDefault();
+    var url = btn.dataset.url;
+    limpiarErroresEditar();
+
+    fetch(url, {
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      document.getElementById('editarClienteUrl').value = url;
+      document.getElementById('editar_tipo_documento').value = data.tipo_documento || '';
+      document.getElementById('editar_numero_documento').value = data.numero_documento || '';
+      document.getElementById('editar_nombre').value = data.nombre || '';
+      document.getElementById('editar_apellido').value = data.apellido || '';
+      document.getElementById('editar_fecha_nacimiento').value = data.fecha_nacimiento || '';
+      document.getElementById('editar_telefono').value = data.telefono || '';
+      document.getElementById('editar_correo').value = data.correo || '';
+      document.getElementById('editar_estado').value = data.estado || 'activo';
+
+      bootstrap.Modal.getOrCreateInstance(document.getElementById('modalEditarCliente')).show();
+    })
+    .catch(function(error) {
+      console.error('Error cargando cliente para edición:', error);
+      window.location.href = url;
+    });
+  });
+
+});
+
+function abrirModalTratamiento(clienteId) {
+  var modalEl = document.getElementById('modalTratamientoDatos');
+  var contenedor = document.getElementById('modalFormContentClientes');
+
+  document.getElementById('btnAnteriorTrat').style.display = 'none';
+  document.getElementById('btnSiguienteTrat').style.display = 'inline-flex';
+  document.getElementById('btnGuardarTrat').style.display = 'none';
+
+  contenedor.innerHTML = '<div class="text-center py-5"><div class="spinner-border" style="color:#634c40;" role="status"></div><p class="mt-3 text-muted">Cargando formulario...</p></div>';
+  bootstrap.Modal.getOrCreateInstance(modalEl).show();
+
+  var url = '{% url "gestion_alisados:form_gestion_alisado_modal_content" %}?cliente=' + clienteId + '&desde_clientes=1';
+
+  fetch(url, {
+    headers: {
+      'X-Requested-With': 'XMLHttpRequest'
+    }
+  })
+  .then(function(r) { return r.text(); })
+  .then(function(html) {
+    contenedor.innerHTML = html;
+
+    contenedor.querySelectorAll('script').forEach(function(oldScript) {
+      var newScript = document.createElement('script');
+      if (oldScript.src) {
+        newScript.src = oldScript.src;
+      } else {
+        newScript.textContent = oldScript.textContent;
+      }
+      document.body.appendChild(newScript);
+      oldScript.remove();
+    });
+
+    setTimeout(function() {
+      var mapa = [
+        ['btnSiguienteTrat', 'btnSiguiente'],
+        ['btnAnteriorTrat', 'btnAnterior'],
+        ['btnGuardarTrat', 'btnGuardar']
+      ];
+
+      mapa.forEach(function(par) {
+        var btnModal = document.getElementById(par[0]);
+        var btnInterno = document.getElementById(par[1]);
+
+        if (btnModal && btnInterno) {
+          btnModal.onclick = function() {
+            btnInterno.click();
+          };
+        }
+      });
+    }, 300);
+  })
+  .catch(function() {
+    contenedor.innerHTML = '<div class="alert alert-danger m-3">Error al cargar el formulario.</div>';
+  });
+}
+</script>
+{% endblock %}
+

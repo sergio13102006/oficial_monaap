@@ -1,0 +1,761 @@
+﻿{% extends 'core/panel_admin_base.html' %}
+{% load static %}
+
+{% block title %}{{ titulo }}{% endblock %}
+
+{% block page_title %}
+    <i class="bi bi-globe2"></i> {{ titulo }}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.pw-form-card {
+    max-width: 680px;
+    margin: 0 auto;
+    border-radius: 14px;
+    border: none;
+    box-shadow: 0 4px 20px rgba(0,0,0,.08);
+}
+.pw-form-card .card-header {
+    background: linear-gradient(135deg, #3a2a24, #5c3d2e);
+    color: #fff;
+    border-radius: 14px 14px 0 0;
+    padding: 18px 24px;
+    font-weight: 600;
+}
+.pw-dropzone {
+    background: linear-gradient(145deg, #fafafa, #f0f0f0);
+    border: 2px solid #e0e0e0;
+    border-radius: 16px;
+    padding: 40px 30px;
+    text-align: center;
+    cursor: pointer;
+    transition: all .3s ease;
+    position: relative;
+    box-shadow: 0 4px 12px rgba(0,0,0,.05);
+}
+.pw-dropzone:hover,
+.pw-dropzone.dragover {
+    border-color: #8d604a;
+    background: linear-gradient(145deg, #fff, #f8f5f2);
+    box-shadow: 0 6px 20px rgba(141,96,74,.15);
+    transform: translateY(-2px);
+}
+.pw-dropzone i { 
+    font-size: 3.5rem; 
+    color: #8d604a;
+    margin-bottom: 8px;
+    display: block;
+    animation: float 3s ease-in-out infinite;
+}
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+}
+.pw-dropzone input[type="file"] {
+    position: absolute; inset: 0; opacity: 0; cursor: pointer; z-index: 10;
+}
+.pw-dropzone .upload-text {
+    font-size: 1.05rem;
+    color: #5c3d2e;
+    font-weight: 500;
+    margin-bottom: 5px;
+}
+.pw-dropzone .upload-hint {
+    font-size: 0.85rem;
+    color: #999;
+}
+.pw-form-card .form-control,
+.pw-form-card .form-select,
+.pw-form-card .btn,
+.pw-form-card .input-group,
+.pw-form-card .input-group .input-group-text {
+    border-radius: 16px;
+}
+.pw-form-card .input-group {
+    overflow: hidden;
+}
+.pw-form-card .input-group .input-group-text {
+    border-radius: 16px 0 0 16px;
+}
+.pw-form-card .input-group .form-control {
+    border-radius: 0 16px 16px 0 !important;
+}
+.pw-preview-img {
+    max-height: 200px;
+    border-radius: 12px;
+    margin-top: 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,.2);
+    border: 3px solid #fff;
+}
+
+/* =========================================
+   VALIDACION VISUAL PRODUCTO WEB
+========================================= */
+.pw-input-wrap {
+    position: relative;
+}
+
+.pw-input-wrap .form-control,
+.pw-input-wrap .form-select,
+.pw-input-wrap input,
+.pw-input-wrap select,
+.pw-input-wrap textarea {
+    padding-right: 2.6rem !important;
+    background-image: none !important;
+    transition: border-color .2s ease, box-shadow .2s ease, background-color .2s ease !important;
+}
+
+.pw-valid-icon,
+.pw-invalid-icon {
+    position: absolute;
+    right: 0.85rem;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 5;
+    pointer-events: none;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+.pw-valid-icon i {
+    color: #198754 !important;
+    font-size: 1.05rem !important;
+    line-height: 1 !important;
+}
+
+.pw-invalid-icon i {
+    color: #dc3545 !important;
+    font-size: 1rem !important;
+    line-height: 1 !important;
+}
+
+.pw-input-wrap.is-ok .pw-valid-icon {
+    display: inline-flex !important;
+}
+
+.pw-input-wrap.is-error .pw-invalid-icon {
+    display: inline-flex !important;
+}
+
+.pw-input-wrap.is-ok .pw-invalid-icon {
+    display: none !important;
+}
+
+.pw-input-wrap.is-error .pw-valid-icon {
+    display: none !important;
+}
+
+.pw-input-wrap.is-ok .form-control,
+.pw-input-wrap.is-ok .form-select,
+.pw-input-wrap.is-ok input,
+.pw-input-wrap.is-ok select,
+.pw-input-wrap.is-ok textarea,
+.pw-input-wrap .form-control.is-valid,
+.pw-input-wrap .form-select.is-valid,
+.pw-input-wrap input.is-valid,
+.pw-input-wrap select.is-valid,
+.pw-input-wrap textarea.is-valid {
+    border: 2px solid #198754 !important;
+    background-color: #fff !important;
+    background-image: none !important;
+    box-shadow: none !important;
+}
+
+.pw-input-wrap.is-ok .form-control:focus,
+.pw-input-wrap.is-ok .form-select:focus,
+.pw-input-wrap.is-ok input:focus,
+.pw-input-wrap.is-ok select:focus,
+.pw-input-wrap.is-ok textarea:focus,
+.pw-input-wrap .form-control.is-valid:focus,
+.pw-input-wrap .form-select.is-valid:focus,
+.pw-input-wrap input.is-valid:focus,
+.pw-input-wrap select.is-valid:focus,
+.pw-input-wrap textarea.is-valid:focus {
+    border-color: #198754 !important;
+    box-shadow: 0 0 0 0.2rem rgba(25, 135, 84, 0.15) !important;
+}
+
+.pw-input-wrap.is-error .form-control,
+.pw-input-wrap.is-error .form-select,
+.pw-input-wrap.is-error input,
+.pw-input-wrap.is-error select,
+.pw-input-wrap.is-error textarea,
+.pw-input-wrap .form-control.is-invalid,
+.pw-input-wrap .form-select.is-invalid,
+.pw-input-wrap input.is-invalid,
+.pw-input-wrap select.is-invalid,
+.pw-input-wrap textarea.is-invalid {
+    border: 2px solid #dc3545 !important;
+    background-color: #fff !important;
+    background-image: none !important;
+    box-shadow: none !important;
+}
+
+.pw-input-wrap.is-error .form-control:focus,
+.pw-input-wrap.is-error .form-select:focus,
+.pw-input-wrap.is-error input:focus,
+.pw-input-wrap.is-error select:focus,
+.pw-input-wrap.is-error textarea:focus,
+.pw-input-wrap .form-control.is-invalid:focus,
+.pw-input-wrap .form-select.is-invalid:focus,
+.pw-input-wrap input.is-invalid:focus,
+.pw-input-wrap select.is-invalid:focus,
+.pw-input-wrap textarea.is-invalid:focus {
+    border-color: #dc3545 !important;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.15) !important;
+}
+
+.pw-field-error {
+    display: none;
+    margin-top: 0.4rem;
+    color: #dc3545 !important;
+    font-size: 0.875rem !important;
+    font-weight: 500;
+    line-height: 1.25;
+}
+
+.pw-field-error.is-visible {
+    display: block;
+}
+/* =========================================
+   VALIDACION VISUAL PRODUCTO WEB
+========================================= */
+.pw-input-wrap {
+    position: relative;
+}
+
+.pw-input-wrap .form-control,
+.pw-input-wrap .form-select,
+.pw-input-wrap input,
+.pw-input-wrap select,
+.pw-input-wrap textarea {
+    padding-right: 2.6rem !important;
+    background-image: none !important;
+    transition: border-color .2s ease, box-shadow .2s ease, background-color .2s ease !important;
+}
+
+.pw-valid-icon,
+.pw-invalid-icon {
+    position: absolute;
+    right: 0.85rem;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 5;
+    pointer-events: none;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+.pw-valid-icon i {
+    color: #198754 !important;
+    font-size: 1.05rem !important;
+    line-height: 1 !important;
+}
+
+.pw-invalid-icon i {
+    color: #dc3545 !important;
+    font-size: 1rem !important;
+    line-height: 1 !important;
+}
+
+.pw-input-wrap.is-ok .pw-valid-icon {
+    display: inline-flex !important;
+}
+
+.pw-input-wrap.is-error .pw-invalid-icon {
+    display: inline-flex !important;
+}
+
+.pw-input-wrap.is-ok .pw-invalid-icon {
+    display: none !important;
+}
+
+.pw-input-wrap.is-error .pw-valid-icon {
+    display: none !important;
+}
+
+.pw-input-wrap.is-ok .form-control,
+.pw-input-wrap.is-ok .form-select,
+.pw-input-wrap.is-ok input,
+.pw-input-wrap.is-ok select,
+.pw-input-wrap.is-ok textarea,
+.pw-input-wrap .form-control.is-valid,
+.pw-input-wrap .form-select.is-valid,
+.pw-input-wrap input.is-valid,
+.pw-input-wrap select.is-valid,
+.pw-input-wrap textarea.is-valid {
+    border: 2px solid #198754 !important;
+    background-color: #fff !important;
+    background-image: none !important;
+    box-shadow: none !important;
+}
+
+.pw-input-wrap.is-ok .form-control:focus,
+.pw-input-wrap.is-ok .form-select:focus,
+.pw-input-wrap.is-ok input:focus,
+.pw-input-wrap.is-ok select:focus,
+.pw-input-wrap.is-ok textarea:focus,
+.pw-input-wrap .form-control.is-valid:focus,
+.pw-input-wrap .form-select.is-valid:focus,
+.pw-input-wrap input.is-valid:focus,
+.pw-input-wrap select.is-valid:focus,
+.pw-input-wrap textarea.is-valid:focus {
+    border-color: #198754 !important;
+    box-shadow: 0 0 0 0.2rem rgba(25, 135, 84, 0.15) !important;
+}
+
+.pw-input-wrap.is-error .form-control,
+.pw-input-wrap.is-error .form-select,
+.pw-input-wrap.is-error input,
+.pw-input-wrap.is-error select,
+.pw-input-wrap.is-error textarea,
+.pw-input-wrap .form-control.is-invalid,
+.pw-input-wrap .form-select.is-invalid,
+.pw-input-wrap input.is-invalid,
+.pw-input-wrap select.is-invalid,
+.pw-input-wrap textarea.is-invalid {
+    border: 2px solid #dc3545 !important;
+    background-color: #fff !important;
+    background-image: none !important;
+    box-shadow: none !important;
+}
+
+.pw-input-wrap.is-error .form-control:focus,
+.pw-input-wrap.is-error .form-select:focus,
+.pw-input-wrap.is-error input:focus,
+.pw-input-wrap.is-error select:focus,
+.pw-input-wrap.is-error textarea:focus,
+.pw-input-wrap .form-control.is-invalid:focus,
+.pw-input-wrap .form-select.is-invalid:focus,
+.pw-input-wrap input.is-invalid:focus,
+.pw-input-wrap select.is-invalid:focus,
+.pw-input-wrap textarea.is-invalid:focus {
+    border-color: #dc3545 !important;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.15) !important;
+}
+
+.pw-field-error {
+    display: none;
+    margin-top: 0.4rem;
+    color: #dc3545 !important;
+    font-size: 0.875rem !important;
+    font-weight: 500;
+    line-height: 1.25;
+}
+
+.pw-field-error.is-visible {
+    display: block;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+            <div class="card pw-form-card">
+                <div class="card-header">
+                    <i class="bi bi-pencil-square me-2"></i>{{ titulo }}
+                </div>
+                <div class="card-body p-4">
+                <form method="post" enctype="multipart/form-data" id="pwProductoForm" data-producto-id="{{ producto.pk|default:'' }}" novalidate>
+                    {% csrf_token %}
+                    <div class="row g-3">
+                    <div class="col-md-6">
+            <label class="form-label fw-semibold">Nombre</label>
+            <div class="pw-input-wrap">
+                {{ form.nombre }}
+                <span class="pw-valid-icon"><i class="bi bi-check-lg"></i></span>
+                <span class="pw-invalid-icon"><i class="bi bi-exclamation-circle-fill"></i></span>
+            </div>
+            {% if form.nombre.errors %}
+                <div class="pw-field-error is-visible">{{ form.nombre.errors.0 }}</div>
+            {% else %}
+                <div class="pw-field-error"></div>
+            {% endif %}
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label fw-semibold">Precio Publico (pesos colombianos)</label>
+            <div class="pw-input-wrap">
+                {{ form.precio }}
+                <span class="pw-valid-icon"><i class="bi bi-check-lg"></i></span>
+                <span class="pw-invalid-icon"><i class="bi bi-exclamation-circle-fill"></i></span>
+            </div>
+            {% if form.precio.errors %}
+                <div class="pw-field-error is-visible">{{ form.precio.errors.0 }}</div>
+            {% else %}
+                <div class="pw-field-error" id="err_precio_form"></div>
+            {% endif %}
+        </div>
+
+        <div class="col-12">
+            <label class="form-label fw-semibold">Descripción</label>
+            <div class="pw-input-wrap">
+                {{ form.descripcion }}
+                <span class="pw-valid-icon"><i class="bi bi-check-lg"></i></span>
+                <span class="pw-invalid-icon"><i class="bi bi-exclamation-circle-fill"></i></span>
+            </div>
+            {% if form.descripcion.errors %}
+                <div class="pw-field-error is-visible">{{ form.descripcion.errors.0 }}</div>
+            {% else %}
+                <div class="pw-field-error"></div>
+            {% endif %}
+        </div>
+
+                <div class="col-12">
+                    <label class="form-label fw-semibold mb-3">Imagen del Producto</label>
+                    <div class="pw-dropzone" id="dropzoneEditar">
+                        <i class="bi bi-cloud-arrow-up"></i>
+                        <div class="upload-text">Arrastra tu imagen aquí</div>
+                        <div class="upload-hint">o haz clic para seleccionar desde tu equipo</div>
+                        {{ form.imagen }}
+                        {% if producto and producto.imagen %}
+                            <img src="{{ producto.imagen.url }}" class="pw-preview-img" id="previewEditar" alt="preview">
+                        {% else %}
+                            <img class="pw-preview-img d-none" id="previewEditar" alt="preview">
+                        {% endif %}
+                        <div class="pw-name-error" id="err_nombre_form"></div>
+                    </div>
+                </div>
+
+                <div class="col-12">
+                    <div class="form-check form-switch">
+                        {{ form.visible }}
+                        <label class="form-check-label" for="id_visible">Visible en la Web</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between mt-4">
+                <a href="{% url 'productos_web:lista' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i>Volver
+                </a>
+                <button type="submit" class="btn text-white" style="background:#3a2a24;">
+                    <i class="bi bi-check-lg me-1"></i>Guardar
+                </button>
+            </div>
+        </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const form = document.querySelector('form');
+    const btnSubmit = form ? form.querySelector('[type="submit"]') : null;
+
+    const fileInput = document.querySelector('#dropzoneEditar input[type="file"]');
+    const preview = document.getElementById('previewEditar');
+
+    if (fileInput && preview) {
+        fileInput.addEventListener('change', function () {
+            pwValidarImagen(this, errImagen, preview);
+        });
+    }
+
+    document.querySelectorAll('.pw-dropzone').forEach(zone => {
+        zone.addEventListener('dragover', e => {
+            e.preventDefault();
+            zone.classList.add('dragover');
+        });
+        zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+        zone.addEventListener('drop', () => zone.classList.remove('dragover'));
+    });
+
+    function getWrap(input) {
+        return input?.closest('.pw-input-wrap') || null;
+    }
+
+    function getFeedback(input) {
+        const wrap = getWrap(input);
+        if (!wrap) return null;
+
+        let feedback = wrap.parentElement.querySelector(':scope > .pw-field-error');
+        if (!feedback) {
+            feedback = document.createElement('div');
+            feedback.className = 'pw-field-error';
+            wrap.insertAdjacentElement('afterend', feedback);
+        }
+        return feedback;
+    }
+
+    function clearState(input) {
+        if (!input) return;
+
+        input.classList.remove('is-valid', 'is-invalid');
+        input.style.backgroundImage = 'none';
+        input.style.boxShadow = 'none';
+
+        const wrap = getWrap(input);
+        if (wrap) wrap.classList.remove('is-ok', 'is-error');
+
+        const feedback = getFeedback(input);
+        if (feedback) {
+            feedback.textContent = '';
+            feedback.classList.remove('is-visible');
+        }
+    }
+
+    function markValid(input) {
+        if (!input) return;
+
+        input.classList.remove('is-invalid');
+        input.classList.add('is-valid');
+        input.style.backgroundImage = 'none';
+
+        const wrap = getWrap(input);
+        if (wrap) {
+            wrap.classList.remove('is-error');
+            wrap.classList.add('is-ok');
+        }
+
+        const feedback = getFeedback(input);
+        if (feedback) {
+            feedback.textContent = '';
+            feedback.classList.remove('is-visible');
+        }
+    }
+
+    function markInvalid(input, msg) {
+        if (!input) return;
+
+        input.classList.remove('is-valid');
+        input.classList.add('is-invalid');
+        input.style.backgroundImage = 'none';
+
+        const wrap = getWrap(input);
+        if (wrap) {
+            wrap.classList.remove('is-ok');
+            wrap.classList.add('is-error');
+        }
+
+        const feedback = getFeedback(input);
+        if (feedback) {
+            feedback.textContent = msg || 'Campo inválido';
+            feedback.classList.add('is-visible');
+        }
+    }
+
+    function validarNombre() {
+        const input = document.getElementById('id_nombre');
+        if (!input) return true;
+
+        const value = (input.value || '').trim();
+
+        if (!value) {
+            markInvalid(input, 'El nombre es obligatorio.');
+            return false;
+        }
+
+        if (value.length < 3) {
+            markInvalid(input, 'Mínimo 3 letras.');
+            return false;
+        }
+
+        if (input.dataset.nombreDuplicado === '1') {
+            markInvalid(input, 'Ya existe un producto con este nombre.');
+            return false;
+        }
+
+        markValid(input);
+        return true;
+    }
+
+    const productoForm = document.getElementById('pwProductoForm');
+    const PRODUCTO_DUP_URL = "{% url 'productos_web:validar_nombre_producto_web' %}";
+
+    async function validarNombreDuplicadoProducto() {
+        const input = document.getElementById('id_nombre');
+        if (!input) return true;
+
+        const value = (input.value || '').trim();
+        if (!value || value.length < 2) return true;
+
+        const productoId = (productoForm?.dataset?.productoId || '').trim();
+        const url = new URL(PRODUCTO_DUP_URL, window.location.origin);
+        url.searchParams.set('nombre', value);
+        if (productoId) url.searchParams.set('producto_id', productoId);
+
+        const token = String(Date.now()) + Math.random().toString(36).slice(2);
+        input.dataset.dupToken = token;
+
+        try {
+            const response = await fetch(url.toString(), {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            });
+            const data = await response.json().catch(() => ({}));
+            if (input.dataset.dupToken !== token) return false;
+            if (!data.valid) {
+                input.dataset.nombreDuplicado = '1';
+                markInvalid(input, data.message || 'Ya existe un producto con este nombre.');
+                validarFormulario();
+                return false;
+            }
+            delete input.dataset.nombreDuplicado;
+            if ((value || '').length >= 2) {
+                markValid(input);
+            }
+            validarFormulario();
+            return true;
+        } catch (error) {
+            return true;
+        }
+    }
+
+    function validarPrecio() {
+        const input = document.getElementById('id_precio');
+        if (!input) return true;
+
+        const value = input.value.trim();
+        const val = parseFloat(value);
+        const decimals = value.includes('.') ? value.split('.')[1].length : 0;
+
+        if (!value) {
+            markInvalid(input, 'El precio es obligatorio.');
+            return false;
+        }
+
+        if (isNaN(val)) {
+            markInvalid(input, 'Ingresa un número válido.');
+            return false;
+        }
+
+        if (val <= 0) {
+            markInvalid(input, 'El precio debe ser mayor a $0.');
+            return false;
+        }
+
+        if (val > 9999999.99) {
+            markInvalid(input, 'El precio no puede superar $9,999,999.99.');
+            return false;
+        }
+
+        if (decimals > 2) {
+            markInvalid(input, 'Máximo 2 decimales permitidos.');
+            return false;
+        }
+
+        markValid(input);
+        return true;
+    }
+
+    function validarDescripcion() {
+        const input = document.getElementById('id_descripcion');
+        if (!input) return true;
+
+        const value = (input.value || '').trim();
+
+        if (!value) {
+            markInvalid(input, 'La descripción es obligatoria.');
+            return false;
+        }
+
+        if (value.length < 10) {
+            markInvalid(input, 'Mínimo 10 caracteres.');
+            return false;
+        }
+
+        markValid(input);
+        return true;
+    }
+
+    function validarFormulario() {
+        const okNombre = validarNombre();
+        const okPrecio = validarPrecio();
+        const okDescripcion = validarDescripcion();
+
+        const ok = okNombre && okPrecio && okDescripcion;
+
+        if (btnSubmit) btnSubmit.disabled = !ok;
+        return ok;
+    }
+
+    const nombreInput = document.getElementById('id_nombre');
+    const precioInput = document.getElementById('id_precio');
+    const descripcionInput = document.getElementById('id_descripcion');
+
+    const NOMBRE_ALLOWED = /^[a-zA-ZáéíóúÁÉÍÓÚàèìòùÀÈÌÒÙñÑüÜ\s]$/;
+
+    if (nombreInput) {
+        nombreInput.addEventListener('keypress', function (e) {
+            if (e.key && e.key.length === 1 && !e.ctrlKey && !e.metaKey) {
+                if (!NOMBRE_ALLOWED.test(e.key)) e.preventDefault();
+            }
+        });
+
+        nombreInput.addEventListener('paste', function (e) {
+            e.preventDefault();
+            const texto = (e.clipboardData || window.clipboardData).getData('text');
+            const limpio = texto.replace(/[^a-zA-ZáéíóúÁÉÍÓÚàèìòùÀÈÌÒÙñÑüÜ\s\.\,\-\(\)]/g, '');
+            document.execCommand('insertText', false, limpio);
+        });
+
+        nombreInput.addEventListener('input', function () {
+            const pos = this.selectionStart;
+            const original = this.value;
+            const limpio = original.replace(/[^a-zA-ZáéíóúÁÉÍÓÚàèìòùÀÈÌÒÙñÑüÜ\s\.\,\-\(\)]/g, '');
+            if (limpio !== original) {
+                this.value = limpio;
+                this.setSelectionRange(Math.min(pos, limpio.length), Math.min(pos, limpio.length));
+            }
+            validarFormulario();
+            validarNombreDuplicadoProducto();
+        });
+
+        nombreInput.addEventListener('blur', function () {
+            validarFormulario();
+            validarNombreDuplicadoProducto();
+        });
+    }
+
+    if (precioInput) {
+        precioInput.addEventListener('input', validarFormulario);
+        precioInput.addEventListener('blur', validarFormulario);
+    }
+
+    if (descripcionInput) {
+        descripcionInput.addEventListener('input', validarFormulario);
+        descripcionInput.addEventListener('blur', validarFormulario);
+    }
+
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            if (!validarFormulario()) {
+                e.preventDefault();
+                const firstInvalid =
+                    form.querySelector('.is-invalid') ||
+                    document.getElementById('id_nombre') ||
+                    document.getElementById('id_precio') ||
+                    document.getElementById('id_descripcion');
+
+                if (firstInvalid) firstInvalid.focus();
+            }
+        });
+    }
+
+    validarFormulario();
+});
+</script>
+{% endblock %}

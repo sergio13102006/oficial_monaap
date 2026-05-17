@@ -1,0 +1,141 @@
+<form method="post"
+      action="{{ action_url }}"
+      id="formDevolucionCompra"
+      data-modo="{{ modo }}"
+      data-detalles-url="{% url 'compras:cargar_detalles_compra' %}">
+  {% csrf_token %}
+
+  <div id="devolucionErroresGenerales" class="alert alert-danger d-none mb-3"></div>
+
+  {% if form.non_field_errors %}
+    <div class="alert alert-danger mb-3">
+      {% for e in form.non_field_errors %}
+        <div>{{ e }}</div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <h5 class="mb-3">Información General</h5>
+
+  <div class="row g-3 align-items-end">
+    <div class="col-md-6">
+      <label class="form-label">Compra</label>
+      {{ form.compra }}
+      {% for e in form.compra.errors %}
+        <div class="text-danger small">{{ e }}</div>
+      {% endfor %}
+    </div>
+
+    <div class="col-md-3">
+      <label class="form-label">Motivo</label>
+      {{ form.motivo }}
+      {% for e in form.motivo.errors %}
+        <div class="text-danger small">{{ e }}</div>
+      {% endfor %}
+    </div>
+
+    <div class="col-md-3">
+      <label class="form-label">Total (auto)</label>
+      <div class="input-group">
+        <span class="input-group-text">$</span>
+        <input type="text" id="id_total_devolucion" class="form-control text-end" value="0" readonly>
+      </div>
+    </div>
+
+    <div class="col-12">
+      <label class="form-label">Observación</label>
+      {{ form.observacion }}
+      {% for e in form.observacion.errors %}
+        <div class="text-danger small">{{ e }}</div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <hr class="my-4">
+
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <h5 class="mb-0">Productos a devolver</h5>
+    <button type="button" class="btn-pill-dark btn-sm" id="btnAgregarDetalleDevolucion">
+      <i class="fas fa-plus me-1"></i> Nuevo producto
+    </button>
+  </div>
+
+  {{ formset.management_form }}
+
+  {% if formset.non_form_errors %}
+    <div class="alert alert-danger">
+      {{ formset.non_form_errors }}
+    </div>
+  {% endif %}
+
+  <div class="vstack gap-3" id="detallesDevolucionContainer">
+    {% for f in formset %}
+      <div class="border rounded p-3 detalle-item position-relative">
+
+        <button type="button"
+                class="btn btn-sm btn-danger btn-eliminar-item position-absolute top-0 end-0 m-2"
+                title="Quitar producto">
+          <i class="bi bi-x-lg"></i>
+        </button>
+
+        <div class="row g-3 align-items-end">
+          <div class="col-md-8">
+            <label class="form-label">Detalle de compra</label>
+            {{ f.detalle_compra }}
+            {% for e in f.detalle_compra.errors %}
+              <div class="text-danger small">{{ e }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Cantidad a devolver</label>
+            {{ f.cantidad }}
+            {% for e in f.cantidad.errors %}
+              <div class="text-danger small">{{ e }}</div>
+            {% endfor %}
+          </div>
+        </div>
+
+        {% if f.DELETE %}
+          <div class="d-none">
+            {{ f.DELETE }}
+          </div>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+
+  <template id="emptyFormTemplateDevolucion">
+    <div class="border rounded p-3 detalle-item position-relative">
+
+      <button type="button"
+              class="btn btn-sm btn-danger btn-eliminar-item position-absolute top-0 end-0 m-2"
+              title="Quitar producto">
+        <i class="bi bi-x-lg"></i>
+      </button>
+
+      <div class="row g-3 align-items-end">
+        <div class="col-md-8">
+          <label class="form-label">Detalle de compra</label>
+          {{ formset.empty_form.detalle_compra }}
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">Cantidad a devolver</label>
+          {{ formset.empty_form.cantidad }}
+        </div>
+      </div>
+
+      <div class="d-none">
+        {{ formset.empty_form.DELETE }}
+      </div>
+    </div>
+  </template>
+
+  <div class="d-flex justify-content-end mt-4">
+    <button type="submit" class="btn-pill-dark" id="btnGuardarDevolucion">
+      
+      Guardar devolución
+    </button>
+  </div>
+</form>

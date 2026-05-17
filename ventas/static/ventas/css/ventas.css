@@ -1,0 +1,865 @@
+/* =====================================================
+   INPUTS ESTADO
+===================================================== */
+
+input[readonly] {
+  background-color: #f1f3f5;
+  cursor: not-allowed;
+}
+
+input:disabled {
+  background-color: #e9ecef;
+  cursor: not-allowed;
+}
+
+.is-invalid {
+  border-color: rgba(141, 96, 74, 0.45);
+}
+
+.is-invalid:focus {
+  box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+/* =====================================================
+   INPUTS REDONDEADOS EN FORMULARIOS Y MODALES
+===================================================== */
+.ventas-filters-card .form-control,
+.ventas-filters-card .form-select,
+.modal .form-control,
+.modal .form-select {
+  border-radius: 16px !important;
+}
+
+.modal .input-group {
+  overflow: hidden;
+  border-radius: 16px !important;
+}
+
+.modal .input-group .input-group-text {
+  border-radius: 16px 0 0 16px !important;
+}
+
+.modal .input-group .form-control {
+  border-radius: 0 16px 16px 0 !important;
+}
+
+.ventas-filters-card .btn,
+.modal .btn,
+.ventas-table-card .btn {
+  border-radius: 16px;
+}
+
+/* =====================================================
+   EMPTY STATE
+===================================================== */
+
+.empty-state {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 4px;
+  background: rgba(105, 29, 2, 0.05);
+  color: #2c0909;
+  font-size: 12px;
+}
+
+.empty-state a {
+  color: #2c0909;
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+
+
+.btn-pill-dark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 14px;
+  min-height: 38px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #3a2a24 0%, #1f1412 100%);
+  border: 1px solid #2a1d18;
+  color: #fff !important;
+  text-decoration: none !important;
+  font-weight: 700;
+  box-shadow: 0 6px 16px rgba(31, 20, 18, 0.28);
+  transition: transform .18s ease, filter .18s ease, box-shadow .18s ease;
+  font-size: 0.95rem;
+}
+
+.btn-guardar-venta {
+    background-color: #8B5E3C !important;
+    border-color: #2c0909 !important;
+    color: #fff !important;
+}
+
+.btn-guardar-venta:hover {
+    background-color: #6f472d !important;
+    border-color: #2c0909 !important;
+    color: #fff !important;
+}
+
+.btn-guardar-venta:focus,
+.btn-guardar-venta:active {
+    background-color: #6f472d !important;
+    border-color: #2c0909 !important;
+    color: #fff !important;
+    box-shadow: 0 0 0 0.2rem rgba(139, 94, 60, 0.25) !important;
+}
+
+.btn-guardar-venta:disabled,
+.btn-guardar-venta.disabled {
+    background-color: #c0bcb9 !important;
+    border-color: #d6d0ca !important;
+    color: #fff !important;
+    opacity: 1 !important;
+    cursor: not-allowed;
+}
+
+.ventas-filters-card {
+  margin: 8px 0 14px;
+  padding: 8px 12px;
+  display: block;
+  width: 100%;
+  max-width: 100%;
+}
+
+.ventas-filters-form {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: nowrap;
+  width: 100%;
+}
+
+.ventas-filter-search {
+  flex: 0 0 260px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ventas-filter-status {
+  flex: 0 0 180px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ventas-search-inline {
+  min-width: 0;
+}
+
+.ventas-search-inline .search-toggle-wrapper.busqueda-global--inline {
+  width: 100%;
+  min-width: 0;
+}
+
+.ventas-search-inline .search-toggle-box.is-open {
+  width: 100%;
+  max-width: 100%;
+}
+
+.ventas-search-inline .search-toggle-input {
+  width: 100%;
+  max-width: 100%;
+}
+
+.ventas-toolbar-select {
+  min-height: 36px;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  font-size: 0.9rem;
+}
+
+/* =====================================================
+   SELECTS (mismo estilo que Personal)
+===================================================== */
+.ventas-filters-card .form-select,
+#formCrearVenta .form-select,
+#formEditarVenta .form-select,
+#modalReporteVentas .form-select {
+  border: 1.5px solid rgba(17, 17, 17, 0.15);
+  border-radius: 16px;
+  color: #111;
+  background-color: #fff !important;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%233a2a24' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 0.75rem center !important;
+  background-size: 16px 12px !important;
+  padding-right: 2.2rem !important;
+}
+
+.ventas-filters-card .form-select:focus,
+#formCrearVenta .form-select:focus,
+#formEditarVenta .form-select:focus,
+#modalReporteVentas .form-select:focus {
+  outline: none;
+  border-color: #4b2f2a !important;
+  box-shadow: 0 0 0 2px rgba(75, 47, 42, 0.1) !important;
+}
+
+/* TomSelect (Cliente/Producto/Servicio/Personal) */
+#formCrearVenta .ts-wrapper .ts-control,
+#formEditarVenta .ts-wrapper .ts-control,
+#modalReporteVentas .ts-wrapper .ts-control,
+.ts-wrapper.form-select .ts-control,
+.ts-wrapper.form-select.single .ts-control,
+.ts-wrapper.form-select.multi .ts-control {
+  border: 1.5px solid rgba(17, 17, 17, 0.15) !important;
+  border-radius: 16px !important;
+  color: #111 !important;
+  background-color: #fff !important;
+  box-shadow: none !important;
+  outline: none !important;
+  min-height: 36px;
+  padding-right: 2.2rem !important;
+  background-image: none !important;
+}
+
+/* Oculta el <select> original cuando TomSelect ya está aplicado (evita flechas duplicadas) */
+select.tomselected,
+select.ts-hidden-accessible {
+  position: absolute !important;
+  left: -9999px !important;
+  width: 1px !important;
+  height: 1px !important;
+  opacity: 0 !important;
+}
+
+#formCrearVenta .ts-wrapper.focus .ts-control,
+#formCrearVenta .ts-wrapper .ts-control:focus-within,
+#formEditarVenta .ts-wrapper.focus .ts-control,
+#formEditarVenta .ts-wrapper .ts-control:focus-within,
+#modalReporteVentas .ts-wrapper.focus .ts-control,
+#modalReporteVentas .ts-wrapper .ts-control:focus-within,
+.ts-wrapper.focus .ts-control,
+.ts-wrapper.form-select.focus .ts-control,
+.ts-wrapper .ts-control:focus-within {
+  border-color: #4b2f2a !important;
+  box-shadow: 0 0 0 2px rgba(75, 47, 42, 0.1) !important;
+}
+
+.ts-dropdown {
+  border-radius: 16px !important;
+  border: 1px solid rgba(198, 162, 136, 0.25) !important;
+  box-shadow: 0 12px 30px rgba(31, 20, 18, 0.16) !important;
+  z-index: 3001 !important;
+}
+
+.ts-dropdown .option.active {
+  background: #fbf5f0 !important;
+  color: #111 !important;
+}
+
+/* Asegura que el dropdown quede por encima de tablas/cards */
+#formCrearVenta .ts-wrapper,
+#formEditarVenta .ts-wrapper,
+#modalReporteVentas .ts-wrapper {
+  position: relative;
+  z-index: 1;
+}
+
+#formCrearVenta .ts-wrapper.dropdown-active,
+#formEditarVenta .ts-wrapper.dropdown-active,
+#modalReporteVentas .ts-wrapper.dropdown-active {
+  z-index: 3000;
+}
+
+.ventas-toolbar-actions {
+  display: flex;
+  align-items: end;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-left: auto;
+  flex: 0 0 auto;
+}
+
+.ventas-filters-card .module-filter-label {
+  font-size: 0.8rem;
+}
+
+.ventas-filters-card .module-filter-btn {
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: 12px;
+  font-size: 0.9rem;
+}
+
+.ventas-search-inline .btn-search-toggle {
+  width: 36px;
+  height: 36px;
+}
+
+.ventas-search-inline .search-toggle-box.is-open,
+.ventas-search-inline .search-toggle-input {
+  min-height: 36px;
+  height: 36px;
+}
+
+.ventas-table-card {
+  margin-top: 2px;
+  border-radius: 24px;
+  box-shadow: 0 12px 28px rgba(48, 29, 22, 0.10);
+}
+
+.ventas-table-card .styled-table {
+  table-layout: fixed;
+}
+
+.ventas-col-codigo {
+  width: 14%;
+}
+
+.ventas-col-cliente {
+  width: 14%;
+}
+
+.ventas-col-detalles {
+  width: 21%;
+}
+
+.ventas-col-fecha {
+  width: 16%;
+}
+
+.ventas-col-total {
+  width: 11%;
+}
+
+.ventas-col-estado {
+  width: 9%;
+}
+
+.ventas-col-acciones {
+  width: 15%;
+}
+
+.ventas-cell-codigo,
+.ventas-cell-fecha,
+.ventas-cell-total {
+  white-space: nowrap;
+}
+
+.ventas-cell-total {
+  color: #35231e;
+}
+
+.ventas-cell-detalles {
+  color: #4a3932;
+}
+
+.ventas-item-detalle {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ventas-item-detalle + .ventas-item-detalle {
+  margin-top: 2px;
+}
+
+.ventas-item-cantidad {
+  margin-left: 4px;
+}
+
+.ventas-cell-acciones .table-action-group {
+  min-width: 132px;
+}
+
+.ventas-table-card .styled-table tbody td {
+  padding-top: 16px;
+  padding-bottom: 16px;
+}
+
+.ventas-table-card .styled-table thead th {
+  padding-top: 16px;
+  padding-bottom: 16px;
+}
+
+.ventas-table-card .styled-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.ventas-modal-content {
+  border: none;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 40px rgba(58, 33, 23, 0.18);
+}
+
+.ventas-modal-header {
+  background: linear-gradient(135deg, #1a0a0a 0%, #3a2117 60%, #4b2f2a 100%);
+  border: none;
+  padding: 18px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ventas-modal-title {
+  font-size: 1rem;
+  letter-spacing: .01em;
+  color: #fff;
+  font-weight: 600;
+  margin: 0;
+}
+
+.ventas-modal-close {
+  opacity: 1;
+  filter: invert(1) grayscale(1);
+}
+
+.ventas-modal-empty-note {
+  min-height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.ventas-report-preview-box {
+  margin-top: 18px;
+}
+
+.ventas-report-preview-inner {
+  padding: 14px 14px 6px;
+}
+
+.ventas-report-preview-title {
+  font-weight: 800;
+  letter-spacing: .02em;
+  color: #3c2418;
+  margin-bottom: 10px;
+  font-size: 0.98rem;
+}
+
+.ventas-report-preview-canvas-wrap {
+  position: relative;
+  height: 280px;
+}
+
+.ventas-report-preview-canvas {
+  width: 100%;
+  height: 100%;
+}
+
+
+/* =====================================================
+   SWITCH ESTADO
+===================================================== */
+
+.sw {
+  position: relative;
+  display: inline-block;
+  width: 36px;
+  height: 18px;
+}
+
+.sw__input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.sw__slider {
+  position: absolute;
+  inset: 0;
+  cursor: pointer;
+  background: #b3b3b3;
+  transition: .22s;
+  border-radius: 999px;
+}
+
+.sw__slider:before {
+  content: "";
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  left: 3px;
+  top: 3px;
+  background: #fff;
+  transition: .22s;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(58, 33, 23, 0.22);
+}
+
+.sw__input:checked + .sw__slider {
+  background: #2c0909;
+}
+
+.sw__input:checked + .sw__slider:before {
+  transform: translateX(18px);
+}
+
+/* =====================================================
+   RADIO BUTTON COLOR CAFÉ
+===================================================== */
+
+.form-check-input:checked {
+  background-color: #4b2e2e;
+  border-color: #4b2e2e;
+}
+
+.form-check-input:focus {
+  box-shadow: 0 0 0 0.25rem rgba(75, 46, 46, 0.25);
+}
+
+/* =====================================================
+   BOTÓN AGREGAR 
+===================================================== */
+
+.btn-agregar-verde {
+  background-color: #3a2a24;
+  border-color: #3a2a24;
+  color: #fff;
+  transition: .2s ease;
+}
+
+.btn-agregar-verde:hover {
+  background-color: #2b2b2b;
+  border-color: #3a2a24;
+}
+
+.btn-accion-venta {
+    background: transparent;
+    border: none;
+    padding: 6px 8px;
+    margin-left: 4px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #5c3b2e !important;
+    font-size: 1.25rem;
+    line-height: 1;
+    border-radius: 8px;
+    transition: background-color 0.2s ease, transform 0.2s ease, color 0.2s ease;
+}
+
+.btn-accion-venta i {
+    color: inherit !important;
+    font-size: 1.2rem;
+    display: inline-block;
+}
+
+.btn-accion-venta:hover {
+    background-color: rgba(92, 59, 46, 0.10);
+    color: #382822 !important;
+    transform: scale(1.05);
+}
+
+.btn-accion-venta:focus,
+.btn-accion-venta:active {
+    outline: none;
+    box-shadow: none;
+}
+
+.report-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid rgba(141, 96, 74, 0.18);
+  border-radius: 12px;
+  background: #fff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 56px;
+}
+
+.report-option:hover {
+  background: rgba(141, 96, 74, 0.06);
+  border-color: #2c0909;
+}
+
+.report-option input[type="checkbox"],
+.report-option input[type="radio"] {
+  display: none;
+}
+
+.report-option input[type="checkbox"]:checked + .report-circle::after,
+.report-option input[type="radio"]:checked + .report-circle::after {
+  content: "";
+  width: 8px;
+  height: 8px;
+  background: #2c0909;
+  border-radius: 50%;
+  position: absolute;
+  top: 3px;
+  left: 3px;
+}
+.report-circle {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #2c0909;
+  border-radius: 50%;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.report-option input[type="checkbox"]:checked + .report-circle::after {
+  content: "";
+  width: 8px;
+  height: 8px;
+  background: #2c0909;
+  border-radius: 50%;
+  position: absolute;
+  top: 3px;
+  left: 3px;
+}
+
+.report-label-text {
+  font-weight: 500;
+  color: #3a2a24;
+}
+/* Tabla del modal de devolución */
+#contenidoDevolucion .table thead th {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 600;
+}
+#contenidoDevolucion .input-cant-dev:focus {
+  border-color: #2c0909;
+  box-shadow: 0 0 0 0.2rem rgba(141, 96, 74, 0.2);
+}
+#contenidoDevolucion #motivoDevolucion:focus {
+  border-color: #2c0909;
+  box-shadow: 0 0 0 0.2rem rgba(141, 96, 74, 0.2);
+}
+
+/* ============================================================
+   ANIMACIÓN CARRITO — TÍTULO VENTAS
+============================================================ */
+
+/* El ícono del carrito entra desde la derecha junto al título */
+.ventas-cart-icon {
+  display: inline-block;
+  opacity: 0;
+  animation: cart-drive 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.05s forwards;
+}
+
+/* El texto "Ventas" aparece cuando el carrito frena */
+.ventas-title-text {
+  display: inline-block;
+  opacity: 0;
+  transform: translateX(-10px);
+  animation: title-reveal 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) 0.75s forwards;
+}
+
+/* El subtítulo sube después */
+.ventas-subtitle-anim {
+  display: inline-block;
+  opacity: 0;
+  animation: subtitle-in 0.35s ease 1.0s forwards;
+}
+
+/* ── Keyframes ── */
+@keyframes cart-drive {
+  0%   { opacity: 0; transform: translateX(120px); }
+  65%  { opacity: 1; transform: translateX(-5px); }
+  82%  { transform: translateX(3px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes title-reveal {
+  0%   { opacity: 0; transform: translateX(-10px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes subtitle-in {
+  0%   { opacity: 0; transform: translateY(5px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* Respeta prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .ventas-cart-icon,
+  .ventas-title-text,
+  .ventas-subtitle-anim {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+@media (max-width: 992px) {
+  .ventas-filters-form {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  .ventas-table-card .styled-table {
+    table-layout: auto;
+  }
+
+  .ventas-filter-search,
+  .ventas-filter-status,
+  .ventas-toolbar-actions {
+    max-width: 100%;
+    width: 100%;
+    flex: 1 1 100%;
+  }
+
+  .ventas-toolbar-actions {
+    margin-left: 0;
+    justify-content: flex-start;
+  }
+}
+/* ============================================================
+   MODAL DEVOLUCIÓN — HEADER Y BOTÓN X CON GIRO
+============================================================ */
+
+/* Botón X personalizado */
+.btn-close-dev {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background 0.2s ease;
+  flex-shrink: 0;
+}
+
+.btn-close-dev:hover {
+  background: rgba(255,255,255,0.12);
+}
+
+.btn-close-dev:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(255,255,255,0.25);
+}
+
+.btn-close-dev__icon {
+  display: inline-block;
+  color: rgba(255,255,255,0.85);
+  font-size: 1rem;
+  line-height: 1;
+  font-weight: 300;
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.2s ease;
+  /* Estado base: listo para girar antihorario si viene del hover */
+  transform: rotate(0deg);
+}
+
+/* Al pasar el mouse: giro horario 90° */
+.btn-close-dev:hover .btn-close-dev__icon {
+  transform: rotate(90deg);
+  color: #fff;
+}
+
+/* Al quitar el mouse: vuelve antihorario (vía JS) */
+.btn-close-dev__icon.spin-back {
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+  transform: rotate(-90deg) !important;
+}
+
+/* Tras volver, reset sin animación */
+.btn-close-dev__icon.spin-reset {
+  transition: none !important;
+  transform: rotate(0deg) !important;
+}
+
+/* ============================================================
+   ANIMACIONES DE ENTRADA — PÁGINA VENTAS
+============================================================ */
+
+/* Desde arriba (botones Nueva venta / Reporte) */
+.anim-from-top {
+  opacity: 0;
+  animation: slide-from-top 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.05s forwards;
+}
+
+/* Desde abajo (filtros, tabla y cualquier otro bloque) */
+.anim-from-bottom {
+  opacity: 0;
+  animation: slide-from-bottom 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes slide-from-top {
+  0%   { opacity: 0; transform: translateY(-22px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-from-bottom {
+  0%   { opacity: 0; transform: translateY(22px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .anim-from-top,
+  .anim-from-bottom {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .ventas-filters-card {
+    padding: 12px;
+  }
+
+  .ventas-filters-form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .ventas-filter-search,
+  .ventas-filter-status,
+  .ventas-toolbar-actions {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+
+  .ventas-toolbar-actions {
+    margin-left: 0;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .ventas-toolbar-actions .btn-pill-dark,
+  .ventas-toolbar-actions .btn,
+  .ventas-toolbar-actions button,
+  .ventas-toolbar-actions a {
+    width: 100%;
+  }
+
+  .ventas-table-card {
+    overflow-x: auto;
+  }
+
+  .ventas-table-card .styled-table {
+    min-width: 900px;
+  }
+}
+
+@media (max-width: 576px) {
+  .ventas-table-card .styled-table {
+    min-width: 760px;
+  }
+
+  .ventas-col-codigo,
+  .ventas-col-cliente,
+  .ventas-col-total,
+  .ventas-col-estado {
+    width: auto;
+  }
+
+  .ventas-col-detalles {
+    width: auto;
+  }
+}

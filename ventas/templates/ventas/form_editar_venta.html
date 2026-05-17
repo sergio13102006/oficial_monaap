@@ -1,0 +1,203 @@
+{% load ventas_extras %}
+<form id="formEditarVenta" method="post" action="{% url 'ventas:editar_modal' venta.id %}">
+  {% csrf_token %}
+
+  {% if messages %}
+    {% for msg in messages %}
+      <div class="alert alert-danger py-2">{{ msg }}</div>
+    {% endfor %}
+  {% endif %}
+
+  <!-- INFO VENTA -->
+  <div class="d-flex flex-wrap gap-3 mb-4 p-3 rounded-3" style="background:rgba(44,9,9,0.05);border:1px solid rgba(44,9,9,0.12)">
+    <div>
+      <span class="d-block text-muted" style="font-size:.72rem;text-transform:uppercase;letter-spacing:.05em">Venta</span>
+      <strong style="color:#2c0909">{{ venta.codigo_venta }}</strong>
+    </div>
+    <div>
+      <span class="d-block text-muted" style="font-size:.72rem;text-transform:uppercase;letter-spacing:.05em">Cliente</span>
+      <strong style="color:#2c0909">{{ venta.cliente }}</strong>
+    </div>
+    <div>
+      <span class="d-block text-muted" style="font-size:.72rem;text-transform:uppercase;letter-spacing:.05em">Fecha</span>
+      <strong style="color:#2c0909">{{ venta.fecha|date:"d/m/Y H:i" }}</strong>
+    </div>
+  </div>
+
+  <!-- PRODUCTOS -->
+  {% if detalles_productos %}
+  <h6 class="fw-semibold mb-2" style="color:#2c0909;font-size:.82rem;text-transform:uppercase;letter-spacing:.05em">
+    <i class="bi bi-box-seam me-1"></i> Productos
+  </h6>
+  <div class="table-responsive mb-4">
+    <div class="table-card">
+      <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0 styled-table">
+      <thead>
+        <tr>
+          <th>Producto</th>
+          <th class="text-center" style="width:80px">Stock</th>
+          <th class="text-center" style="width:110px">Cantidad</th>
+          <th class="text-end" style="width:140px">Precio</th>
+          <th class="text-end" style="width:140px">Subtotal</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for d in detalles_productos %}
+        {% with stock=d.stock_disponible %}
+        <tr style="border-bottom:1px solid rgba(44,9,9,0.07)">
+          <td>
+            <select class="form-select form-select-sm js-prod-select"
+                    name="prod_codigo_{{ d.id }}"
+                    data-detalle="{{ d.id }}"
+                    style="min-width:180px">
+              {% for item in todos_stock %}
+                <option value="{{ item.producto.codigo }}"
+                        data-precio="{{ item.producto.precio }}"
+                        data-stock="{{ item.stock }}"
+                        {% if item.producto.codigo == d.producto.codigo %}selected{% endif %}>
+                  {{ item.producto.nombre }}{% if not item.activo %} (Inactivo){% endif %} (stock: {{ item.stock }})
+                </option>
+              {% endfor %}
+            </select>
+          </td>
+          <td class="text-center">
+            {% if stock < 5 %}
+              <span class="badge rounded-pill js-prod-stock-badge" data-detalle="{{ d.id }}" style="background:rgba(180,35,24,0.1);color:#b42318;font-weight:600">{{ stock }}</span>
+            {% else %}
+              <span class="badge rounded-pill js-prod-stock-badge" data-detalle="{{ d.id }}" style="background:rgba(22,101,52,0.1);color:#166534;font-weight:600">{{ stock }}</span>
+            {% endif %}
+          </td>
+          <td class="text-center">
+            <input type="number"
+                   class="form-control form-control-sm text-center js-prod-cant"
+                   name="prod_cant_{{ d.id }}"
+                   value="{{ d.cantidad }}"
+                   min="1"
+                   step="1"
+                   max="{{ stock }}"
+                   data-detalle="{{ d.id }}"
+                   data-stock="{{ stock }}"
+                   style="width:72px;margin:auto;border-color:rgba(44,9,9,0.25)">
+            <div class="text-danger small d-none err-stock-{{ d.id }}" style="font-size:.72rem">Supera el stock</div>
+          </td>
+          <td class="text-end">
+            <input type="number"
+                   class="form-control form-control-sm text-end js-prod-precio"
+                   name="prod_precio_{{ d.id }}"
+                   value="{{ d.producto.precio }}"
+                   step="0.01" min="0"
+                   data-detalle="{{ d.id }}"
+                   readonly
+                   tabindex="-1"
+                   style="width:120px;margin-left:auto;border-color:rgba(44,9,9,0.25)">
+          </td>
+          <td class="text-end">
+            <input type="text"
+                   class="form-control form-control-sm text-end js-prod-subtotal"
+                   value="{{ d.subtotal }}"
+                   data-detalle="{{ d.id }}"
+                   readonly
+                   style="width:120px;margin-left:auto;background:rgba(44,9,9,0.04);border-color:rgba(44,9,9,0.12)">
+          </td>
+        </tr>
+        {% endwith %}
+        {% endfor %}
+      </tbody>
+    </table>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- SERVICIOS -->
+  {% if detalles_servicios %}
+  <h6 class="fw-semibold mb-2" style="color:#2c0909;font-size:.82rem;text-transform:uppercase;letter-spacing:.05em">
+    <i class="bi bi-scissors me-1"></i> Servicios
+  </h6>
+  <div class="table-responsive mb-4">
+    <div class="table-card">
+      <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0 styled-table">
+      <thead>
+        <tr>
+          <th>Servicio</th>
+          <th>Colaborador</th>
+          <th class="text-center" style="width:100px">Cant.</th>
+          <th class="text-end" style="width:130px">Precio</th>
+          <th class="text-end" style="width:130px">Subtotal</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for d in detalles_servicios %}
+        <tr style="border-bottom:1px solid rgba(44,9,9,0.07)">
+          <td>
+            <select class="form-select form-select-sm js-serv-servicio"
+                    name="serv_servicio_{{ d.id }}"
+                    data-detalle="{{ d.id }}"
+                    style="min-width:160px">
+              {% for s in servicios %}
+                <option value="{{ s.pk }}" data-precio="{{ s.precio }}"
+                  {% if d.servicio_id == s.pk %}selected{% endif %}>{{ s }}</option>
+              {% endfor %}
+            </select>
+          </td>
+          <td>
+            <select class="form-select form-select-sm"
+                    name="serv_personal_{{ d.id }}"
+                    style="min-width:140px">
+              {% for p in personal %}
+                <option value="{{ p.pk }}" {% if d.colaborador_servicio_id == p.pk %}selected{% endif %}>{{ p }}</option>
+              {% endfor %}
+            </select>
+          </td>
+          <td class="text-center">
+            <input type="number"
+                   class="form-control form-control-sm text-center js-serv-cant"
+                   name="serv_cant_{{ d.id }}"
+                   value="{{ d.cantidad|default:1 }}"
+                   min="1"
+                   data-detalle="{{ d.id }}"
+                   style="width:64px;margin:auto;border-color:rgba(44,9,9,0.25)">
+          </td>
+          <td class="text-end">
+            <input type="text"
+                   class="form-control form-control-sm text-end js-serv-precio"
+                   value="{{ d.precio_unitario }}"
+                   data-detalle="{{ d.id }}"
+                   readonly
+                   style="width:110px;margin-left:auto;background:rgba(44,9,9,0.04);border-color:rgba(44,9,9,0.12)">
+          </td>
+          <td class="text-end">
+            <input type="text"
+                   class="form-control form-control-sm text-end js-serv-subtotal"
+                   value="{{ d.subtotal }}"
+                   data-detalle="{{ d.id }}"
+                   readonly
+                   style="width:110px;margin-left:auto;background:rgba(44,9,9,0.04);border-color:rgba(44,9,9,0.12)">
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- TOTAL -->
+  <div class="d-flex justify-content-end align-items-center gap-3 mb-4">
+    <span class="text-muted fw-semibold">Total:</span>
+    <span id="totalEditar" class="fw-bold" style="color:#2c0909;font-size:1.1rem">
+      $ {{ venta.total|floatformat:2 }}
+    </span>
+  </div>
+
+  <!-- BOTONES -->
+  <div class="d-flex justify-content-end gap-2">
+    <button type="button" class="btn btn-outline-secondary btn-sm px-4" data-bs-dismiss="modal">Cancelar</button>
+    <button type="submit" class="btn btn-guardar-venta btn-sm px-4">
+      <i class="bi bi-check-circle me-1"></i> Guardar cambios
+    </button>
+  </div>
+</form>

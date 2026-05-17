@@ -1,0 +1,133 @@
+<form method="post" action="{% url 'compras:editar_compra' compra.id %}" id="formCompra" data-modo="editar">
+  {% csrf_token %}
+
+  <div id="compraErroresGenerales" class="alert alert-danger d-none mb-3"></div>
+
+  <h5 class="mb-3">Información General</h5>
+
+  <div class="row g-3 align-items-end">
+    <div class="col-md-6">
+      <label class="form-label">Proveedor</label>
+      {{ form.proveedor }}
+      {% if compra and compra.proveedor and compra.proveedor.estado != 'activo' %}
+        <div class="compra-switch-holder d-flex align-items-center gap-3 mb-2">
+          <label class="compras-switch-wrapper" title="Activar proveedor">
+            <input type="checkbox"
+                   class="js-reactivar-proveedor-compra compras-switch-input"
+                   data-reactivar-url="{% url 'proveedores:reactivar' compra.proveedor.pk %}"
+                   data-proveedor-nombre="{{ compra.proveedor.nombre_proveedor|escapejs }}">
+            <span class="compras-switch-slider"></span>
+          </label>
+          <span class="compras-switch-label">Activar proveedor</span>
+        </div>
+        <div class="alert alert-light border mt-2 mb-0 py-2 px-3" id="alertaProveedorInactivoCompra">
+          Este proveedor está inactivo. Puedes activarlo con la píldora de arriba.
+        </div>
+      {% endif %}
+      {% for e in form.proveedor.errors %}
+        <div class="text-danger small">{{ e }}</div>
+      {% endfor %}
+    </div>
+
+    <div class="col-md-3">
+      <label class="form-label">Total (auto)</label>
+      <div class="input-group">
+        <span class="input-group-text">$</span>
+        <input type="text" id="id_precio_total" class="form-control text-end" value="0" readonly>
+      </div>
+    </div>
+  </div>
+
+  <hr class="my-4">
+
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <h5 class="mb-0">Productos</h5>
+    <button type="button" class="btn-pill-dark btn-sm" id="btnAgregarProducto">
+      <i class="fas fa-plus me-1"></i> Nuevo producto
+    </button>
+  </div>
+
+  {{ formset.management_form }}
+
+  {% if formset.non_form_errors %}
+    <div class="alert alert-danger">
+      {{ formset.non_form_errors }}
+    </div>
+  {% endif %}
+
+  <div class="vstack gap-3" id="productosContainer">
+    {% for f in formset %}
+      <div class="border rounded p-3 detalle-item position-relative">
+
+        {% for hidden in f.hidden_fields %}
+          <div class="d-none">{{ hidden }}</div>
+        {% endfor %}
+
+        <button type="button"
+                class="btn btn-sm btn-danger btn-eliminar-item position-absolute top-0 end-0 m-2"
+                title="Quitar producto">
+          <i class="bi bi-x-lg"></i>
+        </button>
+
+        <div class="row g-3 align-items-end">
+          <div class="col-md-6">
+            <label class="form-label">Producto</label>
+            {{ f.producto }}
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Cantidad</label>
+            {{ f.cantidad }}
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Precio unitario de compra</label>
+            {{ f.precio_unitario }}
+          </div>
+        </div>
+
+        {% if f.DELETE %}
+          <div class="d-none">{{ f.DELETE }}</div>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+
+  <template id="emptyFormTemplate">
+    <div class="border rounded p-3 detalle-item position-relative">
+
+      <button type="button"
+              class="btn btn-sm btn-danger btn-eliminar-item position-absolute top-0 end-0 m-2"
+              title="Quitar producto">
+        <i class="bi bi-x-lg"></i>
+      </button>
+
+      <div class="row g-3 align-items-end">
+        <div class="col-md-6">
+          <label class="form-label">Producto</label>
+          {{ formset.empty_form.producto }}
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label">Cantidad</label>
+          {{ formset.empty_form.cantidad }}
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label">Precio unitario de compra</label>
+          {{ formset.empty_form.precio_unitario }}
+        </div>
+      </div>
+
+      <div class="d-none">
+        {{ formset.empty_form.DELETE }}
+      </div>
+    </div>
+  </template>
+
+  <div class="d-flex justify-content-end mt-4 formulario-acciones-compra">
+    <button type="submit" class="btn-pill-dark" id="btnGuardarCompra">
+      Editar compra
+    </button>
+  </div>
+</form>

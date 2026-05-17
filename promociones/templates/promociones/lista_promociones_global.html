@@ -1,0 +1,143 @@
+{# promociones/templates/promociones/_lista_partial.html #}
+{% load humanize %}
+{% load sort_tags %}
+<div class="card border-0 shadow-sm promo-table-card">
+    <div class="table-responsive promo-table-responsive" aria-label="Tabla de promociones">
+        <table class="promo-table" id="promo-tabla">
+            <thead>
+                <tr>
+                    <th scope="col">Imagen</th>
+                    <th scope="col">
+                        <a href="{% sort_url 'nombre' %}">Nombre
+                            {% if current_sort == 'nombre' %}<i class="bi bi-caret-{% if current_dir == 'asc' %}up{% else %}down{% endif %}-fill ms-1" aria-hidden="true"></i>{% endif %}
+                        </a>
+                    </th>
+                    <th scope="col">
+                        <a href="{% sort_url 'etiqueta' %}">Etiqueta
+                            {% if current_sort == 'etiqueta' %}<i class="bi bi-caret-{% if current_dir == 'asc' %}up{% else %}down{% endif %}-fill ms-1" aria-hidden="true"></i>{% endif %}
+                        </a>
+                    </th>
+                    <th scope="col" class="text-center">
+                        <a href="{% sort_url 'descuento' %}">Descuento
+                            {% if current_sort == 'descuento' %}<i class="bi bi-caret-{% if current_dir == 'asc' %}up{% else %}down{% endif %}-fill ms-1" aria-hidden="true"></i>{% endif %}
+                        </a>
+                    </th>
+                    <th scope="col">
+                        <a href="{% sort_url 'inicio' %}">Fecha Inicio
+                            {% if current_sort == 'inicio' %}<i class="bi bi-caret-{% if current_dir == 'asc' %}up{% else %}down{% endif %}-fill ms-1" aria-hidden="true"></i>{% endif %}
+                        </a>
+                    </th>
+                    <th scope="col">
+                        <a href="{% sort_url 'fin' %}">Fecha Fin
+                            {% if current_sort == 'fin' %}<i class="bi bi-caret-{% if current_dir == 'asc' %}up{% else %}down{% endif %}-fill ms-1" aria-hidden="true"></i>{% endif %}
+                        </a>
+                    </th>
+                    <th scope="col" class="text-center">
+                        <a href="{% sort_url 'estado' %}">Estado
+                            {% if current_sort == 'estado' %}<i class="bi bi-caret-{% if current_dir == 'asc' %}up{% else %}down{% endif %}-fill ms-1" aria-hidden="true"></i>{% endif %}
+                        </a>
+                    </th>
+                    <th scope="col" class="text-center">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in promociones %}
+                <tr data-nombre="{{ p.nombre|lower }}">
+                    <td>
+                        {% if p.imagen %}
+                            <img src="{{ p.imagen.url }}" class="promo-thumb" alt="{{ p.nombre }}">
+                        {% else %}
+                            <div class="promo-thumb-placeholder"><i class="bi bi-image"></i></div>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="fw-semibold">{{ p.nombre }}</span>
+                        {% if p.descripcion %}
+                            <br><small class="text-muted">{{ p.descripcion|truncatewords:10 }}</small>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="badge bg-secondary text-uppercase promo-tag-badge">{{ p.get_etiqueta_display }}</span>
+                    </td>
+                    <td class="text-center">
+                        <span class="promo-discount">{{ p.porcentaje_descuento }}%</span>
+                    </td>
+                    <td>{{ p.fecha_inicio|date:"d/m/Y" }}</td>
+                    <td>{{ p.fecha_fin|date:"d/m/Y" }}</td>
+                    <td class="text-center">
+                        <div class="d-inline-flex align-items-center justify-content-center gap-2">
+                            {% if p.activa %}
+                                <span class="promo-badge-active">Activa</span>
+                            {% else %}
+                                <span class="promo-badge-inactive">Inactiva</span>
+                            {% endif %}
+                            <label class="promo-switch" title="Alternar estado">
+                                <input type="checkbox"
+                                       {% if p.activa %}checked{% endif %}
+                                       data-toggle-url="{% url 'promociones:toggle_activa' p.pk %}"
+                                       data-nombre="{{ p.nombre }}">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </td>
+                    <td class="text-center promo-actions">
+                        <button type="button" class="btn btn-outline-info btn-sm me-1 btn-detalle-promo promo-action-btn"
+                                data-bs-toggle="modal"
+                                data-bs-target="#modalDetallePromo"
+                                data-nombre="{{ p.nombre|escapejs }}"
+                                data-descripcion="{{ p.descripcion|escapejs }}"
+                                data-etiqueta="{{ p.get_etiqueta_display }}"
+                                data-descuento="{{ p.porcentaje_descuento|stringformat:'.2f' }}"
+                                data-inicio="{{ p.fecha_inicio|date:'d/m/Y' }}"
+                                data-fin="{{ p.fecha_fin|date:'Y-m-d' }}"
+                                data-activa="{{ p.activa|yesno:'Si,No' }}"
+                                data-imagen-url="{% if p.imagen %}{{ p.imagen.url }}{% endif %}"
+                                data-creado="{{ p.fecha_creacion|date:'d/m/Y H:i' }}"
+                                data-modificado="{{ p.fecha_modificacion|date:'d/m/Y H:i' }}"
+                                title="Ver detalles">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                        <button type="button" class="btn btn-link btn-edit p-0 promo-action-btn promo-action-btn--ghost"
+                                data-pk="{{ p.pk }}"
+                                data-promocion-id="{{ p.pk }}"
+                                data-nombre="{{ p.nombre }}"
+                                data-etiqueta="{{ p.etiqueta }}"
+                                data-descripcion="{{ p.descripcion }}"
+                                data-descuento="{{ p.porcentaje_descuento|stringformat:'.2f' }}"
+                                data-inicio="{{ p.fecha_inicio|date:'Y-m-d' }}"
+                                data-fin="{{ p.fecha_fin|date:'Y-m-d' }}"
+                                data-activa="{{ p.activa|yesno:'true,false' }}"
+                                data-imagen-url="{% if p.imagen %}{{ p.imagen.url }}{% endif %}"
+                                data-edit-url="{% url 'promociones:editar' p.pk %}"
+                                title="Editar">
+                            <i class="bi bi-pencil-square"></i>
+                        </button>
+                        {% if permisos.roles.es_admin %}
+                        <button type="button" class="btn btn-outline-danger btn-sm ms-1 btn-eliminar-promo promo-action-btn promo-action-btn--danger promo-delete-action"
+                                data-nombre="{{ p.nombre }}"
+                                data-url="{% url 'promociones:eliminar' p.pk %}"
+                                title="Eliminar">
+                            <i class="bi bi-trash3"></i>
+                        </button>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="text-center py-5 promo-empty-cell">
+                        <div class="d-flex flex-column align-items-center gap-3 py-4">
+                            <div class="promo-empty-state">
+                                <i class="bi bi-percent"></i>
+                            </div>
+                            <div>
+                                <h4 class="promo-empty-title">No hay promociones registradas</h4>
+                                <p class="promo-empty-text">Parece que aun no tienes ofertas activas. Comienza publicando tu primera promocion para atraer a mas clientes con descuentos exclusivos.</p>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>

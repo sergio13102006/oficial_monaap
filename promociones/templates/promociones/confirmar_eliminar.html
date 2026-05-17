@@ -1,0 +1,46 @@
+{% extends 'core/panel_admin_base.html' %}
+{% load static %}
+
+{% block title %}Eliminar - {{ promocion.nombre }}{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item"><a href="{% url 'promociones:lista' %}">Promociones</a></li>
+<li class="breadcrumb-item active" aria-current="page">Eliminar</li>
+{% endblock %}
+
+{% block page_title %}
+    <i class="bi bi-trash3"></i> Eliminar Promoción
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card border-0 shadow-sm mx-auto promo-delete-card">
+        <div class="card-body text-center py-5">
+            <i class="bi bi-percent text-muted d-block mb-3 promo-delete-icon"></i>
+
+            <h5 class="fw-bold">{{ promocion.nombre }}</h5>
+            <p class="text-muted mb-1">Descuento: <strong>{{ promocion.porcentaje_descuento }}%</strong></p>
+            <p class="text-muted mb-4 promo-delete-message">
+                ¿Estás seguro de que deseas eliminar esta promoción?<br>
+                Esta acción no se puede deshacer.
+            </p>
+
+            <form method="post" id="formEliminarPromo" class="promo-delete-form">
+                {% csrf_token %}
+                <div class="d-flex justify-content-center gap-3">
+                    <a href="{% url 'promociones:lista' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i>Cancelar
+                    </a>
+                    <button type="button" id="btnEliminarPromo" class="btn btn-danger" data-nombre="{{ promocion.nombre|escapejs }}">
+                        <i class="bi bi-trash3 me-1"></i>Eliminar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'promociones/js/promociones.js' %}?v={% now 'U' %}"></script>
+{% endblock %}

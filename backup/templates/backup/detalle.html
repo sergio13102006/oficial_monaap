@@ -1,0 +1,175 @@
+{% extends 'core/panel_admin_base.html' %}
+{% load static %}
+
+{% block title %}Detalle de copia — {{ backup.nombre }}{% endblock %}
+{% block page_title %}Detalle de copia{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'backup/css/backup.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="bk-wrapper">
+    <div class="bk-page-header">
+        <h1>
+            <i class="bi bi-shield-check"></i>
+            {{ backup.nombre|truncatechars:50 }}
+        </h1>
+        <div class="bk-header-actions">
+            <a href="{% url 'backup:dashboard' %}" class="bk-btn outline">
+                <i class="bi bi-arrow-left"></i> Volver
+            </a>
+            {% if backup.estado == 'exitoso' and backup.archivo_existe %}
+            <a href="{% url 'backup:descargar' backup.pk %}" class="bk-btn success">
+                <i class="bi bi-download"></i> Descargar
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="bk-card">
+        <div class="bk-card-header">
+            <i class="bi bi-info-circle"></i>
+            Información de la copia
+        </div>
+        <div class="bk-card-body">
+            <div class="bk-detail-grid">
+                <div class="bk-detail-item">
+                    <span class="label">Nombre</span>
+                    <span class="value">{{ backup.nombre }}</span>
+                </div>
+                <div class="bk-detail-item">
+                    <span class="label">Tipo</span>
+                    <span class="value">
+                        <span class="bk-badge-tipo">
+                            {% if backup.tipo == 'completo' %}
+                                <i class="bi bi-archive"></i>
+                            {% elif backup.tipo == 'base_datos' %}
+                                <i class="bi bi-database"></i>
+                            {% else %}
+                                <i class="bi bi-images"></i>
+                            {% endif %}
+                            {{ backup.get_tipo_display }}
+                        </span>
+                    </span>
+                </div>
+                <div class="bk-detail-item">
+                    <span class="label">Estado</span>
+                    <span class="value">
+                        <span class="bk-badge {{ backup.estado }}">
+                            {% if backup.estado == 'exitoso' %}
+                                <i class="bi bi-check-circle-fill"></i>
+                            {% elif backup.estado == 'fallido' %}
+                                <i class="bi bi-x-circle-fill"></i>
+                            {% elif backup.estado == 'restaurado' %}
+                                <i class="bi bi-arrow-counterclockwise"></i>
+                            {% else %}
+                                <i class="bi bi-hourglass-split"></i>
+                            {% endif %}
+                            {{ backup.get_estado_display }}
+                        </span>
+                    </span>
+                </div>
+                <div class="bk-detail-item">
+                    <span class="label">Fecha de creación</span>
+                    <span class="value">{{ backup.fecha_creacion|date:"d/m/Y H:i:s" }}</span>
+                </div>
+                <div class="bk-detail-item">
+                    <span class="label">Tamaño</span>
+                    <span class="value">{{ backup.tamano_legible }}</span>
+                </div>
+                <div class="bk-detail-item">
+                    <span class="label">Duración</span>
+                    <span class="value">{{ backup.duracion_segundos }}s</span>
+                </div>
+                <div class="bk-detail-item">
+                    <span class="label">Usuario</span>
+                    <span class="value">{{ backup.usuario|default:"Sistema" }}</span>
+                </div>
+                <div class="bk-detail-item">
+                    <span class="label">Automático</span>
+                    <span class="value">{% if backup.es_automatico %}Sí{% else %}No{% endif %}</span>
+                </div>
+            </div>
+
+            {% if backup.notas %}
+            <hr style="margin: 20px 0; border-color: rgba(0,0,0,0.06);">
+            <div class="bk-detail-item">
+                <span class="label">Notas</span>
+                <span class="value" style="white-space: pre-wrap;">{{ backup.notas }}</span>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="bk-card">
+                <div class="bk-card-header" style="background: linear-gradient(135deg, #3a2a24, #2a1d18);">
+                    <i class="bi bi-file-earmark-zip"></i>
+                    Archivo
+                </div>
+                <div class="bk-card-body">
+                    {% if backup.archivo %}
+                    <div class="bk-detail-item" style="margin-bottom: 14px;">
+                        <span class="label">Ruta</span>
+                        <span class="value" style="word-break: break-all; font-size: .82rem;">
+                            {{ backup.archivo }}
+                        </span>
+                    </div>
+                    <div class="bk-detail-item" style="margin-bottom: 18px;">
+                        <span class="label">Existe en disco</span>
+                        <span class="value">
+                            {% if backup.archivo_existe %}
+                                <span class="bk-badge exitoso">
+                                    <i class="bi bi-check-circle-fill"></i> Disponible
+                                </span>
+                            {% else %}
+                                <span class="bk-badge fallido">
+                                    <i class="bi bi-x-circle-fill"></i> No encontrado
+                                </span>
+                            {% endif %}
+                        </span>
+                    </div>
+                    {% else %}
+                    <p style="color: #8a7a72; font-size: .88rem;">Sin archivo asociado.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="bk-card">
+                <div class="bk-card-header" style="background: linear-gradient(135deg, #2d6a4f, #1b4332);">
+                    <i class="bi bi-lightning-charge"></i>
+                    Acciones
+                </div>
+                <div class="bk-card-body">
+                    <div class="d-grid gap-2">
+                        {% if backup.estado == 'exitoso' and backup.archivo_existe %}
+                        <a href="{% url 'backup:descargar' backup.pk %}" class="bk-btn success" style="justify-content:center;">
+                            <i class="bi bi-download"></i> Descargar
+                        </a>
+                        {% endif %}
+                        {% if backup.archivo_existe %}
+                            {% if backup.estado == 'exitoso' or backup.estado == 'restaurado' %}
+                            <button type="button" class="bk-btn primary btn-restaurar" style="justify-content:center;"
+                                    data-id="{{ backup.pk }}"
+                                    data-nombre="{{ backup.nombre }}"
+                                    data-url="{% url 'backup:restaurar' backup.pk %}">
+                                <i class="bi bi-arrow-counterclockwise"></i>
+                                {% if backup.estado == 'restaurado' %}Restaurar de Nuevo{% else %}Restaurar{% endif %}
+                            </button>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<form id="formRestaurar" method="post" style="display:none;">
+    {% csrf_token %}
+</form>
+{% endblock %}
