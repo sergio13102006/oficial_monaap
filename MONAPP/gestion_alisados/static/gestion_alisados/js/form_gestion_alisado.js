@@ -292,6 +292,7 @@ function initGestionForm() {
   const tabletProcessStatus = root.getElementById('tabletProcessStatus');
   const esEdicion = form.dataset.esEdicion === '1';
   const isModal = form.dataset.isModal === '1';
+  const isPopup = form.dataset.isPopup === '1';
 
   let currentStep = 1;
   let signatureDrawing = false;
@@ -680,7 +681,7 @@ function initGestionForm() {
   }
 
   form.addEventListener('submit', async (event) => {
-    if (!isModal) return;
+    if (!isModal && !isPopup) return;
     event.preventDefault();
     if (form.dataset.submitting === '1') return;
 
@@ -702,12 +703,25 @@ function initGestionForm() {
           : null;
         consentimientoModal?.hide();
 
+        toast(data.message || 'Gestion guardada correctamente.', 'success');
+        if (isPopup) {
+          try {
+            if (window.opener && !window.opener.closed) {
+              window.opener.postMessage({ type: 'gestion_alisados:refresh' }, window.location.origin);
+            }
+          } catch (error) {
+            console.warn(error);
+          }
+          window.setTimeout(() => {
+            window.close();
+          }, 300);
+          return;
+        }
+
         const parentModal = parentModalEl && window.bootstrap
           ? window.bootstrap.Modal.getInstance(parentModalEl) || window.bootstrap.Modal.getOrCreateInstance(parentModalEl)
           : null;
         parentModal?.hide();
-
-        toast(data.message || 'Gestion guardada correctamente.', 'success');
         window.location.reload();
         return;
       }
@@ -718,7 +732,7 @@ function initGestionForm() {
       );
     } catch (error) {
       console.warn(error);
-      setStepAlert('No fue posible guardar la gestion desde el modal.', 'error');
+      setStepAlert(isPopup ? 'No fue posible guardar la gestion desde la ventana.' : 'No fue posible guardar la gestion desde el modal.', 'error');
     } finally {
       form.dataset.submitting = '0';
       if (btnConfirmar) btnConfirmar.disabled = false;

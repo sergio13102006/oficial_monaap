@@ -1,5 +1,10 @@
 from django.db import models
 from django.core.exceptions import ValidationError
+from django.contrib.auth import get_user_model
+from django.utils.functional import cached_property
+
+
+User = get_user_model()
 
 
 class Personal(models.Model):
@@ -92,3 +97,16 @@ class Personal(models.Model):
 
     def __str__(self):
         return f"{self.nombres} {self.apellidos} - {self.numero_documento}"
+
+    @cached_property
+    def usuario(self):
+        """
+        Usuario de autenticación vinculado al personal por correo.
+
+        Se usa como puente mientras el módulo no tenga una relación
+        explícita 1:1 con el modelo User.
+        """
+        correo = (self.correo or "").strip()
+        if not correo:
+            return None
+        return User.objects.filter(email__iexact=correo).first()

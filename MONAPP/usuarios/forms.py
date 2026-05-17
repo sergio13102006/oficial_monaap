@@ -1,7 +1,7 @@
 import re
 
 from django import forms
-from django.contrib.auth.forms import AuthenticationForm, UserCreationForm, PasswordResetForm
+from django.contrib.auth.forms import AuthenticationForm, PasswordResetForm, SetPasswordForm, UserCreationForm
 from django.contrib.auth.models import User, Group
 from django.db.models import Q
 from core.form_validations import ValidationFormMixin
@@ -49,11 +49,6 @@ class IdentifierPasswordResetForm(PasswordResetForm):
         value = (self.cleaned_data.get('email') or '').strip()
         if not value:
             raise forms.ValidationError('Ingresa un correo o identificador válido.')
-
-        usuarios = list(self.get_users(value) or [])
-        if not usuarios:
-            raise forms.ValidationError('El correo no está registrado. Ingresa uno válido.')
-
         return value
 
 
@@ -83,6 +78,25 @@ class LoginForm(AuthenticationForm):
             'id': 'remember_me'
         }),
         label='Recordarme'
+    )
+
+
+class AdminSetPasswordForm(SetPasswordForm):
+    new_password1 = forms.CharField(
+        label='Nueva contraseña',
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Nueva contraseña',
+            'autocomplete': 'new-password',
+        }),
+    )
+    new_password2 = forms.CharField(
+        label='Confirmar contraseña',
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Confirmar contraseña',
+            'autocomplete': 'new-password',
+        }),
     )
 
 

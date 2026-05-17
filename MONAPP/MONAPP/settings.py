@@ -24,8 +24,13 @@ if _debug_raw in {"release", "prod", "production"}:
 else:
     DEBUG = _debug_raw in {"1", "true", "yes", "y", "on", "debug"}
 
+if not DEBUG and SECRET_KEY == "django-insecure-change-me":
+    raise ImproperlyConfigured("SECRET_KEY debe configurarse en produccion.")
+
 ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="localhost,127.0.0.1,192.168.1.44,192.168.1.21", cast=Csv())
 CSRF_TRUSTED_ORIGINS = config("CSRF_TRUSTED_ORIGINS", default="", cast=Csv())
+if not DEBUG and not ALLOWED_HOSTS:
+    raise ImproperlyConfigured("ALLOWED_HOSTS debe configurarse en produccion.")
 
 # Application definition
 
@@ -150,9 +155,12 @@ LOGOUT_REDIRECT_URL = 'core:index'
 LOGIN_RECAPTCHA_SITE_KEY = config("RECAPTCHA_SITE_KEY", default="")
 LOGIN_RECAPTCHA_SECRET_KEY = config("RECAPTCHA_SECRET_KEY", default="")
 LOGIN_SECURITY_FORCE_CAPTCHA = config("LOGIN_SECURITY_FORCE_CAPTCHA", default=True, cast=bool)
+LOGIN_TRUSTED_PROXY_IPS = config("LOGIN_TRUSTED_PROXY_IPS", default="", cast=Csv())
+if not DEBUG and LOGIN_SECURITY_FORCE_CAPTCHA and (not LOGIN_RECAPTCHA_SITE_KEY or not LOGIN_RECAPTCHA_SECRET_KEY):
+    raise ImproperlyConfigured("RECAPTCHA_SITE_KEY y RECAPTCHA_SECRET_KEY son obligatorios en produccion.")
 
 # Configuración de sesiones
-SESSION_COOKIE_AGE = 3600  # 1 hora
+SESSION_COOKIE_AGE = 28800  # 8 horas
 SESSION_SAVE_EVERY_REQUEST = True
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 

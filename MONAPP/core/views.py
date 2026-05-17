@@ -1,5 +1,6 @@
 from datetime import date
 from pathlib import Path
+import logging
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -16,6 +17,9 @@ from servicios.models import Servicio
 from servicios_web.models import ServicioWeb
 from promociones.models import Promocion
 from productos_web.models import ProductoWeb
+
+
+logger = logging.getLogger(__name__)
 
 
 def index(request):
@@ -215,15 +219,24 @@ def gestion_datos_view(request):
 
             _ = (nombre, categoria, descripcion, fecha, estado)
             return JsonResponse({"success": True, "message": "Datos guardados correctamente"})
-        except Exception as e:
-            return JsonResponse({"success": False, "message": str(e)}, status=400)
+        except Exception:
+            logger.exception("Fallo al guardar datos en gestion_datos_view")
+            return JsonResponse({"success": False, "message": "No fue posible guardar los datos en este momento."}, status=400)
 
     return render(request, "core/gestion_datos.html", {"titulo": "Gestión de Datos"})
 
 
 @login_required
 def ayuda_view(request):
+    caja_documento = {
+        "titulo": "Caja y Bancos",
+        "descripcion": "Guía paso a paso de aperturas, movimientos, cuentas y cierre.",
+        "icono": "bi-cash-coin",
+        "archivo": "core/docs/ayuda/manual_caja_banco.pdf",
+    }
+
     documentos = [
+        caja_documento,
         {
             "titulo": "Manual MONAPP",
             "descripcion": "Documento principal del sistema.",
@@ -262,12 +275,16 @@ def ayuda_view(request):
         },
     ]
 
-    documento_principal = documentos[0] if documentos else None
+    documento_principal = caja_documento if caja_documento else (documentos[0] if documentos else None)
 
     return render(
         request,
         "core/ayuda.html",
-        {"documentos": documentos, "documento_principal": documento_principal},
+        {
+            "documentos": documentos,
+            "documento_principal": documento_principal,
+            "caja_documento": caja_documento,
+        },
     )
 
 

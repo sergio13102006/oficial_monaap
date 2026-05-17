@@ -1,10 +1,11 @@
 import os
+import logging
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.http import FileResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_POST, require_http_methods
 
 from .forms import BackupConfigForm, BackupCreateForm, BackupImportForm
 from .models import BackupConfig, BackupRecord
@@ -22,12 +23,16 @@ from .services import (
 )
 
 
+logger = logging.getLogger(__name__)
+
+
 def es_administrador(user):
     return user.is_superuser or user.is_staff
 
 
 @login_required
 @user_passes_test(es_administrador)
+@require_http_methods(["GET"])
 def backup_dashboard_view(request):
     page_data = get_dashboard_page(request.GET)
     summary = get_backup_dashboard_summary(page_data["queryset"])
@@ -69,8 +74,9 @@ def crear_backup_view(request):
             request,
             f'Backup "{record.nombre}" creado correctamente como copia completa.',
         )
-    except Exception as exc:
-        messages.error(request, f"No se pudo crear el backup: {exc}")
+    except Exception:
+        logger.exception("Fallo al crear backup")
+        messages.error(request, "No se pudo crear el backup. Revisa la configuración o intenta de nuevo.")
     return redirect("backup:dashboard")
 
 
@@ -100,23 +106,26 @@ def importar_backup_view(request):
                     f'Backup "{record.nombre}" importado y restaurado correctamente. '
                     "El archivo quedó registrado en el historial para futuras restauraciones.",
                 )
-            except Exception as exc:
+            except Exception:
+                logger.exception("Fallo al restaurar backup importado")
                 messages.warning(
                     request,
-                    f'Backup "{record.nombre}" importado correctamente, pero no se pudo restaurar: {exc}',
+                    f'Backup "{record.nombre}" importado correctamente, pero no se pudo restaurar. Revisa el historial para más detalle.',
                 )
         else:
             messages.success(
                 request,
                 f'Backup "{record.nombre}" importado correctamente. Ya puedes restaurarlo desde el historial si lo necesitas.',
             )
-    except Exception as exc:
-        messages.error(request, f"No se pudo importar el backup: {exc}")
+    except Exception:
+        logger.exception("Fallo al importar backup")
+        messages.error(request, "No se pudo importar el backup. Verifica que el archivo sea válido.")
     return redirect("backup:dashboard")
 
 
 @login_required
 @user_passes_test(es_administrador)
+@require_http_methods(["GET"])
 def descargar_backup_view(request, pk):
     record = get_object_or_404(BackupRecord, pk=pk)
     if not record.archivo or not os.path.exists(record.archivo):
@@ -144,15 +153,12 @@ def restaurar_backup_view(request, pk):
         )
     except FileNotFoundError:
         messages.error(request, "El archivo de backup no existe en el servidor.")
-    except Exception as exc:
-        mensaje = str(exc)
-        if "requiere flujo de migracion/importacion" in mensaje:
-            messages.error(
-                request,
-                "Este respaldo pertenece a otro motor y requiere migracion/importacion controlada; no se puede restaurar directamente desde este panel.",
-            )
-        else:
-            messages.error(request, f"Error al restaurar: {mensaje}")
+    except Exception:
+        logger.exception("Fallo al restaurar backup")
+        messages.error(
+            request,
+            "No fue posible restaurar el backup. Si pertenece a otro motor, usa el flujo de migración/importación controlada.",
+        )
     return redirect("backup:dashboard")
 
 
@@ -174,6 +180,7 @@ def eliminar_backup_view(request, pk):
 
 @login_required
 @user_passes_test(es_administrador)
+@require_http_methods(["GET"])
 def detalle_backup_view(request, pk):
     record = get_object_or_404(BackupRecord, pk=pk)
     meta = None
@@ -202,6 +209,7 @@ def configuracion_backup_view(request):
 
 @login_required
 @user_passes_test(es_administrador)
+@require_http_methods(["GET"])
 def info_base_datos_view(request):
     return JsonResponse(get_database_stats())
 

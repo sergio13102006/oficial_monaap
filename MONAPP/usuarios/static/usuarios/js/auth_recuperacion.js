@@ -1,4 +1,4 @@
-(function () {
+﻿(function () {
     function startCanvas() {
         var c = document.getElementById('leftCanvas');
         if (!c) return;
@@ -34,6 +34,8 @@
         var RE_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
         var requiresEmailFormat = emailInp && emailInp.type === 'email';
         if (!emailInp || !form || !btnEnviar) return;
+        if (form.dataset.recoveryBound === '1') return;
+        form.dataset.recoveryBound = '1';
 
         function setEmailState(valid, msg) {
             if (emailErr) emailErr.textContent = msg || '';
@@ -46,7 +48,7 @@
             var v = emailInp.value.trim();
             if (!v) { setEmailState(null, ''); return false; }
             if (requiresEmailFormat && !RE_EMAIL.test(v)) {
-                setEmailState(false, 'Ingresa un correo válido (ej: tu@correo.com)');
+                setEmailState(false, 'Ingresa un correo vÃ¡lido (ej: tu@correo.com)');
                 return false;
             }
             setEmailState(true, '');
@@ -72,6 +74,8 @@
         var form = document.getElementById('codigoForm');
         var btn = document.getElementById('btnVerificar');
         if (!inp || !counter || !form || !btn) return;
+        if (form.dataset.recoveryBound === '1') return;
+        form.dataset.recoveryBound = '1';
 
         function updateCounter() {
             var len = inp.value.length;
@@ -126,6 +130,8 @@
         var btnSave = document.getElementById('btnSave');
         var requirementsCard = document.getElementById('passwordRequirements');
         if (!p1 || !p2 || !btnSave) return;
+        if (btnSave.dataset.recoveryBound === '1') return;
+        btnSave.dataset.recoveryBound = '1';
 
         window.togglePw = function (id) {
             var inp = document.getElementById(id);
@@ -237,10 +243,10 @@
             mtxt.className = 'match-text';
             if (!v2) { mtxt.textContent = ''; validateForm(); return; }
             if (v1 === v2) {
-                mtxt.textContent = '\u2713 Las contraseñas coinciden';
+                mtxt.textContent = '\u2713 Las contraseÃ±as coinciden';
                 mtxt.classList.add('match-ok');
             } else {
-                mtxt.textContent = '\u2715 Las contraseñas no coinciden';
+                mtxt.textContent = '\u2715 Las contraseÃ±as no coinciden';
                 mtxt.classList.add('match-fail');
             }
             validateForm();
@@ -249,7 +255,7 @@
         function updateStrength() {
             var v = p1.value, score = calcScore(v);
             var cls = ['', 'weak', 'ok', 'ok', 'strong', 'strong'];
-            var lbl = ['', 'Muy débil', 'Regular', 'Buena', 'Fuerte', 'Muy fuerte'];
+            var lbl = ['', 'Muy dÃ©bil', 'Regular', 'Buena', 'Fuerte', 'Muy fuerte'];
             segs.forEach(function (s, i) { if (s) s.className = 'bar-seg ' + (i < score ? cls[Math.min(score, 5)] : ''); });
             if (stxt) stxt.innerHTML = v.length ? lbl[score] : '';
 
@@ -303,4 +309,5 @@
             startCanvas();
         }
     });
+
 })();

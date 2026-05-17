@@ -31,6 +31,7 @@ MODULOS_PROTEGIDOS = {
     "notificaciones",
     "backup",
     "gestion_alisados",
+    "control_fondos",
 }
 
 

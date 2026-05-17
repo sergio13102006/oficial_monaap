@@ -44,16 +44,46 @@
             </div>
 
             <div class="mb-3">
+              <label class="form-label">Categoria operativa</label>
+              {{ form.categoria_operativa }}
+              {% for error in form.categoria_operativa.errors %}
+                <div class="text-danger small">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <div class="row g-2 mb-3">
+              <div class="col-6 form-check">
+                {{ form.activa }}
+                <label class="form-check-label" for="{{ form.activa.id_for_label }}">Cuenta activa</label>
+              </div>
+              <div class="col-6 form-check">
+                {{ form.obligatoria_apertura }}
+                <label class="form-check-label" for="{{ form.obligatoria_apertura.id_for_label }}">Obligatoria para apertura</label>
+              </div>
+              <div class="col-6 form-check">
+                {{ form.requiere_base_inicial }}
+                <label class="form-check-label" for="{{ form.requiere_base_inicial.id_for_label }}">Requiere base inicial</label>
+              </div>
+              <div class="col-6 form-check">
+                {{ form.requiere_referencia }}
+                <label class="form-check-label" for="{{ form.requiere_referencia.id_for_label }}">Requiere referencia</label>
+              </div>
+              <div class="col-6 form-check">
+                {{ form.permite_entradas }}
+                <label class="form-check-label" for="{{ form.permite_entradas.id_for_label }}">Permite entradas</label>
+              </div>
+              <div class="col-6 form-check">
+                {{ form.permite_salidas }}
+                <label class="form-check-label" for="{{ form.permite_salidas.id_for_label }}">Permite salidas</label>
+              </div>
+            </div>
+
+            <div class="mb-3">
               <label class="form-label">Orden visual</label>
               {{ form.orden_visual }}
               {% for error in form.orden_visual.errors %}
                 <div class="text-danger small">{{ error }}</div>
               {% endfor %}
-            </div>
-
-            <div class="form-check mb-3">
-              {{ form.activa }}
-              <label class="form-check-label" for="{{ form.activa.id_for_label }}">Cuenta activa</label>
             </div>
 
             <button type="submit" class="btn btn-dark">Guardar cuenta</button>
@@ -72,7 +102,9 @@
                 <tr>
                   <th>Nombre</th>
                   <th>Tipo</th>
+                  <th>Categoria</th>
                   <th>Estado</th>
+                  <th>Base</th>
                   <th>Orden</th>
                 </tr>
               </thead>
@@ -81,6 +113,7 @@
                   <tr>
                     <td>{{ cuenta.nombre }}</td>
                     <td>{{ cuenta.get_tipo_display }}</td>
+                    <td>{{ cuenta.get_categoria_operativa_display }}</td>
                     <td>
                       {% if cuenta.activa %}
                         <span class="badge text-bg-success">Activa</span>
@@ -88,11 +121,18 @@
                         <span class="badge text-bg-secondary">Inactiva</span>
                       {% endif %}
                     </td>
+                    <td>
+                      {% if cuenta.requiere_base_inicial %}
+                        <span class="badge text-bg-warning">Requiere base</span>
+                      {% else %}
+                        <span class="badge text-bg-info">No requiere base</span>
+                      {% endif %}
+                    </td>
                     <td>{{ cuenta.orden_visual }}</td>
                   </tr>
                 {% empty %}
                   <tr>
-                    <td colspan="4" class="text-center text-muted py-4">Todavia no hay cuentas creadas.</td>
+                    <td colspan="6" class="text-center text-muted py-4">Todavia no hay cuentas creadas.</td>
                   </tr>
                 {% endfor %}
               </tbody>

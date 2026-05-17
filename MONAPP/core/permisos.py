@@ -41,6 +41,7 @@ PERMISOS_MODULOS = {
     "notificaciones": PermisoModulo(ROLES_ADMIN_AUX, ROLES_ADMIN_AUX, ROLES_ADMIN),
     "backup": PermisoModulo(ROLES_ADMIN, ROLES_ADMIN, ROLES_ADMIN),
     "gestion_alisados": PermisoModulo(ROLES_ADMIN_AUX_COL, ROLES_ADMIN_AUX_COL, ROLES_ADMIN),
+    "control_fondos": PermisoModulo(ROLES_ADMIN_AUX_COL, ROLES_ADMIN_AUX, ROLES_ADMIN),
 }
 
 PUBLIC_USER_URLS = {

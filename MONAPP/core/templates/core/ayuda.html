@@ -20,7 +20,7 @@
     <header class="help-hero">
       <div>
         <h4>Manuales y guías</h4>
-        <p>Accede a la documentación del sistema en PDF.</p>
+        <p>Accede a la documentación del sistema en PDF, con un acceso directo para Caja y Bancos.</p>
       </div>
 
       <div class="help-actions">
@@ -37,9 +37,30 @@
       </div>
     </header>
 
+    {% if caja_documento %}
+      <h5 class="help-section-title">Caja y Bancos</h5>
+      <div class="help-docs help-docs-highlight">
+        <a class="help-doc help-doc-feature" href="{% static caja_documento.archivo %}" target="_blank" rel="noopener">
+          <div class="help-doc-icon" aria-hidden="true">
+            <i class="bi {{ caja_documento.icono }}"></i>
+          </div>
+          <div class="help-doc-body">
+            <div class="help-doc-title">{{ caja_documento.titulo }}</div>
+            {% if caja_documento.descripcion %}
+              <div class="help-doc-desc">{{ caja_documento.descripcion }}</div>
+            {% endif %}
+          </div>
+          <div class="help-doc-action" aria-hidden="true">
+            <i class="bi bi-box-arrow-up-right"></i>
+          </div>
+        </a>
+      </div>
+    {% endif %}
+
     {% if documentos %}
       <div class="help-docs" aria-label="Documentos PDF">
         {% for doc in documentos %}
+          {% if doc.archivo != caja_documento.archivo %}
           <a class="help-doc" href="{% static doc.archivo %}" target="_blank" rel="noopener">
             <div class="help-doc-icon" aria-hidden="true">
               <i class="bi {{ doc.icono }}"></i>
@@ -54,6 +75,7 @@
               <i class="bi bi-box-arrow-up-right"></i>
             </div>
           </a>
+          {% endif %}
         {% endfor %}
       </div>
     {% endif %}

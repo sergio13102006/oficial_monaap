@@ -40,17 +40,17 @@
         <td class="col-producto">
           <div class="fw-semibold">{{ producto.nombre }}</div>
 
-          {% if producto.stock_actual <= 1 %}
+          {% if producto.stock_actual <= 0 %}
             <div class="stock-chip stock-critico">
-              {{ producto.stock_actual }} unidades — crítico
-            </div>
+              Sin stock · {{ producto.stock_actual }}
+          </div>
           {% elif producto.stock_actual <= 15 %}
             <div class="stock-chip stock-bajo">
-              {{ producto.stock_actual }} unidades — bajo
+              Stock bajo · {{ producto.stock_actual }}
             </div>
           {% else %}
             <div class="stock-chip stock-ok">
-              {{ producto.stock_actual }} unidades disponibles
+              Disponible · {{ producto.stock_actual }}
             </div>
           {% endif %}
         </td>

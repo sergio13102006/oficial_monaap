@@ -2,6 +2,7 @@
 import socket
 from urllib.parse import urlencode
 from django.shortcuts import render, redirect, get_object_or_404
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User, Group
@@ -10,9 +11,9 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_POST
 from django.db.models import Q
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseForbidden
 from django.template.loader import render_to_string
-from .forms import LoginForm, RegistroForm, EditarUsuarioForm, EditarPerfilForm, UsuarioBusquedaForm
+from .forms import LoginForm, RegistroForm, EditarUsuarioForm, EditarPerfilForm, UsuarioBusquedaForm, AdminSetPasswordForm
 from .models import PerfilUsuario
 from .models import AuthSecurityEvent, AuthSecurityState
 from django.utils import timezone
@@ -21,6 +22,7 @@ from datetime import timedelta
 from django.conf import settings
 from django.urls import reverse, reverse_lazy
 from django.contrib.auth.views import PasswordResetView, PasswordResetConfirmView, PasswordResetDoneView, PasswordResetCompleteView
+import logging
 import traceback
 from django.db import transaction
 
@@ -37,6 +39,9 @@ from .security import (
     validate_recaptcha,
 )
 from .forms import IdentifierPasswordResetForm
+
+
+logger = logging.getLogger(__name__)
 
 
 class PasswordResetRequestView(PasswordResetView):
@@ -157,12 +162,83 @@ def _puede_modificar_usuarios(user):
     return user.is_superuser or 'Administrador' in grupos or 'Auxiliar' in grupos
 
 
+def _es_administrador(user):
+    grupos = list(user.groups.values_list('name', flat=True))
+    return user.is_superuser or 'Administrador' in grupos
+
+
 def _login_portal_url(request):
     params = {"login": "1"}
     next_url = (request.GET.get("next") or request.POST.get("next") or "").strip()
-    if next_url:
+    if next_url and url_has_allowed_host_and_scheme(
+        next_url,
+        allowed_hosts={request.get_host()},
+        require_https=request.is_secure(),
+    ):
         params["next"] = next_url
     return f"{reverse('core:index')}?{urlencode(params)}"
+
+
+@login_required
+def cambiar_password_usuario_view(request, user_id):
+    usuario = get_object_or_404(User, id=user_id)
+    if not _es_administrador(request.user):
+        return HttpResponseForbidden('Solo el administrador puede cambiar contraseñas de otros usuarios.')
+
+    if request.method == 'POST':
+        form = AdminSetPasswordForm(usuario, request.POST)
+        if form.is_valid():
+            form.save()
+            register_login_attempt(
+                request=request,
+                username=usuario.username,
+                success=True,
+                user=usuario,
+                event_type=AuthSecurityEvent.EVENT_PASSWORD_CHANGED,
+                subject_type=AuthSecurityState.SUBJECT_USER,
+                subject_value=normalize_subject(usuario.username),
+                details={'source': 'admin_panel', 'admin': request.user.username},
+            )
+            if usuario.email:
+                try:
+                    send_mail(
+                        subject='Tu contraseña fue actualizada - Mona Keratina',
+                        message=(
+                            f"Hola {usuario.get_full_name() or usuario.username},\n\n"
+                            "Un administrador actualizó tu contraseña.\n"
+                            "Si no reconoces esta acción, contacta al equipo de soporte de inmediato.\n\n"
+                            "Saludos,\nEquipo Mona Keratina"
+                        ),
+                        from_email=settings.DEFAULT_FROM_EMAIL,
+                        recipient_list=[usuario.email],
+                        fail_silently=True,
+                    )
+                except Exception:
+                    pass
+            messages.success(request, f'La contraseña de {usuario.get_full_name() or usuario.username} fue actualizada.')
+            return redirect('usuarios:lista_usuarios')
+    else:
+        form = AdminSetPasswordForm(usuario)
+
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return render(
+            request,
+            'usuarios/cambiar_password_usuario_modal.html',
+            {
+                'usuario': usuario,
+                'form': form,
+            },
+        )
+
+    return render(
+        request,
+        'usuarios/cambiar_password_usuario.html',
+        {
+            'titulo': f'Cambiar contraseña: {usuario.get_full_name() or usuario.username}',
+            'usuario': usuario,
+            'form': form,
+        }
+    )
 # ==================== VISTAS DE AUTENTICACIá“N ====================
 
 @csrf_protect
@@ -171,6 +247,7 @@ def login_view(request):
     if request.user.is_authenticated:
         return redirect("core:dashboard")
 
+    is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest" or request.POST.get("ajax_login") == "1"
     captcha_enabled = bool(settings.LOGIN_RECAPTCHA_SITE_KEY and settings.LOGIN_RECAPTCHA_SECRET_KEY)
     login_context = {
         "login_recaptcha_site_key": settings.LOGIN_RECAPTCHA_SITE_KEY if captcha_enabled else "",
@@ -178,18 +255,39 @@ def login_view(request):
         "login_captcha_required": False,
     }
 
+    if settings.LOGIN_SECURITY_FORCE_CAPTCHA and not captcha_enabled and not settings.DEBUG:
+        if is_ajax:
+            return JsonResponse(
+                {
+                    "success": False,
+                    "message": "La verificación de seguridad no está configurada.",
+                    "blocked": True,
+                    "blocked_minutes": 0,
+                    "attempts": 0,
+                    "captcha_required": True,
+                    "captcha_site_key": "",
+                },
+                status=503,
+            )
+        messages.error(request, "La verificación de seguridad no está configurada.")
+        return redirect(_login_portal_url(request))
+
     if request.method != "POST":
         return redirect(_login_portal_url(request))
 
     username = (request.POST.get("username") or "").strip()
     password = request.POST.get("password") or ""
-    is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest" or request.POST.get("ajax_login") == "1"
     now = timezone.now()
     ip = get_client_ip(request)
     captcha_token = request.POST.get("g-recaptcha-response") or request.POST.get("captcha_token")
     gate = evaluate_login_gate(request, username, now=now)
 
     def _error_response(message, *, status=400, blocked=False, decision=None, captcha_required=False):
+        if blocked and decision and decision.blocked_minutes:
+            message = (
+                f"{message} "
+                f"Espera aproximadamente {decision.blocked_minutes} minuto(s) antes de volver a intentar."
+            )
         payload = {
             "success": False,
             "message": message,
@@ -230,7 +328,13 @@ def login_view(request):
                 ),
             },
         )
-        return _error_response("Tu acceso quedó pausado por seguridad. Intenta nuevamente más tarde.", status=429, blocked=True, decision=gate, captcha_required=captcha_enabled and gate.captcha_required)
+        return _error_response(
+            "Tu acceso quedó pausado por seguridad. Tu contraseña no cambió.",
+            status=429,
+            blocked=True,
+            decision=gate,
+            captcha_required=captcha_enabled and gate.captcha_required,
+        )
 
     if captcha_enabled and gate.captcha_required:
         register_login_attempt(
@@ -285,6 +389,12 @@ def login_view(request):
 
         if is_ajax:
             next_url = request.POST.get("next") or request.GET.get("next") or reverse("core:dashboard")
+            if not url_has_allowed_host_and_scheme(
+                next_url,
+                allowed_hosts={request.get_host()},
+                require_https=request.is_secure(),
+            ):
+                next_url = reverse("core:dashboard")
             return JsonResponse({
                 "success": True,
                 "message": "Inicio de sesión correcto.",
@@ -314,6 +424,7 @@ def login_view(request):
 
 
 @login_required
+@require_POST
 def logout_view(request):
     register_logout(
         request=request,
@@ -421,6 +532,11 @@ def lista_usuarios_view(request):
 
     es_administrador = request.user.is_superuser or 'Administrador' in grupos
     puede_modificar  = request.user.is_superuser or 'Administrador' in grupos or 'Auxiliar' in grupos
+
+    if not puede_modificar:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': False, 'message': 'No tienes permisos para ver este panel.'}, status=403)
+        return HttpResponseForbidden('No tienes permisos para ver este panel.')
 
     # âœ… form se crea PRIMERO
     form = UsuarioBusquedaForm(request.GET)
@@ -639,14 +755,12 @@ def editar_usuario_view(request, user_id):
         )
 
     except Exception as e:
-        print("ERROR EDITAR USUARIO:")
-        print(traceback.format_exc())
+        logger.exception("ERROR EDITAR USUARIO")
 
         if is_ajax:
             return JsonResponse({
                 'success': False,
-                'message': str(e),
-                'trace': traceback.format_exc()
+                'message': 'No fue posible editar el usuario en este momento.'
             }, status=500)
         raise
 
@@ -696,10 +810,11 @@ def eliminar_usuario_view(request, user_id):
                                            {'usuario': usuario}, 
                                            request=request)
             return JsonResponse({'html_content': html_content})
-        except Exception as e:
+        except Exception:
+            logger.exception("ERROR CARGANDO MODAL DE ELIMINACION DE USUARIO")
             return JsonResponse({
                 'success': False,
-                'message': f'Error al cargar el contenido: {str(e)}'
+                'message': 'No fue posible cargar el contenido en este momento.'
             }, status=500)
 
     # Si no es AJAX, mostrar la pá¡gina completa (comportamiento anterior)
@@ -719,6 +834,11 @@ def detalle_usuario_view(request, user_id):
     grupos = list(request.user.groups.values_list('name', flat=True))
     es_administrador = request.user.is_superuser or 'Administrador' in grupos
     puede_modificar = request.user.is_superuser or 'Administrador' in grupos or 'Auxiliar' in grupos
+
+    if not puede_modificar:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': False, 'message': 'No tienes permisos para ver este detalle.'}, status=403)
+        return HttpResponseForbidden('No tienes permisos para ver este detalle.')
 
     usuario = get_object_or_404(User, id=user_id)
     is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
@@ -808,6 +928,9 @@ def validar_documento_ajax(request):
     """
     Endpoint AJAX para validar documento en tiempo real
     """
+    if not _puede_modificar_usuarios(request.user):
+        return JsonResponse({'valido': False, 'mensaje': 'No tienes permisos para validar documentos.'}, status=403)
+
     if request.method == 'GET':
         documento = request.GET.get('documento', '').strip()
         
@@ -909,6 +1032,9 @@ def validar_email_usuario(request):
     """
     Endpoint para validar email de usuario en tiempo real
     """
+    if not _puede_modificar_usuarios(request.user):
+        return JsonResponse({'valido': False, 'mensaje': 'No tienes permisos para validar correos.'}, status=403)
+
     email = (request.GET.get('email') or '').strip()
     user_id = request.GET.get('user_id')
 

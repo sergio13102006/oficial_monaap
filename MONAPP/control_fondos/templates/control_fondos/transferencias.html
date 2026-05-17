@@ -16,6 +16,12 @@
     <a class="btn btn-outline-secondary" href="{% url 'control_fondos:movimientos' %}?fecha={{ fecha_consulta|date:'Y-m-d' }}">Ver movimientos</a>
   </div>
 
+  {% if operacion_bloqueada %}
+    <div class="alert alert-warning border-0 shadow-sm mb-4">
+      <strong>Atenci&oacute;n:</strong> la apertura est&aacute; incompleta. Completa las bases obligatorias antes de registrar transferencias.
+    </div>
+  {% endif %}
+
   {% if ultima_transferencia %}
     <div class="card shadow-sm border-0 mb-4">
       <div class="card-body">
@@ -38,7 +44,7 @@
       <div class="card shadow-sm border-0">
         <div class="card-body">
           <h5 class="mb-3">Nueva transferencia</h5>
-          <form method="post">
+          <form method="post" enctype="multipart/form-data">
             {% csrf_token %}
             {{ form.request_uid }}
 
@@ -63,10 +69,22 @@
               {{ form.valor }}
             </div>
             <div class="mb-3">
+              <label class="form-label">Referencia</label>
+              {{ form.referencia }}
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Comprobante</label>
+              {{ form.comprobante }}
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Soporte adjunto</label>
+              {{ form.soporte_adjunto }}
+            </div>
+            <div class="mb-3">
               <label class="form-label">Observacion</label>
               {{ form.observacion }}
             </div>
-            <button type="submit" class="btn btn-dark">Guardar transferencia</button>
+            <button type="submit" class="btn btn-dark" {% if operacion_bloqueada %}disabled{% endif %}>Guardar transferencia</button>
           </form>
         </div>
       </div>
@@ -85,6 +103,7 @@
                   <th>Tipo</th>
                   <th class="text-end">Valor</th>
                   <th>Concepto</th>
+                  <th>Soporte</th>
                   <th>Estado</th>
                 </tr>
               </thead>
@@ -96,10 +115,19 @@
                     <td>{{ movimiento.get_tipo_display }}</td>
                     <td class="text-end {% if movimiento.tipo == 'ENTRADA' %}text-success{% else %}text-danger{% endif %}">${{ movimiento.valor|floatformat:0|intcomma }}</td>
                     <td>{{ movimiento.concepto }}</td>
+                    <td>
+                      {% if movimiento.soporte_adjunto %}
+                        <a href="{{ movimiento.soporte_adjunto.url }}" target="_blank" rel="noopener">Archivo</a>
+                      {% elif movimiento.comprobante %}
+                        {{ movimiento.comprobante }}
+                      {% else %}
+                        -
+                      {% endif %}
+                    </td>
                     <td>{{ movimiento.get_estado_display }}</td>
                   </tr>
                 {% empty %}
-                  <tr><td colspan="6" class="text-center text-muted py-4">Todavia no hay transferencias registradas para esta fecha.</td></tr>
+                  <tr><td colspan="7" class="text-center text-muted py-4">Todavia no hay transferencias registradas para esta fecha.</td></tr>
                 {% endfor %}
               </tbody>
             </table>

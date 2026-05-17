@@ -117,15 +117,23 @@
                                 </td>
                                 <td>{{ s.producto.get_unidad_medida_display }}</td>
                                 <td>
-                                    {% if s.cantidad_actual < 10 %}
-                                        <span class="stock-pill stock-pill-danger" title="Stock bajo">
+                                    {% if s.cantidad_actual <= 0 %}
+                                        <span class="stock-pill stock-pill-danger" title="Sin stock">
+                                            <i class="bi bi-x-circle-fill" aria-hidden="true"></i>
+                                            <span class="stock-pill__label">Sin stock</span>
+                                            <span class="stock-pill__count">{{ s.cantidad_actual }}</span>
+                                        </span>
+                                    {% elif s.cantidad_actual < 10 %}
+                                        <span class="stock-pill stock-pill-warning" title="Stock bajo">
                                             <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>
-                                            <span>{{ s.cantidad_actual }}</span>
+                                            <span class="stock-pill__label">Stock bajo</span>
+                                            <span class="stock-pill__count">{{ s.cantidad_actual }}</span>
                                         </span>
                                     {% else %}
                                         <span class="stock-pill stock-pill-success" title="Stock disponible">
                                             <i class="bi bi-check-circle-fill" aria-hidden="true"></i>
-                                            <span>{{ s.cantidad_actual }}</span>
+                                            <span class="stock-pill__label">Disponible</span>
+                                            <span class="stock-pill__count">{{ s.cantidad_actual }}</span>
                                         </span>
                                     {% endif %}
                                 </td>

@@ -22,6 +22,7 @@ urlpatterns = [
     path('usuarios/<int:user_id>/editar/', views.editar_usuario_view, name='editar_usuario'),
     path('usuarios/<int:user_id>/eliminar/', views.eliminar_usuario_view, name='eliminar_usuario'),
     path('usuarios/<int:user_id>/detalle/', views.detalle_usuario_view, name='detalle_usuario'),
+    path('usuarios/<int:user_id>/cambiar-contrasena/', views.cambiar_password_usuario_view, name='cambiar_password_usuario'),
     path('usuarios/<int:user_id>/toggle-activo/', views.toggle_activo_usuario_view, name='toggle_activo_usuario'),
 
     # Validaciones en tiempo real

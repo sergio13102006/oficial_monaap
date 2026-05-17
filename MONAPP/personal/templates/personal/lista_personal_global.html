@@ -47,6 +47,16 @@
                                 {% if puede_modificar %}
                                 <button type="button" class="table-action-btn" data-personal-action="open-edit" data-personal-id="{{ persona.id }}" title="Editar"><i class="bi bi-pencil-square"></i></button>
                                 {% endif %}
+                                {% if es_administrador and persona.usuario %}
+                                <button type="button"
+                                        class="table-action-btn"
+                                        data-open-password-modal
+                                        data-modal-url="{% url 'personal:cambiar_password_personal' persona.id %}"
+                                        data-modal-title="Cambiar contraseña"
+                                        title="Cambiar contraseña">
+                                    <i class="bi bi-shield-lock"></i>
+                                </button>
+                                {% endif %}
                                 {% if es_administrador %}
                                 <button type="button" class="table-action-btn table-action-btn--danger" data-personal-action="open-delete" data-personal-id="{{ persona.id }}" title="Eliminar"><i class="bi bi-trash3"></i></button>
                                 {% endif %}

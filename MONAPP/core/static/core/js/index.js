@@ -623,4 +623,5 @@ function checkFadeElements() {
 window.addEventListener("scroll", checkFadeElements, { passive: true });
 window.addEventListener("resize", checkFadeElements, { passive: true });
 checkFadeElements();
+
 });

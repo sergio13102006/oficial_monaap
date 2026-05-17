@@ -1,0 +1,93 @@
+{% extends "core/panel_admin_base.html" %}
+{% load humanize %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item"><a href="{% url 'control_fondos:dashboard' %}">Control de fondos</a></li>
+<li class="breadcrumb-item active" aria-current="page">Cierre</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3">
+  {% if operacion_bloqueada %}
+    <div class="alert alert-warning border-0 shadow-sm mb-4">
+      <strong>Atenci&oacute;n:</strong> la apertura est&aacute; incompleta. Completa las bases obligatorias antes de conciliar o cerrar.
+    </div>
+  {% endif %}
+  <div class="row g-4">
+    <div class="col-lg-4">
+      <div class="card shadow-sm border-0">
+        <div class="card-body">
+          <h4 class="mb-3">Cierre del dia</h4>
+          {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+          <form method="post">
+            {% csrf_token %}
+            <div class="mb-3"><label class="form-label">Fecha</label>{{ form.fecha }}</div>
+            <div class="mb-3"><label class="form-label">Efectivo contado real</label>{{ form.efectivo_contado_real }}</div>
+            <div class="mb-3"><label class="form-label">Caja fuerte contada real</label>{{ form.caja_fuerte_contada_real }}</div>
+            <div class="mb-3"><label class="form-label">Transferencias verificadas</label>{{ form.transferencias_verificadas }}</div>
+            <div class="mb-3"><label class="form-label">Datáfono verificado</label>{{ form.datofono_verificado }}</div>
+            <div class="mb-3"><label class="form-label">Financiación verificada</label>{{ form.financiacion_verificada }}</div>
+            <div class="mb-3"><label class="form-label">Observación de cierre</label>{{ form.observacion_cierre }}</div>
+            <div class="form-check mb-3">{{ form.autorizacion_supervisor }} <label class="form-check-label">Autorización de supervisor</label></div>
+            <div class="form-check mb-3">{{ form.confirmacion }} <label class="form-check-label">{{ form.confirmacion.label }}</label></div>
+            <button type="submit" class="btn btn-dark w-100" {% if operacion_bloqueada %}disabled{% endif %}>Cerrar jornada</button>
+          </form>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-8">
+      <div class="row g-3 mb-3">
+        <div class="col-md-3"><div class="card shadow-sm border-0"><div class="card-body"><small class="text-muted d-block">Caja esperada</small><strong>{% if caja_esperada is not None %}${{ caja_esperada|floatformat:0|intcomma }}{% else %}No calculada{% endif %}</strong></div></div></div>
+        <div class="col-md-3"><div class="card shadow-sm border-0"><div class="card-body"><small class="text-muted d-block">Caja fuerte esperada</small><strong>{% if caja_fuerte_esperada is not None %}${{ caja_fuerte_esperada|floatformat:0|intcomma }}{% else %}No calculada{% endif %}</strong></div></div></div>
+        <div class="col-md-3"><div class="card shadow-sm border-0"><div class="card-body"><small class="text-muted d-block">Total ingresos</small><strong class="text-success">${{ totales.total_ingresos|floatformat:0|intcomma }}</strong></div></div></div>
+        <div class="col-md-3"><div class="card shadow-sm border-0"><div class="card-body"><small class="text-muted d-block">Total egresos</small><strong class="text-danger">${{ totales.total_egresos|floatformat:0|intcomma }}</strong></div></div></div>
+      </div>
+      <div class="card shadow-sm border-0 mb-3">
+        <div class="card-body">
+          <h5 class="mb-3">Estado de la jornada</h5>
+          <p class="mb-1"><strong>Jornada:</strong> {{ jornada.fecha|date:"d/m/Y" }}</p>
+          <p class="mb-1"><strong>Estado:</strong> {{ jornada.get_estado_display }}</p>
+          <p class="mb-1"><strong>Diferencia caja:</strong> {% if diferencia_caja is not None %}${{ diferencia_caja|floatformat:0|intcomma }}{% else %}Pendiente de arqueo{% endif %}</p>
+          <p class="mb-1"><strong>Diferencia caja fuerte:</strong> {% if diferencia_caja_fuerte is not None %}${{ diferencia_caja_fuerte|floatformat:0|intcomma }}{% else %}Pendiente de arqueo{% endif %}</p>
+          <p class="mb-1"><strong>Diferencia transferencias:</strong> {% if diferencia_transferencias is not None %}${{ diferencia_transferencias|floatformat:0|intcomma }}{% else %}Pendiente de arqueo{% endif %}</p>
+          <p class="mb-1"><strong>Diferencia datáfono:</strong> {% if diferencia_datofono is not None %}${{ diferencia_datofono|floatformat:0|intcomma }}{% else %}Pendiente de arqueo{% endif %}</p>
+          <p class="mb-0"><strong>Diferencia financiación:</strong> {% if diferencia_financiacion is not None %}${{ diferencia_financiacion|floatformat:0|intcomma }}{% else %}Pendiente de arqueo{% endif %}</p>
+        </div>
+      </div>
+      <div class="card shadow-sm border-0">
+        <div class="card-body">
+          <h5 class="mb-3">Movimientos del dia</h5>
+          <div class="table-responsive">
+            <table class="table align-middle">
+              <thead>
+                <tr>
+                  <th>Hora</th>
+                  <th>Cuenta</th>
+                  <th>Tipo</th>
+                  <th class="text-end">Valor</th>
+                  <th>Concepto</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for movimiento in movimientos %}
+                  <tr>
+                    <td>{{ movimiento.fecha_hora|date:"H:i" }}</td>
+                    <td>{{ movimiento.cuenta.nombre }}</td>
+                    <td>{{ movimiento.get_tipo_display }}</td>
+                    <td class="text-end {% if movimiento.tipo == 'ENTRADA' %}text-success{% else %}text-danger{% endif %}">${{ movimiento.valor|floatformat:0|intcomma }}</td>
+                    <td>{{ movimiento.concepto }}</td>
+                    <td>{{ movimiento.get_estado_display }}</td>
+                  </tr>
+                {% empty %}
+                  <tr><td colspan="6" class="text-center text-muted py-4">Todavia no hay movimientos para esta fecha.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

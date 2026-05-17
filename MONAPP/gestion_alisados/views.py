@@ -435,9 +435,11 @@ def crear_gestion_alisado(request):
     """
     Crea un nuevo registro de gestión de alisado
     - modal=1 o AJAX: devuelve JSON
+    - popup=1: renderiza una vista completa pensada para pestaña nueva
     - normal: render/redirect normal
     """
     is_modal = request.GET.get('modal') == '1'
+    is_popup = request.GET.get('popup') == '1'
     es_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
 
     if request.method == 'POST':
@@ -445,7 +447,7 @@ def crear_gestion_alisado(request):
 
         if form.is_valid():
             gestion = save_gestion_form(form, usuario=request.user)
-            if is_modal or es_ajax:
+            if is_modal or is_popup or es_ajax:
                 return JsonResponse({
                     'success': True,
                     'message': 'Gestión de alisado registrada exitosamente.'
@@ -455,7 +457,7 @@ def crear_gestion_alisado(request):
             return redirect('gestion_alisados:lista_gestion_alisados')
 
         # inválido
-        if is_modal or es_ajax:
+        if is_modal or is_popup or es_ajax:
             return JsonResponse({
                 'success': False,
                 'message': 'Por favor corrija los errores en el formulario.',
@@ -479,7 +481,9 @@ def crear_gestion_alisado(request):
         'form': form,
         'titulo': 'Gestión de Alisado',
         'is_modal': is_modal,
-        'action_url': request.get_full_path() if is_modal else request.path,
+        'is_popup': is_popup,
+        'tablet_mode': is_popup,
+        'action_url': request.get_full_path() if (is_modal or is_popup) else request.path,
         'promociones_activas': build_admin_capture_context(form=form)['promociones_activas'],
     }
 
@@ -487,8 +491,9 @@ def crear_gestion_alisado(request):
     if is_modal:
         return render(request, 'gestion_alisados/form_gestion_alisado_modal_content.html', context)
 
-    if is_modal:
-        return render(request, 'gestion_alisados/form_gestion_alisado_modal_content.html', context)
+    if is_popup:
+        return render(request, 'gestion_alisados/form_gestion_alisado_popup.html', context)
+
     return render(request, 'gestion_alisados/form_gestion_alisado.html', context)
 
 

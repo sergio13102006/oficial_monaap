@@ -102,7 +102,6 @@ def _create_backup_recorded(tipo, nombre, usuario, notas, *, include_db, include
     try:
         payload = None
         tablas_incluidas = ""
-        checksum = ""
 
         with open_backup_zip(filepath, "w") as zf:
             if include_db:
@@ -117,21 +116,6 @@ def _create_backup_recorded(tipo, nombre, usuario, notas, *, include_db, include
                 tablas_incluidas = (
                     f"{tablas_incluidas}, media" if tablas_incluidas else f"{len(media_files)} archivos de media"
                 )
-            metadata = build_backup_metadata(
-                nombre=nombre,
-                tipo=tipo,
-                usuario=usuario,
-                notas=notas,
-                db_engine=engine.get_engine_name(),
-                includes_media=include_media,
-                checksum=checksum,
-                is_security_backup=es_backup_seguridad,
-                extra={
-                    "origen": "local",
-                    "payload_member": payload.get("member_name") if payload else "",
-                },
-            )
-            zf.writestr(BACKUP_META_FILENAME, serialize_backup_metadata(metadata))
 
         checksum = calculate_zip_content_checksum(filepath, skip_members={BACKUP_META_FILENAME})
         with open_backup_zip(filepath, "a") as zf:

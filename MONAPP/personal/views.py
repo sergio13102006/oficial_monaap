@@ -1,12 +1,13 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.http import HttpResponseForbidden
 from django.contrib import messages
 from django.db.models import Q
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.template.loader import render_to_string
 from .models import Personal
-from .forms import PersonalForm, PersonalBusquedaForm
+from .forms import AdminSetPasswordForm, PersonalForm, PersonalBusquedaForm
 from .archivo_personal import build_personal_excel_response, build_personal_pdf_response
 
 
@@ -81,6 +82,11 @@ def _obtener_personal_filtrado(request):
 def _puede_modificar_personal(user):
     grupos = set(user.groups.values_list("name", flat=True))
     return user.is_superuser or "Administrador" in grupos or "Auxiliar" in grupos
+
+
+def _es_administrador(user):
+    grupos = set(user.groups.values_list("name", flat=True))
+    return user.is_superuser or "Administrador" in grupos
 
 
 def _respuesta_no_autorizado_personal(request):
@@ -287,12 +293,55 @@ def detalle_personal(request, pk):
         return JsonResponse({'html_content': html_content})
     
     # Si no es AJAX, mostrar la página completa (comportamiento anterior)
-    context = {
-        'personal': personal,
-        'es_administrador': es_administrador,
-        'puede_modificar': puede_modificar,
-    }
-    return render(request, 'personal/detalle_personal.html', context)
+    messages.info(request, "El detalle del personal se abre desde la lista.")
+    return redirect('personal:lista_personal')
+
+
+@login_required
+def cambiar_password_personal(request, pk):
+    personal = get_object_or_404(Personal, pk=pk)
+
+    if not _es_administrador(request.user):
+        return HttpResponseForbidden("Solo el administrador puede cambiar contraseñas desde personal.")
+
+    usuario = personal.usuario
+    if usuario is None:
+        messages.error(request, "Este personal no tiene un usuario vinculado para cambiar la contraseña.")
+        return redirect("personal:lista_personal")
+
+    if request.method == "POST":
+        form = AdminSetPasswordForm(usuario, request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(
+                request,
+                f"La contraseña de {personal.nombres} {personal.apellidos} fue actualizada."
+            )
+            return redirect("personal:lista_personal")
+    else:
+        form = AdminSetPasswordForm(usuario)
+
+    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        return render(
+            request,
+            "personal/cambiar_password_personal_modal.html",
+            {
+                "form": form,
+                "personal": personal,
+                "usuario": usuario,
+            },
+        )
+
+    return render(
+        request,
+        "personal/cambiar_password_personal.html",
+        {
+            "form": form,
+            "personal": personal,
+            "usuario": usuario,
+            "titulo": f"Cambiar contraseña: {personal.nombres} {personal.apellidos}",
+        },
+    )
 
 
 @login_required

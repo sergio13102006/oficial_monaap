@@ -123,6 +123,10 @@
   margin:14px 0 18px;
 }
 
+.help-docs-highlight{
+  margin-top:8px;
+}
+
 .help-doc{
   display:flex;
   align-items:center;
@@ -140,6 +144,13 @@
 .help-doc:hover{
   transform:translateY(-1px);
   border-color:rgba(125,79,54,.28);
+}
+
+.help-doc-feature{
+  border-width:1.5px;
+  background:
+    linear-gradient(135deg, rgba(125,79,54,.10), rgba(255,255,255,.92)),
+    var(--help-card);
 }
 
 .help-doc-icon{

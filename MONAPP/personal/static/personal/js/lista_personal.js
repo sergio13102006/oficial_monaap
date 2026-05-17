@@ -460,6 +460,9 @@
                 showConfirmButton: false,
                 confirmButtonColor: '#5d4037',
             });
+            setTimeout(() => {
+                window.location.reload();
+            }, 400);
         });
     }
 
@@ -475,6 +478,9 @@
                     showConfirmButton: false,
                     confirmButtonColor: '#5d4037',
                 });
+                setTimeout(() => {
+                    window.location.reload();
+                }, 400);
             })
             .catch((error) => {
                 Swal.fire({

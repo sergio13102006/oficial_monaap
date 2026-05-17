@@ -1,0 +1,34 @@
+{% extends 'core/panel_admin_base.html' %}
+{% load static %}
+
+{% block title %}Tratamiento de datos{% endblock %}
+
+{% block breadcrumb_items %}
+<li class="breadcrumb-item"><a href="{% url 'gestion_alisados:lista_gestion_alisados' %}">Gestión de datos</a></li>
+<li class="breadcrumb-item active" aria-current="page">Tratamiento de datos</li>
+{% endblock %}
+
+{% block page_icon %}<i class="bi bi-file-earmark-text page-icon"></i>{% endblock %}
+{% block page_title %}Tratamiento de datos{% endblock %}
+{% block page_subtitle %}Completa el consentimiento, firma y guarda el registro. Esta pestaña se cerrará al finalizar.{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'gestion_alisados/css/gestion_alisados.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-2">
+    <div class="alert alert-info border-0 shadow-sm mb-3">
+        <strong>Secuencia de trabajo:</strong> completa el tratamiento de datos, registra la firma táctil y pulsa <em>Guardar</em>. Al guardarse, esta pestaña se cerrará sola y la tabla principal se actualizará.
+    </div>
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            {% include 'gestion_alisados/form_gestion_alisado_modal_content.html' with popup_mode=True tablet_mode=True %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'gestion_alisados/js/form_gestion_alisado.js' %}?v={% now 'U' %}"></script>
+{% endblock %}

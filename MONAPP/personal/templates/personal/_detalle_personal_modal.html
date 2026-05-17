@@ -107,6 +107,28 @@
                     Este personal se encuentra registrado en el sistema MONAAPP con su información de contacto y rol operativo disponible para gestión administrativa.
                 </p>
             </div>
+
+            <div class="proveedor-detail-section mt-3">
+                <h6 class="proveedor-section-title">Cuenta de acceso</h6>
+                {% if personal.usuario %}
+                    <p class="proveedor-section-text mb-3">
+                        Usuario vinculado: <strong>{{ personal.usuario.username }}</strong>
+                    </p>
+                    {% if es_administrador %}
+                        <button type="button"
+                                class="btn-pill-dark"
+                                data-open-password-modal
+                                data-modal-url="{% url 'personal:cambiar_password_personal' personal.id %}"
+                                data-modal-title="Cambiar contraseña">
+                            <i class="bi bi-shield-lock"></i> Cambiar contraseña
+                        </button>
+                    {% endif %}
+                {% else %}
+                    <p class="proveedor-section-text mb-0">
+                        No hay un usuario vinculado a este personal para administrar credenciales.
+                    </p>
+                {% endif %}
+            </div>
         </div>
     </div>
 </div>

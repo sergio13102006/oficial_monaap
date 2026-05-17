@@ -101,6 +101,18 @@ document.addEventListener('DOMContentLoaded', function () {
         if (triggerForm && modal) {
             event.preventDefault();
             event.stopImmediatePropagation();
+            const isPageAction = !!triggerForm.closest('.page-actions');
+            if (isPageAction) {
+                const rawUrl = triggerForm.dataset.formUrl || '';
+                const popupUrl = rawUrl ? rawUrl.replace('modal=1', 'popup=1') : '';
+                if (popupUrl) {
+                    const win = window.open(popupUrl, '_blank');
+                    if (!win) {
+                        window.location.href = popupUrl;
+                    }
+                    return;
+                }
+            }
             const url = triggerForm.dataset.formUrl || '';
             modal.dataset.loadUrl = url;
             modal.dataset.manualLoaded = '1';
@@ -140,6 +152,12 @@ document.addEventListener('DOMContentLoaded', function () {
                         </div>`;
                 });
         }
+    });
+
+    window.addEventListener('message', function (event) {
+        if (event.origin !== window.location.origin) return;
+        if (!event.data || event.data.type !== 'gestion_alisados:refresh') return;
+        window.location.reload();
     });
 
     if (modal) {

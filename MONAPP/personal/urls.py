@@ -11,6 +11,7 @@ urlpatterns = [
     path('<int:pk>/editar/', views.editar_personal, name='editar_personal'),
     path('<int:pk>/eliminar/', views.eliminar_personal, name='eliminar_personal'),
     path('<int:pk>/detalle/', views.detalle_personal, name='detalle_personal'),
+    path('<int:pk>/cambiar-contrasena/', views.cambiar_password_personal, name='cambiar_password_personal'),
     path('<int:pk>/toggle-activo/', views.toggle_activo_personal, name='toggle_activo_personal'),
     
     # Validaciones en tiempo real

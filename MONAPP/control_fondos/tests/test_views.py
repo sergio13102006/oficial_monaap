@@ -1,6 +1,8 @@
 from decimal import Decimal
 
+from django.contrib.auth.models import Group
 from django.contrib.auth import get_user_model
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -16,18 +18,15 @@ class ControlFondosViewsTest(TestCase):
             password="12345678",
             is_superuser=True,
         )
-        self.caja = CuentaFinanciera.objects.create(
-            nombre="Caja Principal",
-            tipo=CuentaFinanciera.TIPO_EFECTIVO,
-            activa=True,
-            orden_visual=1,
-        )
-        self.banco = CuentaFinanciera.objects.create(
-            nombre="Bancolombia",
-            tipo=CuentaFinanciera.TIPO_BANCO,
-            activa=True,
-            orden_visual=2,
-        )
+        self.caja = CuentaFinanciera.objects.get(codigo="CAJA_PRINCIPAL")
+        self.caja_fuerte = CuentaFinanciera.objects.get(codigo="CAJA_FUERTE")
+        self.banco = CuentaFinanciera.objects.get(codigo="BANCOLOMBIA")
+        self.nequi = CuentaFinanciera.objects.get(codigo="NEQUI")
+        self.daviplata = CuentaFinanciera.objects.get(codigo="DAVIPLATA")
+        self.nu_bank = CuentaFinanciera.objects.get(codigo="NU_BANK")
+        for cuenta in [self.caja, self.caja_fuerte, self.banco, self.nequi, self.daviplata, self.nu_bank]:
+            cuenta.activa = True
+            cuenta.save(update_fields=["activa"])
         registrar_base_diaria(
             cuenta=self.caja,
             base_inicial=Decimal("10000"),
@@ -35,8 +34,32 @@ class ControlFondosViewsTest(TestCase):
             usuario=self.user,
         )
         registrar_base_diaria(
+            cuenta=self.caja_fuerte,
+            base_inicial=Decimal("5000"),
+            fecha=timezone.localdate(),
+            usuario=self.user,
+        )
+        registrar_base_diaria(
             cuenta=self.banco,
             base_inicial=Decimal("5000"),
+            fecha=timezone.localdate(),
+            usuario=self.user,
+        )
+        registrar_base_diaria(
+            cuenta=self.nequi,
+            base_inicial=Decimal("0"),
+            fecha=timezone.localdate(),
+            usuario=self.user,
+        )
+        registrar_base_diaria(
+            cuenta=self.daviplata,
+            base_inicial=Decimal("0"),
+            fecha=timezone.localdate(),
+            usuario=self.user,
+        )
+        registrar_base_diaria(
+            cuenta=self.nu_bank,
+            base_inicial=Decimal("0"),
             fecha=timezone.localdate(),
             usuario=self.user,
         )
@@ -56,6 +79,19 @@ class ControlFondosViewsTest(TestCase):
         self.assertContains(response, "Control de fondos")
         self.assertContains(response, "Caja y Bancos")
         self.assertContains(response, "Ver movimientos")
+
+    def test_colaborador_puede_ver_pero_no_gestionar(self):
+        grupo = Group.objects.create(name="Colaborador")
+        self.user.is_superuser = False
+        self.user.save(update_fields=["is_superuser"])
+        self.user.groups.add(grupo)
+        self.client.force_login(self.user)
+
+        response_dashboard = self.client.get(reverse("control_fondos:dashboard"))
+        response_cuentas = self.client.get(reverse("control_fondos:cuentas"))
+
+        self.assertEqual(response_dashboard.status_code, 200)
+        self.assertEqual(response_cuentas.status_code, 403)
 
     def test_dashboard_crea_cuentas_base_si_no_existen(self):
         TransferenciaCuenta.objects.all().delete()
@@ -107,6 +143,26 @@ class ControlFondosViewsTest(TestCase):
         self.assertContains(response, "Transferencia")
         self.assertContains(response, "Saldo neto")
 
+    def test_movimientos_post_con_soporte_adjuntado(self):
+        soporte = SimpleUploadedFile("movimiento.txt", b"soporte movimiento")
+        response = self.client.post(
+            reverse("control_fondos:movimientos"),
+            data={
+                "fecha": timezone.localdate().isoformat(),
+                "tipo_movimiento": MovimientoCuenta.TIPO_MOVIMIENTO_INGRESO,
+                "cuenta": self.caja.pk,
+                "valor_total": "1000",
+                "descuento": "0",
+                "entrada_efectivo": "1000",
+                "referencia": "REF-MOV-1",
+                "soporte_adjunto": soporte,
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        movimiento = MovimientoCuenta.objects.latest("id")
+        self.assertTrue(bool(movimiento.soporte_adjunto))
+
     def test_detalle_cuenta_renderiza(self):
         response = self.client.get(
             reverse("control_fondos:detalle_cuenta", args=[self.caja.pk])
@@ -143,6 +199,25 @@ class ControlFondosViewsTest(TestCase):
             4,
         )
 
+    def test_transferencias_post_con_soporte_adjunto(self):
+        soporte = SimpleUploadedFile("transferencia.txt", b"soporte transferencia")
+        response = self.client.post(
+            reverse("control_fondos:transferencias"),
+            data={
+                "fecha": timezone.localdate().isoformat(),
+                "cuenta_origen": self.banco.pk,
+                "cuenta_destino": self.caja.pk,
+                "valor": "1000",
+                "observacion": "Movimiento de prueba",
+                "request_uid": "transferencia-view-file",
+                "soporte_adjunto": soporte,
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        transferencia = TransferenciaCuenta.objects.latest("id")
+        self.assertTrue(bool(transferencia.soporte_adjunto))
+
     def test_transferencias_muestra_comprobante_logico(self):
         response = self.client.post(
             reverse("control_fondos:transferencias"),
@@ -160,3 +235,16 @@ class ControlFondosViewsTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Comprobante logico")
         self.assertContains(response, "Movimiento salida")
+
+    def test_bitacora_renderiza(self):
+        response = self.client.get(reverse("control_fondos:bitacora"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Bitácora de fondos")
+
+    def test_exportar_movimientos_excel(self):
+        response = self.client.get(reverse("control_fondos:exportar_movimientos_excel"))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response["Content-Type"],
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )

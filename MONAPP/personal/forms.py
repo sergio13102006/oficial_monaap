@@ -1,5 +1,6 @@
 from django import forms
 from django.core.exceptions import ValidationError
+from django.contrib.auth.forms import SetPasswordForm
 from core.form_validations import ValidationFormMixin
 from .models import Personal
 
@@ -157,6 +158,29 @@ class PersonalBusquedaForm(ValidationFormMixin, forms.Form):
                 "class": "personal-form-control",
                 "id": "id_filtro_personal",
                 "onchange": "enviarFormularioFiltro(this.form)",
+            }
+        ),
+    )
+
+
+class AdminSetPasswordForm(SetPasswordForm):
+    new_password1 = forms.CharField(
+        label="Nueva contraseña",
+        widget=forms.PasswordInput(
+            attrs={
+                "class": "personal-form-control",
+                "placeholder": "Nueva contraseña",
+                "autocomplete": "new-password",
+            }
+        ),
+    )
+    new_password2 = forms.CharField(
+        label="Confirmar contraseña",
+        widget=forms.PasswordInput(
+            attrs={
+                "class": "personal-form-control",
+                "placeholder": "Confirmar contraseña",
+                "autocomplete": "new-password",
             }
         ),
     )

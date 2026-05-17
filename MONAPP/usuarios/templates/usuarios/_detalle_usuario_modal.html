@@ -106,4 +106,17 @@
             </p>
         </div>
     </div>
+
+    {% if es_administrador %}
+    <hr style="border: none; height: 1px; background: rgba(17,17,17,0.08); margin: 12px 0;">
+    <div style="display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap;">
+        <button type="button"
+                data-open-password-modal
+                data-modal-url="{% url 'usuarios:cambiar_password_usuario' usuario.id %}"
+                data-modal-title="Cambiar contraseña"
+                style="background:#4b2f2a;color:#fff;padding:10px 14px;border-radius:12px;text-decoration:none;font-weight:600;border:0;cursor:pointer;">
+            <i class="bi bi-shield-lock"></i> Cambiar contraseña
+        </button>
+    </div>
+    {% endif %}
 </div>

@@ -194,29 +194,44 @@ h2 {
     min-width: 43px;
 } */
 .stock-chip{
-    display:inline-block;
-    margin-top:2px;
-    padding:2px 3px;
-    border-radius:3px;
-    font-size:.5rem;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:.4rem;
+    margin-top:4px;
+    padding:.42rem .78rem;
+    border-radius:999px;
+    font-size:.84rem;
+    line-height:1.15;
     font-weight:600;
-    color:white;
+    letter-spacing:.01em;
+    color:#f8fafc;
+    border:1px solid transparent;
+    white-space:nowrap;
 }
 
 .stock-ok{
-    background:#2e7d32;
+    background:linear-gradient(180deg, #2f7a46 0%, #25633a 100%);
+    border-color:#14532d;
 }
 
 .stock-bajo{
-    background:#f9a825;
+    background:linear-gradient(180deg, #d97706 0%, #b95f05 100%);
+    border-color:#92400e;
 }
 
 .stock-critico{
-    background:#c62828;
+    background:linear-gradient(180deg, #c23b32 0%, #9f2d26 100%);
+    border-color:#7f1d1d;
+}
+
+.stock-neutral{
+    background:linear-gradient(180deg, #6b7280 0%, #525866 100%);
+    border-color:#374151;
 }
 
 .stock-chip{
-    box-shadow: 0 2px 3px rgba(0,0,0,.15);
+    box-shadow: 0 6px 14px rgba(16,24,40,.12);
 }
 
 

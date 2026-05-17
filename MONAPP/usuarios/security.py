@@ -47,10 +47,18 @@ def normalize_subject(value: str | None) -> str:
 
 
 def get_client_ip(request) -> str:
+    remote_addr = (request.META.get("REMOTE_ADDR") or "0.0.0.0").strip() or "0.0.0.0"
+    trusted_proxies = {
+        (value or "").strip()
+        for value in getattr(settings, "LOGIN_TRUSTED_PROXY_IPS", [])
+        if (value or "").strip()
+    }
     forwarded = request.META.get("HTTP_X_FORWARDED_FOR", "")
-    if forwarded:
-        return forwarded.split(",")[0].strip() or request.META.get("REMOTE_ADDR", "0.0.0.0")
-    return request.META.get("REMOTE_ADDR", "0.0.0.0")
+    if forwarded and remote_addr in trusted_proxies:
+        first_hop = forwarded.split(",")[0].strip()
+        if first_hop:
+            return first_hop
+    return remote_addr
 
 
 def get_user_agent(request) -> str:
@@ -232,7 +240,7 @@ def validate_recaptcha(token: str | None, remote_ip: str | None = None) -> bool:
     secret_key = getattr(settings, "LOGIN_RECAPTCHA_SECRET_KEY", "")
 
     if not site_key or not secret_key:
-        return True
+        return bool(getattr(settings, "DEBUG", False))
 
     if not token:
         return False

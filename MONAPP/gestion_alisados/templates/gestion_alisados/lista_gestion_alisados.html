@@ -12,9 +12,9 @@
 {% block page_title %}Gestion de datos{% endblock %}
 {% block page_subtitle %}Control, filtros y seguimiento{% endblock %}
 {% block page_actions %}
-<button type="button" class="btn-pill-dark js-open-gestion-form-modal" data-form-title="Nueva gestión de datos" data-form-url="{% url 'gestion_alisados:crear_gestion_alisado' %}?modal=1" data-bs-toggle="modal" data-bs-target="#modalFormGestion">
-    <i class="bi bi-plus-circle"></i> Nueva gestión
-</button>
+<a href="{% url 'gestion_alisados:crear_gestion_alisado' %}?popup=1" target="_blank" rel="noopener noreferrer" class="btn-pill-dark">
+    <i class="bi bi-plus-circle"></i> Nueva gesti?n
+</a>
 {% endblock %}
 
 {% block extra_css %}
