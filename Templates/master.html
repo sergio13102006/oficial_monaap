@@ -144,7 +144,6 @@
 
                         <div class="recovery-links mt-3">
                             <a href="{% url 'usuarios:recuperar' %}" class="btn-recovery-link">Olvidé mi contraseña</a>
-                            <a href="{% url 'usuarios:username_recovery' %}" class="btn-back-login">Recuperar usuario</a>
                         </div>
                     </form>
                 </div>
@@ -183,7 +182,7 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        const shouldOpenLogin = {{ show_login_modal|default:False|yesno:'true,false' }};
+        const shouldOpenLogin = {% if show_login_modal %}true{% else %}false{% endif %};
         if (!shouldOpenLogin) return;
 
         const loginModal = document.getElementById('loginModal');
